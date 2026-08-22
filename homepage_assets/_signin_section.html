@@ -1,0 +1,157 @@
+<section id="signin" class="alt">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker">Sign In</div>
+      <h2 id="signin-heading">Access your tools</h2>
+      <p id="signin-sub">Sign in with your username and password.</p>
+      <div class="demo-mode-badge hidden" id="demo-mode-badge">Demo mode &mdash; accounts aren't saved to a real server yet. See SUPABASE_SETUP.md.</div>
+    </div>
+
+    <div id="signedout-view">
+      <div class="signin-card" id="login-card">
+        <form class="auth-form" id="login-form">
+          <label>Email
+            <input type="email" id="login-username" autocomplete="email" required>
+          </label>
+          <label>Password
+            <input type="password" id="login-password" autocomplete="current-password" required>
+          </label>
+          <div class="auth-err hidden" id="login-error"></div>
+          <button class="btn-primary" type="submit">Sign In</button>
+        </form>
+        <div class="auth-switch">Don't have access yet? <a id="show-signup">Set up your property</a></div>
+      </div>
+
+      <div class="signin-card hidden" id="signup-card">
+        <form class="auth-form" id="signup-form">
+          <label>Email <span style="font-weight:400;color:var(--ink-faint);">(this is how you sign in)</span>
+            <input type="email" id="signup-contact-email" autocomplete="email" required>
+          </label>
+          <label>Password
+            <input type="password" id="signup-password" autocomplete="new-password" required>
+          </label>
+          <label>Property name
+            <input type="text" id="signup-property" placeholder="e.g. Blanco Oaks Apartments" required>
+          </label>
+          <div class="auth-err hidden" id="signup-error"></div>
+          <button class="btn-primary" type="submit">Create Account</button>
+        </form>
+        <div class="auth-switch">Already have access? <a id="show-login">Sign in</a></div>
+      </div>
+    </div>
+
+    <div class="signedin-panel hidden" id="signedin-panel">
+      <div class="signedin-top">
+        <div>Signed in as <b id="signedin-email"></b></div>
+        <a id="logout-link">Log out</a>
+      </div>
+      <div class="license-chip">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        Licensed property: <span id="signedin-property"></span>
+      </div>
+      <div class="tools-grid">
+        <div class="tool-card">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+          <h3>LeaseVerify</h3>
+          <p class="tc-value">Compare executed leases against your Rent Roll and catch what doesn't match.</p>
+          <div class="tc-pills">
+            <span class="tc-pill">Rent &amp; charges</span>
+            <span class="tc-pill">Lease dates &amp; term</span>
+            <span class="tc-pill">Signatures</span>
+            <span class="tc-pill">Deposits</span>
+          </div>
+          <button class="btn-primary tool-launch-btn" type="button" onclick="launchTool('reconciler')">
+            Launch tool
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+        <div class="tool-card">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <h3>ConcessionVerify</h3>
+          <p class="tc-value">Work out how many weeks of free rent each resident is really getting, and check it against the lease. Needs the leases, the ledgers and the rent roll.</p>
+          <div class="tc-pills">
+            <span class="tc-pill">Move-in specials</span>
+            <span class="tc-pill">Prorated concessions</span>
+            <span class="tc-pill">Lease-accurate math</span>
+          </div>
+          <button class="btn-primary tool-launch-btn" type="button" onclick="launchTool('concession')">
+            Launch tool
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+        <div class="tool-card">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18M3 10l2-5h14l2 5M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/><path d="M9 15h6"/></svg></div>
+          <h3>DepositVerify</h3>
+          <p class="tc-value">Reconcile LeaseLock invoices against your Rent Roll and confirm every resident&rsquo;s deposit is actually covered.</p>
+          <div class="tc-pills">
+            <span class="tc-pill">LeaseLock vs. invoice</span>
+            <span class="tc-pill">Surety bonds</span>
+            <span class="tc-pill">Security deposits</span>
+            <span class="tc-pill">Coverage gaps</span>
+          </div>
+          <button class="btn-primary tool-launch-btn" type="button" onclick="launchTool('deposit')">
+            Launch tool
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+      <details class="tutorial" id="tutorial">
+        <summary>
+          <span class="tut-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.25V20"/><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v17H6.5A2.5 2.5 0 0 0 4 22.5z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v17h5.5a2.5 2.5 0 0 1 2.5 2.5z"/></svg></span>
+          <span class="tut-head"><b>How to use these tools</b><span>A short walkthrough &mdash; start here if it&rsquo;s your first run</span></span>
+        </summary>
+        <div class="tut-body">
+          <p class="tut-lede">Everything runs inside your own browser. Your leases, ledgers and rent rolls are never uploaded anywhere &mdash; close the tab and they&rsquo;re gone.</p>
+
+          <div class="tut-step">
+            <div class="tut-num">1</div>
+            <div>
+              <h4>Pull the right reports out of ResMan</h4>
+              <p>You need the <b>Rent Roll</b> &mdash; the one that lists each unit with its own Description/Amount charge breakdown underneath. ResMan also offers a <b>Rent Roll Summary</b>; that one only has property-level totals and there&rsquo;s nothing in it to check, so the tools will stop and ask you for the full report if you grab it by mistake.</p>
+              <p>Then, depending on the tool: the resident documents export (leases), a resident ledger, or your LeaseLock invoice.</p>
+            </div>
+          </div>
+
+          <div class="tut-step">
+            <div class="tut-num">2</div>
+            <div>
+              <h4>Set it up before you upload</h4>
+              <p><b>Charge Mappings</b> teach the tool your property&rsquo;s naming, so &ldquo;Valet Trash&rdquo; and &ldquo;Trash Fee&rdquo; are understood as the same charge. <b>Option Filters</b> let you switch off anything you don&rsquo;t want flagged &mdash; every check and every charge type is listed, including move-in specials.</p>
+              <p>Anything you switch off is never deleted. It still shows in that unit&rsquo;s detail, greyed out and labelled, and the true total always appears above your results &mdash; so you can hide noise without ever losing sight of what was found.</p>
+            </div>
+          </div>
+
+          <div class="tut-step">
+            <div class="tut-num">3</div>
+            <div>
+              <h4>Upload</h4>
+              <p>Click <b>Choose lease files</b> and pick whether you&rsquo;re uploading individual PDFs or one ZIP. If you use the ZIP, drop in the whole ResMan documents export &mdash; each unit&rsquo;s most recently signed lease is found automatically, and everything else in the ZIP is skipped.</p>
+              <p>Where several leases exist for one unit, the one actually in effect today is used &mdash; not just the newest file. If it genuinely can&rsquo;t tell, the unit is marked <b>Needs review</b> rather than guessed at.</p>
+            </div>
+          </div>
+
+          <div class="tut-step">
+            <div class="tut-num">4</div>
+            <div>
+              <h4>Read the results</h4>
+              <p>Use the tabs to move between everything, discrepancies only, and clean matches. Click any column &mdash; unit, lease start or end, deposit &mdash; to sort by it. Click a row to open that unit and see every charge and check side by side with the reasoning.</p>
+              <p>Tick <b>Show only the mismatching lines</b> to collapse the whole property into a single flat list of just what doesn&rsquo;t match.</p>
+            </div>
+          </div>
+
+          <div class="tut-step">
+            <div class="tut-num">5</div>
+            <div>
+              <h4>Export</h4>
+              <p><b>CSV</b> or <b>Excel</b> to work the list, or <b>PDF</b> for a clean, branded report you can send to an owner or attach to an audit file. The PDF lists every discrepancy grouped by unit, and states plainly if anything was hidden by your filters.</p>
+            </div>
+          </div>
+
+          <div class="tut-note"><b>Green isn&rsquo;t always a match.</b> Some rows are correct without being identical &mdash; a resident past their lease term who is properly billed a month-to-month fee, for example. Those are marked as expected and explained, rather than flagged. Anything the tool can&rsquo;t justify stays flagged.</div>
+        </div>
+      </details>
+
+      <p class="license-note">Your subscription covers <b id="signedin-property-2"></b>. If you run these tools against a different property's documents, heads up that it's outside what your current subscription covers.</p>
+    </div>
+  </div>
+</section>

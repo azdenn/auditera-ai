@@ -1,0 +1,1377 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Your account — Auditera AI</title>
+<meta name="robots" content="noindex">
+<style>
+:root{
+  --ink:#eef0f6; --ink-soft:#a7adc0; --ink-faint:#767d94;
+  --line:#2a3040; --line-soft:#232838; --bg:#0d0f16; --card:#161926;
+  --accent:#7c8cff; --accent-2:#b083f0; --accent-soft:#232849; --accent-line:#3d4570;
+  --ok:#3ddc9a; --ok-bg:#132a24; --ok-line:#1f5a44;
+  --warn:#ffc069; --muted:#767d94; --muted-bg:#1c2030;
+  --shadow-xs:0 1px 2px rgba(0,0,0,.3);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
+  --shadow-md:0 8px 30px -8px rgba(0,0,0,.6);
+  --shadow-lg:0 20px 50px -18px rgba(0,0,0,.7);
+  --radius-lg:16px; --radius-md:12px; --radius-sm:9px;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+.hidden{display:none !important;}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth;}
+body{
+  margin:0;color:var(--ink);line-height:1.5;
+  background:
+    radial-gradient(1000px 520px at 10% -10%, #1d2450 0%, rgba(29,36,80,0) 60%),
+    radial-gradient(800px 460px at 105% 0%, #14312f 0%, rgba(20,49,47,0) 55%),
+    var(--bg);
+  background-attachment:fixed;
+}
+a{color:var(--accent);}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px;}
+
+/* ---------- nav ---------- */
+nav.top{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);background:rgba(13,15,22,.72);border-bottom:1px solid var(--line-soft);}
+nav.top .inner{max-width:1120px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;color:#fff;letter-spacing:-.01em;}
+.brand-mark{flex:none;width:30px;height:30px;border-radius:9px;background:linear-gradient(140deg,var(--accent),var(--accent-2));box-shadow:0 0 18px -4px rgba(124,140,255,.55);display:flex;align-items:center;justify-content:center;}
+.brand-mark svg{width:16px;height:16px;}
+nav.top .links{display:flex;gap:26px;align-items:center;}
+nav.top .links a{color:var(--ink-soft);text-decoration:none;font-size:13.5px;font-weight:600;transition:color .15s;}
+nav.top .links a:hover{color:#fff;}
+/* The two right-hand actions read as a pair: a quiet way back in for people
+   who already pay, and a loud one for people who don't yet. The divider keeps
+   them from blurring into the content links beside them. */
+nav.top .links .nav-signin{margin-left:auto;padding-left:26px;border-left:1px solid var(--line-soft);}
+nav.top .links .nav-cta{padding:9px 18px;font-size:13.5px;border-radius:var(--radius-sm);color:#0d0f16;}
+nav.top .links .nav-cta:hover{color:#0d0f16;}
+.nav-toggle{display:none;background:none;border:1px solid var(--line);border-radius:8px;padding:8px;color:var(--ink);cursor:pointer;}
+@media (max-width:760px){
+  nav.top .links{position:fixed;top:60px;left:0;right:0;background:#11141f;border-bottom:1px solid var(--line-soft);flex-direction:column;align-items:stretch;padding:10px 20px 18px;gap:4px;display:none;box-shadow:var(--shadow-md);}
+  nav.top .links.open{display:flex;}
+  nav.top .links a{padding:11px 4px;border-bottom:1px solid var(--line-soft);}
+  nav.top .links a.btn-ghost{border:1px solid var(--line);margin-top:8px;text-align:center;justify-content:center;}
+  nav.top .links .nav-signin{margin-left:0;padding-left:4px;border-left:none;}
+  nav.top .links .nav-cta{margin-top:10px;text-align:center;justify-content:center;border-bottom:none;}
+  .nav-toggle{display:inline-flex;align-items:center;justify-content:center;}
+}
+
+/* ---------- buttons ---------- */
+.btn-primary{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#0d0f16;border:none;border-radius:9px;padding:12px 22px;font-size:14.5px;font-weight:700;cursor:pointer;text-decoration:none;box-shadow:0 4px 20px rgba(124,140,255,.3);transition:filter .15s,transform .12s,box-shadow .15s;}
+.btn-primary:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 6px 26px rgba(124,140,255,.4);}
+.btn-ghost{display:inline-flex;align-items:center;gap:8px;background:#171a28;border:1px solid var(--line);border-radius:9px;padding:11px 21px;font-size:14px;font-weight:600;cursor:pointer;color:var(--ink);text-decoration:none;transition:background .15s,border-color .15s;}
+.btn-ghost:hover{background:#1f2333;border-color:#3a415a;}
+
+/* ---------- hero ---------- */
+header.hero{padding:96px 0 44px;text-align:center;}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent);font-size:12.5px;font-weight:700;padding:6px 14px;border-radius:999px;margin-bottom:24px;letter-spacing:.01em;}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);}
+header.hero h1{font-size:46px;line-height:1.15;letter-spacing:-.02em;font-weight:800;color:#fff;margin:0 0 20px;max-width:760px;margin-left:auto;margin-right:auto;}
+header.hero h1 span{background:linear-gradient(135deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+header.hero p.sub{font-size:17.5px;color:var(--ink-soft);max-width:620px;margin:0 auto 34px;}
+.hero-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;}
+.hero-note{font-size:12.5px;color:var(--ink-faint);}
+@media (max-width:640px){
+  header.hero{padding:64px 0 32px;}
+  header.hero h1{font-size:32px;}
+  header.hero p.sub{font-size:15.5px;}
+}
+
+/* ---------- hero screenshot ---------- */
+.hero-shot-wrap{max-width:980px;margin:56px auto 0;position:relative;}
+.hero-shot-wrap .glow{position:absolute;inset:-40px;background:radial-gradient(600px 300px at 50% 0%, rgba(124,140,255,.22), transparent 70%);z-index:-1;filter:blur(10px);}
+.hero-shot{width:100%;display:block;border-radius:var(--radius-lg);border:1px solid var(--line);box-shadow:var(--shadow-lg);}
+
+/* ---------- hand-drawn hero animation ----------
+   Every element shares ONE cycle length and carries its own keyframe
+   percentages rather than using animation-delay. With delays, each element's
+   cycle is permanently offset, so on the second loop the late elements are
+   still fading out while the early ones have started redrawing. Encoding the
+   timing in the keyframes keeps the whole scene perfectly in step, forever.
+
+   pathLength="1" on every path lets one dasharray value (1) drive the
+   draw-on for paths of wildly different real lengths. */
+.hero-anim-wrap{max-width:900px;margin:56px auto 0;position:relative;}
+.hero-anim{position:relative;border-radius:var(--radius-lg);border:1px solid var(--line);
+  background:linear-gradient(180deg,#141726,#101320);box-shadow:var(--shadow-lg);
+  padding:14px 18px;overflow:hidden;}
+.hero-anim svg{width:100%;height:auto;display:block;}
+.hero-anim .ink{stroke-dasharray:1;stroke-dashoffset:1;opacity:0;}
+
+@keyframes drawS1{0%{stroke-dashoffset:1;opacity:0}1%{opacity:1}9%{stroke-dashoffset:0;opacity:1}
+  92%{stroke-dashoffset:0;opacity:1}97%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:1;opacity:0}}
+@keyframes drawS2{0%,10%{stroke-dashoffset:1;opacity:0}11%{opacity:1}19%{stroke-dashoffset:0;opacity:1}
+  92%{stroke-dashoffset:0;opacity:1}97%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:1;opacity:0}}
+@keyframes drawS3{0%,21%{stroke-dashoffset:1;opacity:0}22%{opacity:1}28%{stroke-dashoffset:0;opacity:1}
+  92%{stroke-dashoffset:0;opacity:1}97%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:1;opacity:0}}
+@keyframes drawS4{0%,29%{stroke-dashoffset:1;opacity:0}30%{opacity:1}40%{stroke-dashoffset:0;opacity:1}
+  92%{stroke-dashoffset:0;opacity:1}97%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:1;opacity:0}}
+@keyframes drawS5{0%,44%{stroke-dashoffset:1;opacity:0}45%{opacity:1}58%{stroke-dashoffset:0;opacity:1}
+  92%{stroke-dashoffset:0;opacity:1}97%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:1;opacity:0}}
+@keyframes drawS6{0%,64%{stroke-dashoffset:1;opacity:0}65%{opacity:1}76%{stroke-dashoffset:0;opacity:1}
+  92%{stroke-dashoffset:0;opacity:1}97%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:1;opacity:0}}
+
+/* Text has no stroke to draw, so it just fades in on its stage's beat. */
+@keyframes fadeS1{0%,7%{opacity:0}12%{opacity:1}92%{opacity:1}97%,100%{opacity:0}}
+@keyframes fadeS2{0%,17%{opacity:0}22%{opacity:1}92%{opacity:1}97%,100%{opacity:0}}
+@keyframes fadeS5{0%,52%{opacity:0}60%{opacity:1}92%{opacity:1}97%,100%{opacity:0}}
+@keyframes fadeS6{0%,72%{opacity:0}79%{opacity:1}92%{opacity:1}97%,100%{opacity:0}}
+
+.hero-anim .s1 .ink{animation:drawS1 15s ease-in-out infinite;}
+.hero-anim .s2 .ink{animation:drawS2 15s ease-in-out infinite;}
+.hero-anim .s3 .ink{animation:drawS3 15s ease-in-out infinite;}
+.hero-anim .s4 .ink{animation:drawS4 15s ease-in-out infinite;}
+.hero-anim .s5 .ink{animation:drawS5 15s ease-in-out infinite;}
+.hero-anim .s6 .ink{animation:drawS6 15s ease-in-out infinite;}
+.hero-anim text.lbl{opacity:0;}
+.hero-anim text.s1{animation:fadeS1 15s ease-in-out infinite;}
+.hero-anim text.s2{animation:fadeS2 15s ease-in-out infinite;}
+.hero-anim .s5 text.lbl{animation:fadeS5 15s ease-in-out infinite;}
+.hero-anim text.s6{animation:fadeS6 15s ease-in-out infinite;}
+
+/* Respect a stated preference for less motion: show the finished drawing
+   rather than looping it. */
+@media (prefers-reduced-motion: reduce){
+  .hero-anim .ink{animation:none !important;stroke-dashoffset:0;opacity:1;}
+  .hero-anim text.lbl{animation:none !important;opacity:1;}
+}
+@media (max-width:640px){ .hero-anim{padding:8px 10px;} }
+
+/* ---------- signed-in tutorial ---------- */
+.tutorial{max-width:1060px;margin:26px auto 0;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;}
+.tutorial summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:13px;padding:17px 20px;transition:background .15s;}
+.tutorial summary::-webkit-details-marker{display:none;}
+.tutorial summary:hover{background:#1b1f2e;}
+.tut-ic{flex:none;width:38px;height:38px;border-radius:11px;background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent);display:flex;align-items:center;justify-content:center;}
+.tut-ic svg{width:19px;height:19px;}
+.tut-head{display:flex;flex-direction:column;gap:2px;}
+.tut-head b{font-size:15.5px;color:#fff;font-weight:700;}
+.tut-head span{font-size:12.5px;color:var(--ink-faint);}
+.tutorial summary:after{content:'+';margin-left:auto;font-size:20px;color:var(--ink-faint);line-height:1;}
+.tutorial[open] summary:after{content:'\2013';}
+.tut-body{padding:4px 22px 24px;border-top:1px solid var(--line-soft);}
+.tut-lede{font-size:13.5px;color:var(--ink-soft);margin:16px 0 20px;padding:11px 14px;background:#132a24;border:1px solid #1f5a44;border-radius:9px;}
+.tut-step{display:flex;gap:15px;margin-bottom:20px;}
+.tut-num{flex:none;width:27px;height:27px;border-radius:50%;background:linear-gradient(140deg,var(--accent),var(--accent-2));color:#0d0f16;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+.tut-step h4{margin:2px 0 7px;font-size:14.5px;color:#fff;font-weight:700;letter-spacing:-.005em;}
+.tut-step p{margin:0 0 8px;font-size:13.5px;color:var(--ink-soft);line-height:1.62;}
+.tut-step p:last-child{margin-bottom:0;}
+.tut-step b{color:var(--ink);font-weight:600;}
+.tut-note{font-size:13px;color:var(--ink-soft);line-height:1.6;padding:13px 15px;background:#1c2030;border-left:3px solid var(--warn);border-radius:8px;}
+.tut-note b{color:var(--warn);}
+@media (max-width:640px){.tut-body{padding:4px 16px 20px;}}
+
+/* ---------- sections ---------- */
+section{padding:80px 0;}
+section.alt{background:linear-gradient(180deg, rgba(22,25,38,0) 0%, rgba(22,25,38,.55) 12%, rgba(22,25,38,.55) 88%, rgba(22,25,38,0) 100%);}
+.section-head{text-align:center;max-width:640px;margin:0 auto 48px;}
+.section-head .kicker{font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;}
+.section-head h2{font-size:30px;line-height:1.2;letter-spacing:-.015em;color:#fff;margin:0 0 12px;font-weight:800;}
+.section-head p{font-size:15.5px;color:var(--ink-soft);margin:0;}
+@media (max-width:640px){section{padding:56px 0;}.section-head h2{font-size:24px;}}
+
+/* ---------- three pillars ---------- */
+.pillar-row{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1000px;margin:0 auto;}
+@media (max-width:860px){.pillar-row{grid-template-columns:1fr;max-width:520px;}}
+.pillar-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:30px 26px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;}
+.pillar-card:before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--accent),var(--accent-2));}
+.pillar-icon{width:42px;height:42px;border-radius:11px;background:var(--accent-soft);border:1px solid var(--accent-line);display:flex;align-items:center;justify-content:center;color:var(--accent);margin-bottom:18px;}
+.pillar-icon svg{width:21px;height:21px;}
+.pillar-kicker{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
+.pillar-card h3{font-size:19px;color:#fff;margin:0 0 10px;font-weight:800;letter-spacing:-.01em;line-height:1.3;}
+.pillar-card p{font-size:13.5px;color:var(--ink-soft);margin:0;line-height:1.6;}
+
+/* ---------- what it does ---------- */
+.wid-intro{max-width:680px;margin:0 auto 44px;text-align:center;font-size:15.5px;color:var(--ink-soft);}
+.accordion{max-width:820px;margin:0 auto;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;background:var(--card);box-shadow:var(--shadow-sm);}
+.accordion-item{border-bottom:1px solid var(--line-soft);}
+.accordion-item:last-child{border-bottom:none;}
+.accordion-trigger{width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;background:none;border:none;cursor:pointer;padding:24px 26px;text-align:left;color:var(--ink);transition:background .15s;}
+.accordion-trigger:hover{background:rgba(124,140,255,.05);}
+.accordion-trigger .at-left{display:flex;align-items:center;gap:14px;}
+.accordion-trigger .at-icon{flex:none;width:38px;height:38px;border-radius:10px;background:var(--accent-soft);border:1px solid var(--accent-line);display:flex;align-items:center;justify-content:center;color:var(--accent);}
+.accordion-trigger .at-icon svg{width:19px;height:19px;}
+.accordion-trigger .at-text b{display:block;font-size:16px;color:#fff;font-weight:700;letter-spacing:-.005em;}
+.accordion-trigger .at-text span{display:block;font-size:12.5px;color:var(--ink-faint);margin-top:3px;}
+.accordion-plus{flex:none;width:26px;height:26px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--ink-soft);transition:transform .2s,background .15s,color .15s;}
+.accordion-item.open .accordion-plus{transform:rotate(45deg);background:var(--accent-soft);color:var(--accent);border-color:var(--accent-line);}
+.accordion-panel{max-height:0;overflow:hidden;transition:max-height .32s cubic-bezier(.4,0,.2,1);}
+.accordion-item.open .accordion-panel{max-height:640px;}
+.accordion-panel-inner{padding:0 26px 30px 78px;}
+.accordion-panel-inner p{font-size:14px;color:var(--ink-soft);margin:0 0 18px;line-height:1.65;}
+.cap-list{list-style:none;margin:0 0 22px;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;}
+@media (max-width:640px){.cap-list{grid-template-columns:1fr;}.accordion-panel-inner{padding:0 20px 26px 20px;}}
+.cap-list li{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--ink-soft);line-height:1.5;}
+.cap-list li svg{flex:none;width:15px;height:15px;margin-top:2px;color:var(--ok);}
+.cap-list li b{color:var(--ink);font-weight:600;}
+
+/* ---------- how it works ---------- */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;counter-reset:step;}
+@media (max-width:860px){.steps{grid-template-columns:repeat(2,1fr);}}
+@media (max-width:560px){.steps{grid-template-columns:1fr;}}
+.step{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-md);padding:22px 20px 20px;box-shadow:var(--shadow-xs);}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:linear-gradient(140deg,var(--accent),var(--accent-2));color:#0d0f16;font-size:12.5px;font-weight:800;flex:none;box-shadow:0 0 12px -2px rgba(124,140,255,.6);margin-bottom:14px;}
+.step h4{font-size:14px;color:#fff;margin:0 0 6px;font-weight:700;}
+.step p{font-size:12.5px;color:var(--ink-soft);margin:0;line-height:1.55;}
+
+/* ---------- tools grid ---------- */
+.tools-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:1060px;margin:0 auto;}
+@media (max-width:980px){.tools-grid{grid-template-columns:repeat(2,1fr);max-width:860px;}}
+@media (max-width:700px){.tools-grid{grid-template-columns:1fr;}}
+.tool-card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:28px 26px;box-shadow:var(--shadow-sm);}
+.tool-card .feature-icon{width:38px;height:38px;border-radius:10px;background:var(--accent-soft);border:1px solid var(--accent-line);display:flex;align-items:center;justify-content:center;color:var(--accent);margin-bottom:18px;}
+.tool-card .feature-icon svg{width:19px;height:19px;}
+.tool-card h3{font-size:17px;color:#fff;margin:0 0 8px;font-weight:800;letter-spacing:-.005em;}
+.tool-card p.tc-value{font-size:13.5px;color:var(--ink-soft);margin:0 0 16px;line-height:1.55;}
+.tc-pills{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:22px;flex:1;align-content:flex-start;}
+.tc-pill{font-size:11.5px;font-weight:600;padding:5px 11px;border-radius:999px;background:var(--muted-bg);border:1px solid var(--line);color:var(--ink-soft);}
+.tool-launch-btn{align-self:flex-start;font-size:13.5px;padding:10px 18px;}
+
+/* ---------- CTA band ---------- */
+.cta-band{background:var(--card);border:1px solid var(--accent-line);border-radius:var(--radius-lg);padding:52px 40px;text-align:center;box-shadow:var(--shadow-md);position:relative;overflow:hidden;}
+.cta-band:before{content:'';position:absolute;inset:0;background:radial-gradient(500px 260px at 50% 0%, rgba(124,140,255,.14), transparent 70%);}
+.cta-band h2{font-size:26px;color:#fff;margin:0 0 12px;font-weight:800;letter-spacing:-.015em;position:relative;}
+.cta-band p{font-size:14.5px;color:var(--ink-soft);margin:0 0 28px;position:relative;}
+.cta-band .hero-ctas{position:relative;}
+
+/* ---------- footer ---------- */
+footer.page{border-top:1px solid var(--line-soft);padding:36px 0;margin-top:20px;}
+footer.page .inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;}
+footer.page .fbrand{display:flex;align-items:center;gap:10px;color:var(--ink-soft);font-size:13px;}
+footer.page .flinks{display:flex;gap:22px;flex-wrap:wrap;}
+footer.page .flinks a{color:var(--ink-faint);font-size:12.5px;text-decoration:none;}
+footer.page .flinks a:hover{color:var(--ink-soft);}
+
+/* ---------- sign in ---------- */
+.signin-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:32px 30px;box-shadow:var(--shadow-sm);max-width:420px;margin:0 auto;}
+.auth-form{display:flex;flex-direction:column;gap:14px;}
+.auth-form label{display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink-soft);}
+.auth-form input{border:1px solid var(--line);border-radius:9px;padding:11px 13px;font-size:14px;background:#12141f;color:var(--ink);transition:border-color .15s,box-shadow .15s;font-family:inherit;}
+.auth-form input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+.auth-form button{margin-top:6px;width:100%;justify-content:center;}
+.auth-err{font-size:12.5px;color:#ff6b6b;background:#2c1a1e;border:1px solid #5c2b30;border-radius:8px;padding:9px 12px;}
+.auth-switch{text-align:center;font-size:13px;color:var(--ink-faint);margin-top:18px;}
+.auth-switch a{font-weight:600;cursor:pointer;}
+.signedin-panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:26px 28px;box-shadow:var(--shadow-sm);max-width:900px;margin:0 auto;}
+.signedin-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:13.5px;color:var(--ink-soft);padding-bottom:16px;border-bottom:1px solid var(--line-soft);margin-bottom:16px;}
+.signedin-top b{color:#fff;}
+.signedin-top a{font-size:12.5px;color:var(--ink-faint);text-decoration:none;cursor:pointer;}
+.signedin-top a:hover{color:var(--ink-soft);}
+.license-chip{display:inline-flex;align-items:center;gap:8px;background:var(--ok-bg);border:1px solid var(--ok-line);color:var(--ok);font-size:12.5px;font-weight:700;padding:7px 14px;border-radius:999px;margin-bottom:22px;}
+.license-note{font-size:12px;color:var(--ink-faint);margin-top:20px;text-align:center;max-width:640px;margin-left:auto;margin-right:auto;}
+.demo-mode-badge{display:inline-flex;margin:14px auto 0;background:var(--warn-bg);border:1px solid #5c4a22;color:var(--warn);font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:999px;max-width:480px;}
+</style>
+<style>
+/* The app is not a landing page: no hero, no scroll journey. Content starts
+   immediately under the nav and stays narrow enough to read. */
+body{background:var(--bg);}
+#signin{padding-top:54px;}
+.trial-banner{max-width:760px;margin:0 auto 26px;display:flex;gap:12px;align-items:center;
+  justify-content:space-between;flex-wrap:wrap;border-radius:var(--radius-md);padding:14px 18px;font-size:14px;line-height:1.5;}
+.trial-banner.ok{background:var(--ok-bg);border:1px solid var(--ok-line);color:var(--ink);}
+.trial-banner.warn{background:#2a2213;border:1px solid #5a4a1f;color:var(--ink);}
+.trial-banner b{font-weight:700;}
+.trial-banner a{color:var(--accent);font-weight:700;}
+.banner-btn{flex:0 0 auto;background:var(--accent);color:#0d0f16;font-weight:700;font-size:13px;
+  padding:9px 16px;border-radius:8px;border:none;cursor:pointer;white-space:nowrap;}
+.banner-btn:disabled{opacity:.6;cursor:default;}
+.checkout-note{max-width:760px;margin:0 auto 20px;border-radius:var(--radius-md);padding:12px 18px;
+  font-size:14px;line-height:1.5;}
+.checkout-note.ok{background:var(--ok-bg);border:1px solid var(--ok-line);color:var(--ink);}
+.checkout-note.info{background:var(--muted-bg);border:1px solid var(--line-soft);color:var(--ink-soft);}
+.prop-list{max-width:760px;margin:0 auto 30px;border:1px solid var(--line-soft);border-radius:var(--radius-md);overflow:hidden;}
+.prop-list h3{margin:0;padding:13px 18px;font-size:13px;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--ink-faint);background:var(--muted-bg);border-bottom:1px solid var(--line-soft);}
+.prop-row{display:flex;justify-content:space-between;gap:16px;padding:14px 18px;border-bottom:1px solid var(--line-soft);}
+.prop-row:last-child{border-bottom:none;}
+.prop-row .nm{font-weight:650;font-size:15px;}
+.prop-row .ad{color:var(--ink-faint);font-size:13.5px;margin-top:2px;}
+.prop-row .st{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  padding:4px 10px;border-radius:99px;height:fit-content;white-space:nowrap;}
+.st.trialing{background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent-line);}
+.st.active{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-line);}
+.st.other{background:var(--muted-bg);color:var(--ink-faint);border:1px solid var(--line);}
+.prop-empty{padding:22px 18px;color:var(--ink-soft);font-size:14.5px;line-height:1.6;}
+</style>
+</head>
+<body>
+<nav class="top">
+  <div class="inner">
+    <div class="brand">
+      <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#0d0f16" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+      Auditera AI
+    </div>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <div class="links" id="nav-links">
+      <a href="client_results.html">Client Results</a>
+      <a href="pricing.html">Pricing</a>
+      <a class="nav-contact" href="mailto:azdenkumar@gmail.com">Contact</a>
+      <!-- Two separate doors on purpose. Someone returning to work should never
+           have to read a pricing page to find the way in, and someone new
+           should not have to guess that "Sign in" is where buying happens. -->
+      <a class="nav-signin" href="app.html">Sign in</a>
+      <a class="btn-primary nav-cta" href="pricing.html">Start free trial</a>
+    </div>
+  </div>
+</nav>
+
+<section id="signin">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker" id="signin-kicker">Sign In</div>
+      <h2 id="signin-heading">Access your tools</h2>
+      <p id="signin-sub">Sign in with your email and password.</p>
+      <div class="demo-mode-badge hidden" id="demo-mode-badge">Demo mode &mdash; accounts aren't saved to a real server yet. See SUPABASE_SETUP.md.</div>
+    </div>
+
+    <div id="signedout-view">
+      <div class="signin-card" id="login-card">
+        <form class="auth-form" id="login-form">
+          <label>Email
+            <input type="email" id="login-username" autocomplete="email" required>
+          </label>
+          <label>Password
+            <input type="password" id="login-password" autocomplete="current-password" required>
+          </label>
+          <div class="auth-err hidden" id="login-error"></div>
+          <button class="btn-primary" type="submit">Sign In</button>
+        </form>
+        <div class="auth-switch">Don't have access yet? <a id="show-signup">Set up your property</a></div>
+      </div>
+
+      <div class="signin-card hidden" id="signup-card">
+        <form class="auth-form" id="signup-form">
+          <label>Email <span style="font-weight:400;color:var(--ink-faint);">(this is how you sign in)</span>
+            <input type="email" id="signup-contact-email" autocomplete="email" required>
+          </label>
+          <label>Password
+            <input type="password" id="signup-password" autocomplete="new-password" required>
+          </label>
+          <div class="auth-err hidden" id="signup-error"></div>
+          <button class="btn-primary" type="submit">Create Account</button>
+        </form>
+        <div class="auth-switch">Already have access? <a id="show-login">Sign in</a></div>
+      </div>
+    </div>
+
+
+      <div class="signin-card hidden" id="onboarding-card">
+        <h3 style="margin:0 0 6px;font-size:19px;">Add your first property</h3>
+        <p style="margin:0 0 20px;color:var(--ink-soft);font-size:14.5px;line-height:1.55;">
+          Your 30 days free start now. We need the property name and address exactly as they
+          appear on your ResMan exports and leases &mdash; that is how the tools confirm the
+          documents you upload belong to a property you are licensed for.
+        </p>
+        <form class="auth-form" id="onboarding-form">
+          <label>Property name
+            <input type="text" id="onboard-name" placeholder="e.g. Blanco Oaks Apartments" required>
+          </label>
+          <label>Street address
+            <input type="text" id="onboard-address" placeholder="e.g. 525 Jones Ave, Blanco, TX 78606" required>
+          </label>
+          <div class="auth-err hidden" id="onboarding-error"></div>
+          <button class="btn-primary" type="submit">Start my free month</button>
+        </form>
+        <p style="margin:14px 0 0;color:var(--ink-faint);font-size:12.5px;line-height:1.5;">
+          No card required. You can add more properties later.
+        </p>
+      </div>
+
+    <div class="signedin-panel hidden" id="signedin-panel">
+      <div class="signedin-top">
+        <div>Signed in as <b id="signedin-email"></b></div>
+        <a id="logout-link">Log out</a>
+      </div>
+      <div class="checkout-note hidden" id="checkout-note"></div>
+      <div class="trial-banner hidden" id="trial-banner"></div>
+      <div class="prop-list hidden" id="prop-list">
+        <h3>Licensed properties</h3>
+        <div id="prop-rows"></div>
+      </div>
+      <!-- The licensed properties are listed in full just above, so this chip
+           would only repeat them. Kept in the DOM (hidden) because other code
+           still writes the current property into it. -->
+      <div class="license-chip hidden">
+        Licensed property: <span id="signedin-property"></span>
+      </div>
+      <div class="tools-grid">
+        <div class="tool-card">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+          <h3>LeaseVerify</h3>
+          <p class="tc-value">Compare executed leases against your Rent Roll and catch what doesn't match.</p>
+          <div class="tc-pills">
+            <span class="tc-pill">Rent &amp; charges</span>
+            <span class="tc-pill">Lease dates &amp; term</span>
+            <span class="tc-pill">Signatures</span>
+            <span class="tc-pill">Deposits</span>
+          </div>
+          <button class="btn-primary tool-launch-btn" type="button" onclick="launchTool('reconciler')">
+            Launch tool
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+        <div class="tool-card">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <h3>ConcessionVerify</h3>
+          <p class="tc-value">Work out how many weeks of free rent each resident is really getting, and check it against the lease. Needs the leases, the ledgers and the rent roll.</p>
+          <div class="tc-pills">
+            <span class="tc-pill">Move-in specials</span>
+            <span class="tc-pill">Prorated concessions</span>
+            <span class="tc-pill">Lease-accurate math</span>
+          </div>
+          <button class="btn-primary tool-launch-btn" type="button" onclick="launchTool('concession')">
+            Launch tool
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+        <div class="tool-card">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18M3 10l2-5h14l2 5M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/><path d="M9 15h6"/></svg></div>
+          <h3>DepositVerify</h3>
+          <p class="tc-value">Reconcile LeaseLock invoices against your Rent Roll and confirm every resident&rsquo;s deposit is actually covered.</p>
+          <div class="tc-pills">
+            <span class="tc-pill">LeaseLock vs. invoice</span>
+            <span class="tc-pill">Surety bonds</span>
+            <span class="tc-pill">Security deposits</span>
+            <span class="tc-pill">Coverage gaps</span>
+          </div>
+          <button class="btn-primary tool-launch-btn" type="button" onclick="launchTool('deposit')">
+            Launch tool
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+      <details class="tutorial" id="tutorial">
+        <summary>
+          <span class="tut-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.25V20"/><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v17H6.5A2.5 2.5 0 0 0 4 22.5z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v17h5.5a2.5 2.5 0 0 1 2.5 2.5z"/></svg></span>
+          <span class="tut-head"><b>How to use these tools</b><span>A short walkthrough &mdash; start here if it&rsquo;s your first run</span></span>
+        </summary>
+        <div class="tut-body">
+          <p class="tut-lede">Everything runs inside your own browser. Your leases, ledgers and rent rolls are never uploaded anywhere &mdash; close the tab and they&rsquo;re gone.</p>
+
+          <div class="tut-step">
+            <div class="tut-num">1</div>
+            <div>
+              <h4>Pull the right reports out of ResMan</h4>
+              <p>You need the <b>Rent Roll</b> &mdash; the one that lists each unit with its own Description/Amount charge breakdown underneath. ResMan also offers a <b>Rent Roll Summary</b>; that one only has property-level totals and there&rsquo;s nothing in it to check, so the tools will stop and ask you for the full report if you grab it by mistake.</p>
+              <p>Then, depending on the tool: the resident documents export (leases), a resident ledger, or your LeaseLock invoice.</p>
+            </div>
+          </div>
+
+          <div class="tut-step">
+            <div class="tut-num">2</div>
+            <div>
+              <h4>Set it up before you upload</h4>
+              <p><b>Charge Mappings</b> teach the tool your property&rsquo;s naming, so &ldquo;Valet Trash&rdquo; and &ldquo;Trash Fee&rdquo; are understood as the same charge. <b>Option Filters</b> let you switch off anything you don&rsquo;t want flagged &mdash; every check and every charge type is listed, including move-in specials.</p>
+              <p>Anything you switch off is never deleted. It still shows in that unit&rsquo;s detail, greyed out and labelled, and the true total always appears above your results &mdash; so you can hide noise without ever losing sight of what was found.</p>
+            </div>
+          </div>
+
+          <div class="tut-step">
+            <div class="tut-num">3</div>
+            <div>
+              <h4>Upload</h4>
+              <p>Click <b>Choose lease files</b> and pick whether you&rsquo;re uploading individual PDFs or one ZIP. If you use the ZIP, drop in the whole ResMan documents export &mdash; each unit&rsquo;s most recently signed lease is found automatically, and everything else in the ZIP is skipped.</p>
+              <p>Where several leases exist for one unit, the one actually in effect today is used &mdash; not just the newest file. If it genuinely can&rsquo;t tell, the unit is marked <b>Needs review</b> rather than guessed at.</p>
+            </div>
+          </div>
+
+          <div class="tut-step">
+            <div class="tut-num">4</div>
+            <div>
+              <h4>Read the results</h4>
+              <p>Use the tabs to move between everything, discrepancies only, and clean matches. Click any column &mdash; unit, lease start or end, deposit &mdash; to sort by it. Click a row to open that unit and see every charge and check side by side with the reasoning.</p>
+              <p>Tick <b>Show only the mismatching lines</b> to collapse the whole property into a single flat list of just what doesn&rsquo;t match.</p>
+            </div>
+          </div>
+
+          <div class="tut-step">
+            <div class="tut-num">5</div>
+            <div>
+              <h4>Export</h4>
+              <p><b>CSV</b> or <b>Excel</b> to work the list, or <b>PDF</b> for a clean, branded report you can send to an owner or attach to an audit file. The PDF lists every discrepancy grouped by unit, and states plainly if anything was hidden by your filters.</p>
+            </div>
+          </div>
+
+          <div class="tut-note"><b>Green isn&rsquo;t always a match.</b> Some rows are correct without being identical &mdash; a resident past their lease term who is properly billed a month-to-month fee, for example. Those are marked as expected and explained, rather than flagged. Anything the tool can&rsquo;t justify stays flagged.</div>
+        </div>
+      </details>
+
+      <p class="license-note">Your subscription covers <b id="signedin-property-2"></b>. If you run these tools against a different property's documents, heads up that it's outside what your current subscription covers.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="page">
+  <div class="wrap inner">
+    <div class="fbrand">
+      <div class="brand-mark" style="width:24px;height:24px;border-radius:7px;"><svg viewBox="0 0 24 24" fill="none" stroke="#0d0f16" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+      Auditera AI
+    </div>
+    <div class="flinks">
+      <a href="index.html#what-it-does">What It Does</a>
+      <a href="index.html#how">How It Works</a>
+      <a href="client_results.html">Client Results</a>
+      <a href="app.html">Sign In</a>
+      <a href="mailto:azdenkumar@gmail.com">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+<script>
+// Mobile nav toggle
+const navToggle = document.getElementById('nav-toggle');
+const navLinks = document.getElementById('nav-links');
+navToggle.addEventListener('click', () => {
+  const isOpen = navLinks.classList.toggle('open');
+  navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+});
+navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+  navLinks.classList.remove('open');
+  navToggle.setAttribute('aria-expanded', 'false');
+}));
+
+// Accordion -- single item open at a time
+document.querySelectorAll('#accordion [data-trigger]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item = btn.closest('[data-item]');
+    const wasOpen = item.classList.contains('open');
+    document.querySelectorAll('#accordion [data-item]').forEach(i => i.classList.remove('open'));
+    if (!wasOpen) item.classList.add('open');
+  });
+});
+
+// Each tool's full HTML is embedded below as base64 so this page stays a single
+// self-contained file. Launching a tool decodes it into a Blob and opens that
+// in a new tab -- nothing is downloaded or hosted anywhere.
+/* The tools are NOT embedded in this page any more.
+   Embedding them meant anyone who could load the homepage already had all
+   three files -- view source, save, use forever, no login. They are now
+   fetched from /tools/, which a Cloudflare Worker serves only to a request
+   carrying a valid Supabase session that holds at least one active property
+   licence. A shared URL is worthless without a working login, and revoking an
+   account revokes something real.
+   This is a gate, not DRM: someone who signs in legitimately can still save a
+   copy. That is a detection problem (see usage analytics), not a lock. */
+const TOOL_PATHS = {
+  concession: '/tools/concessionverify.html',
+  reconciler: '/tools/leaseverify.html',
+  deposit:    '/tools/depositverify.html',
+};
+const TOOL_NAMES = {
+  concession: 'ConcessionVerify',
+  reconciler: 'LeaseVerify',
+  deposit:    'DepositVerify',
+};
+
+// The tools are 2.3-2.6 MB each, so the tab that opens on click is visible for
+// a real moment before the tool paints. A bare white page reading "Checking
+// your licence" looked broken against a dark site, so the interstitial is
+// branded and reports what's actually happening: licence check, then download
+// progress. Written into the new tab as a standalone document -- it cannot
+// share the homepage's stylesheet, so the tokens below are duplicated
+// deliberately. Keep them in sync with :root if the palette changes.
+function launchShellHTML(toolName){
+  return '<!doctype html><html><head><meta charset="utf-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>Opening ' + toolName + '…</title><style>' +
+    'html,body{height:100%;margin:0}' +
+    'body{background:#0d0f16;color:#eef0f6;display:flex;align-items:center;justify-content:center;' +
+    'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}' +
+    '.w{text-align:center;padding:32px;max-width:380px;width:100%}' +
+    '.bug{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#767d94;margin-bottom:26px}' +
+    '.bug b{font-weight:600;background:linear-gradient(90deg,#7c8cff,#b083f0);-webkit-background-clip:text;' +
+    'background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.1em}' +
+    '.tool{font-size:20px;font-weight:600;margin-bottom:20px}' +
+    '.track{height:4px;border-radius:99px;background:#232838;overflow:hidden;margin-bottom:16px}' +
+    '.bar{height:100%;width:30%;border-radius:99px;background:linear-gradient(90deg,#7c8cff,#b083f0);' +
+    'transition:width .18s ease;animation:idle 1.15s ease-in-out infinite}' +
+    '.bar.known{animation:none}' +
+    '@keyframes idle{0%{margin-left:-32%}100%{margin-left:102%}}' +
+    '.msg{font-size:14px;color:#a7adc0}' +
+    '@media (prefers-reduced-motion:reduce){.bar{animation:none;width:100%}}' +
+    '</style></head><body><div class="w">' +
+    '<div class="bug"><b>Auditera AI</b></div>' +
+    '<div class="tool">Opening ' + toolName + '</div>' +
+    '<div class="track"><div class="bar" id="bar"></div></div>' +
+    '<div class="msg" id="msg">Checking your licence…</div>' +
+    '</div></body></html>';
+}
+// Safe no-ops if the tab was blocked or has already navigated away.
+function shellSay(tab, text){
+  try { if (tab && !tab.closed){ const el = tab.document.getElementById('msg'); if (el) el.textContent = text; } } catch(e){}
+}
+function shellProgress(tab, fraction){
+  try {
+    if (!tab || tab.closed) return;
+    const bar = tab.document.getElementById('bar');
+    if (!bar) return;
+    bar.className = 'bar known';
+    bar.style.width = Math.max(4, Math.min(100, Math.round(fraction * 100))) + '%';
+  } catch(e){}
+}
+function b64ToBlob(b64, mime){
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}
+let isSignedIn = false;
+let currentProperty = null; // the property name tied to the signed-in account, if any
+
+// Every property this account actually holds a licence for: [{name, address}].
+// Loaded from Supabase after sign-in and handed to each tool, which refuses to
+// audit documents belonging to a property that isn't in this list. RLS scopes
+// the query to the caller's own account, so this can never return someone
+// else's properties even if the query were tampered with client-side.
+let licensedProperties = [];
+
+async function loadLicensedProperties(){
+  licensedProperties = [];
+  if (!sb) return;
+  try {
+    const { data, error } = await sb.from('properties')
+      .select('name, address, status')
+      .eq('status', 'active');
+    if (!error && Array.isArray(data)){
+      licensedProperties = data.map(p => ({ name: p.name || '', address: p.address || '' }));
+    }
+  } catch(e){ /* leave empty; the tool then has nothing to match against */ }
+}
+async function launchTool(key){
+  if (!isSignedIn){ alert('Please sign in first.'); return; }
+  const toolPath = TOOL_PATHS[key];
+  if (!toolPath){ alert('Tool not available yet.'); return; }
+
+  // A pop-up opened inside an await is treated as unrequested by the browser
+  // and blocked, so the tab is opened synchronously on the click and filled in
+  // once the bytes arrive.
+  const tab = window.open('', '_blank');
+  if (tab){
+    try {
+      tab.document.write(launchShellHTML(TOOL_NAMES[key] || 'your tool'));
+      tab.document.close();
+    } catch(e){}
+  }
+
+  // "No Supabase configured" and "your session expired" are different things
+  // and must not be confused: the first happens in a local preview or demo
+  // account, where signing the user out is simply wrong and looks like a bug.
+  if (!sb){
+    if (tab) tab.close();
+    alert('The tools aren\u2019t available in this preview \u2014 they open from the live site, where your licence can be checked.');
+    return;
+  }
+  let token = null;
+  try {
+    const {data} = await sb.auth.getSession();
+    token = data && data.session ? data.session.access_token : null;
+  } catch(e){ token = null; }
+  if (!token){
+    if (tab) tab.close();
+    alert('Your session has expired. Please sign in again.');
+    showSignedOut();
+    return;
+  }
+
+  let res;
+  try {
+    res = await fetch(toolPath, {headers: {Authorization: 'Bearer ' + token}, cache: 'no-store'});
+  } catch(e){
+    if (tab) tab.close();
+    alert('Could not reach the server to open this tool. Check your connection and try again.');
+    return;
+  }
+  if (!res.ok){
+    if (tab) tab.close();
+    let msg = 'This tool could not be opened.';
+    try { const j = await res.json(); if (j && j.message) msg = j.message; } catch(e){}
+    alert(msg);
+    if (res.status === 401){ showSignedOut(); }
+    return;
+  }
+
+  // Licence check passed by this point -- the rest is just moving ~2.5 MB.
+  shellSay(tab, 'Licence confirmed — loading the tool…');
+  let html;
+  // Content-Length describes the *compressed* bytes when the response is
+  // encoded, while the reader below yields decompressed ones -- comparing them
+  // would run the bar to 100% a third of the way in. Better an honest
+  // indeterminate bar than a lying determinate one.
+  const total = res.headers.get('Content-Encoding')
+    ? 0
+    : (Number(res.headers.get('Content-Length')) || 0);
+  if (res.body && res.body.getReader){
+    // Streamed so the progress bar reflects reality rather than guessing.
+    // Any failure here falls back to a plain read rather than breaking launch.
+    try {
+      const reader = res.body.getReader();
+      const chunks = [];
+      let loaded = 0;
+      for(;;){
+        const {done, value} = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        loaded += value.length;
+        if (total) shellProgress(tab, loaded / total);
+      }
+      const merged = new Uint8Array(loaded);
+      let at = 0;
+      for (const c of chunks){ merged.set(c, at); at += c.length; }
+      html = new TextDecoder('utf-8').decode(merged);
+    } catch(e){ html = null; }
+  }
+  if (html == null){
+    try { html = await res.text(); }
+    catch(e){
+      if (tab) tab.close();
+      alert('This tool could not be opened. Please try again.');
+      return;
+    }
+  }
+  shellProgress(tab, 1);
+  shellSay(tab, 'Starting…');
+  const blob = new Blob([html], {type: 'text/html'});
+  let url = URL.createObjectURL(blob);
+  // Hand the tool the account's licensed properties as a URL hash. A hash is
+  // never sent to any server -- it's a same-page fragment on a blob: URL -- so
+  // this stays consistent with "documents and account data never leave the
+  // browser". The tool refuses to audit documents that belong to a property
+  // not in this list (see LICENSED_PROPERTIES in each tool).
+  // If sign-in's background load hasn't landed yet, wait for it now rather
+  // than launching a tool with an empty licence list -- an empty list would
+  // read as "no licences" and block a legitimate audit.
+  if (sb && !licensedProperties.length) await loadLicensedProperties();
+
+  const hashBits = [];
+  if (currentProperty) hashBits.push('property=' + encodeURIComponent(currentProperty));
+  if (licensedProperties.length){
+    // encodeURIComponent on the JSON rather than base64: keeps it readable in
+    // devtools, and there is nothing secret here -- it's the customer's own
+    // property list, which they can already see on the homepage.
+    hashBits.push('lic=' + encodeURIComponent(JSON.stringify(licensedProperties)));
+  }
+  if (hashBits.length) url += '#' + hashBits.join('&');
+  if (tab) tab.location.replace(url); else window.open(url, '_blank');
+}
+
+/* ==========================================================================
+   Sign in / account gating
+   ==========================================================================
+   Real accounts live in Supabase (hosted Postgres + auth), NOT in this file
+   -- passwords are checked server-side by Supabase, never in this page's
+   JavaScript. Fill in SUPABASE_URL and SUPABASE_ANON_KEY below once you've
+   created a free Supabase project (see SUPABASE_SETUP.md). The anon key is
+   safe to put in a public file -- it's the publishable key Supabase is
+   designed to have embedded in front-end code; the real protection comes
+   from the Row Level Security policies on the `subscriptions` table (set up
+   by that same SQL script), which only ever let a signed-in user read or
+   create THEIR OWN row, never anyone else's.
+
+   Until you fill those in, the page automatically runs in a local-only demo
+   mode instead (accounts stored in this browser's localStorage) so you can
+   still click through the whole flow -- that mode is NOT real security and
+   is only meant for previewing the UI.
+   ========================================================================== */
+const SUPABASE_URL = 'https://kyfvrkghqohkhwidqwst.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5ZnZya2docW9oa2h3aWRxd3N0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0MTE4ODcsImV4cCI6MjEwMTk4Nzg4N30.PZQsIhFAxM-PiHwSuSfSWeIx2mVeDZ4FgVR3wDJLXu4';
+
+function isBackendReady(){
+  return typeof window.supabase !== 'undefined'
+    && SUPABASE_URL && !SUPABASE_URL.startsWith('YOUR_')
+    && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.startsWith('YOUR_');
+}
+const sb = isBackendReady() ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+if (!sb) console.warn('[Auditera AI] Running in local demo sign-in mode -- see SUPABASE_SETUP.md to turn on real accounts.');
+
+// ---- Local-only demo fallback (used only when the real backend isn't configured) ----
+const ACCOUNTS_KEY = 'leaseproof_demo_accounts';
+const SESSION_KEY = 'leaseproof_demo_session';
+function loadDemoAccounts(){
+  try { return JSON.parse(localStorage.getItem(ACCOUNTS_KEY)) || {}; }
+  catch(e){ return {}; }
+}
+function saveDemoAccounts(accounts){
+  localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+}
+
+const signedoutView = document.getElementById('signedout-view');
+const signedinPanel = document.getElementById('signedin-panel');
+const loginCard = document.getElementById('login-card');
+const signupCard = document.getElementById('signup-card');
+const loginForm = document.getElementById('login-form');
+const signupForm = document.getElementById('signup-form');
+const loginError = document.getElementById('login-error');
+const signupError = document.getElementById('signup-error');
+const demoBadge = document.getElementById('demo-mode-badge');
+
+if (demoBadge) demoBadge.classList.toggle('hidden', !!sb);
+
+document.getElementById('show-signup').addEventListener('click', (e) => {
+  e.preventDefault();
+  loginCard.classList.add('hidden');
+  signupCard.classList.remove('hidden');
+});
+document.getElementById('show-login').addEventListener('click', (e) => {
+  e.preventDefault();
+  signupCard.classList.add('hidden');
+  loginCard.classList.remove('hidden');
+});
+
+function showSignedIn(username, property){
+  isSignedIn = true;
+  currentProperty = property;
+  // Fire-and-forget: the licence list is only needed when a tool is launched,
+  // which is always a later user action, so there's no reason to block the
+  // sign-in render on a network round trip. launchTool() re-checks and waits
+  // if this hasn't landed yet.
+  loadLicensedProperties();
+  document.getElementById('signedin-email').textContent = username;
+  document.getElementById('signedin-property').textContent = property || '(not set)';
+  document.getElementById('signedin-property-2').textContent = property || '(not set)';
+  signedoutView.classList.add('hidden');
+  signedinPanel.classList.remove('hidden');
+  document.getElementById('signin-heading').textContent = 'Welcome back';
+  document.getElementById('signin-sub').textContent = 'Your tools are ready below.';
+}
+
+function showSignedOut(){
+  isSignedIn = false;
+  currentProperty = null;
+  licensedProperties = [];
+  signedinPanel.classList.add('hidden');
+  signedoutView.classList.remove('hidden');
+  signupCard.classList.add('hidden');
+  loginCard.classList.remove('hidden');
+  loginForm.reset();
+  signupForm.reset();
+  loginError.classList.add('hidden');
+  signupError.classList.add('hidden');
+  document.getElementById('signin-heading').textContent = 'Access your tools';
+  document.getElementById('signin-sub').textContent = 'Sign in with your username and password.';
+}
+
+function setFormBusy(form, busy){
+  form.querySelector('button[type=submit]').disabled = busy;
+}
+
+// Supabase's own login check needs something shaped like an email -- that's
+// not changeable. So customers type a plain username, and it's translated
+// here into a synthetic address under a fixed internal domain before ever
+// talking to Supabase. They never see or need a working inbox for THIS
+// address -- their real email is collected separately, purely as a contact
+// field on the subscriptions row (see signup handler below).
+// Normalization has to be simple and deterministic, since the exact same
+// function has to produce the exact same address every time someone logs
+// in with "Texoplex" (or however they capitalized/spaced it originally).
+// Logins are real email addresses.
+//
+// This used to manufacture a synthetic address (`name@login.texoplex.com`)
+// so customers could sign in with a username. That worked while this was a
+// tool for a handful of known people, and breaks a real product in ways that
+// are invisible until someone needs them:
+//   - password reset mails the LOGIN address, which nobody could ever read,
+//     so no account was recoverable;
+//   - email confirmation could never be completed, so it had to stay off;
+//   - Stripe would identify a customer by an address the database didn't hold.
+// Email as the login fixes all three at once. Kept as a function so the one
+// place that decides "what do we hand Supabase" is still obvious.
+function usernameToLoginEmail(email){
+  return String(email || '').trim().toLowerCase();
+}
+// What to show as the signed-in identity. The local part reads better than
+// the full address in a header, but stays recognisably theirs.
+function displayNameForEmail(email){
+  const e = String(email || '').trim();
+  const at = e.indexOf('@');
+  return at > 0 ? e.slice(0, at) : e;
+}
+
+// If the Supabase project still has "Confirm email" turned on, signUp()
+// returns no active session -- which means there's no auth.uid() yet, so
+// the subscriptions insert (gated by RLS to auth.uid() = user_id) can't
+// happen at signup time. Rather than depend on that dashboard setting being
+// flipped correctly, the intended signup details are cached here by
+// username and written to the subscriptions table the first time that
+// account actually gets a real session (immediately, if confirmation is
+// off; on their first post-confirmation login, if it's on).
+const PENDING_SIGNUP_KEY = 'leaseproof_pending_signup';
+// Keyed by the NORMALIZED username, because the only name available when a
+// session is restored is the local part of the internal login address, which
+// is always lowercase. Stashing under "Texoplex" and looking up "texoplex"
+// silently found nothing, and the property was quietly lost.
+function stashPendingSignup(username, contactEmail, property){
+  try{
+    const m = JSON.parse(localStorage.getItem(PENDING_SIGNUP_KEY) || '{}');
+    m[pendingKey(username)] = { username, contactEmail, property };
+    localStorage.setItem(PENDING_SIGNUP_KEY, JSON.stringify(m));
+  }catch(e){}
+}
+function pendingKey(username){
+  return (username || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+// Read WITHOUT consuming. The old version deleted the entry before attempting
+// the write, so a single failed write (RLS, offline, duplicate row) destroyed
+// the signup details permanently and the account could never get its property.
+function peekPendingSignup(username){
+  try{
+    const m = JSON.parse(localStorage.getItem(PENDING_SIGNUP_KEY) || '{}');
+    return m[pendingKey(username)] || null;
+  }catch(e){ return null; }
+}
+// Only called once the property is actually saved.
+function clearPendingSignup(username){
+  try{
+    const m = JSON.parse(localStorage.getItem(PENDING_SIGNUP_KEY) || '{}');
+    delete m[pendingKey(username)];
+    localStorage.setItem(PENDING_SIGNUP_KEY, JSON.stringify(m));
+  }catch(e){}
+}
+
+// Called any time we have a live session for a user. Looks up their
+// subscriptions row; if it doesn't exist yet (first login after email
+// confirmation), creates it from the details stashed at signup time.
+// Returns { username, property }.
+async function ensureSubscriptionForSession(userId, fallbackUsername){
+  const { data: sub, error: subErr } = await sb.from('subscriptions').select('username, property_name').eq('user_id', userId).maybeSingle();
+  if (!subErr && sub && sub.property_name) return { username: sub.username, property: sub.property_name };
+
+  const pending = peekPendingSignup(fallbackUsername);
+  if (pending && pending.property){
+    // A database trigger now creates the account row the moment the login is
+    // created, so by the time we get here the row almost always EXISTS with
+    // an empty property -- an insert would just collide with itself. Update
+    // the existing row, and only fall back to inserting if there genuinely
+    // isn't one (an account predating the trigger).
+    let saved = false;
+    if (sub){
+      const { error: updErr } = await sb.from('subscriptions')
+        .update({ property_name: pending.property, contact_email: pending.contactEmail })
+        .eq('user_id', userId);
+      saved = !updErr;
+    } else {
+      const { error: insErr } = await sb.from('subscriptions')
+        .insert({ user_id: userId, username: pending.username || fallbackUsername, contact_email: pending.contactEmail, property_name: pending.property });
+      saved = !insErr;
+    }
+    if (saved){
+      clearPendingSignup(fallbackUsername);
+      return { username: (sub && sub.username) || pending.username || fallbackUsername, property: pending.property };
+    }
+    // Not saved: the stash is deliberately left in place so the next sign-in
+    // gets another chance rather than losing the property for good.
+  }
+  return { username: (sub && sub.username) || fallbackUsername, property: null };
+}
+
+signupForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  signupError.classList.add('hidden');
+  const password = document.getElementById('signup-password').value;
+  const contactEmail = document.getElementById('signup-contact-email').value.trim().toLowerCase();
+  // A property is a licence, not a profile field, so it is collected after the
+  // account exists -- see the onboarding card.
+  const property = null;
+  if (!password || !contactEmail) return;
+  const loginEmail = usernameToLoginEmail(contactEmail);
+  // The username column still exists and is still unique, so derive one rather
+  // than leaving it null. It is a display label now, not a credential.
+  const username = displayNameForEmail(loginEmail);
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(loginEmail)){
+    signupError.textContent = 'That doesn’t look like a valid email address.';
+    signupError.classList.remove('hidden');
+    return;
+  }
+
+  if (sb){
+    setFormBusy(signupForm, true);
+    try{
+      const { data, error } = await sb.auth.signUp({ email: loginEmail, password });
+      if (error){
+        signupError.textContent = /already registered|already exists/i.test(error.message) ? 'There is already an account with that email. Try signing in instead.' : error.message;
+        signupError.classList.remove('hidden');
+        return;
+      }
+      stashPendingSignup(username, contactEmail, property);
+      // Record which property this account is licensed for. RLS policies
+      // (see SUPABASE_SETUP.md) only allow inserting a row for your own
+      // user_id, and there's no update policy -- so once set, a signed-in
+      // user can't quietly change their own licensed property later.
+      if (data.user && data.session){
+        // The row itself is created by the on_auth_user_created trigger, so
+        // this only claims the property. The claim is allowed exactly once by
+        // RLS -- see the "Users can claim their property once" policy.
+        const saved = await ensureSubscriptionForSession(data.user.id, username);
+        if (!saved.property){
+          signupError.textContent = 'Account created, but saving your property didn\u2019t go through. Sign in again and it will retry, or ask us to set it.';
+          signupError.classList.remove('hidden');
+        }
+      }
+      if (!data.session){
+        // Email confirmation is turned on for this project -- can't sign in
+        // yet. The stashed details above get written the moment they log in
+        // for the first time after confirming.
+        signupError.textContent = 'Account created! Check your email to confirm it, then sign in.';
+        signupError.classList.remove('hidden');
+        signupCard.classList.add('hidden');
+        loginCard.classList.remove('hidden');
+        return;
+      }
+      showSignedIn(username, property);
+    } finally { setFormBusy(signupForm, false); }
+    return;
+  }
+
+  // Demo fallback
+  const accounts = loadDemoAccounts();
+  if (accounts[username]){
+    signupError.textContent = 'That username is taken -- try another.';
+    signupError.classList.remove('hidden');
+    return;
+  }
+  accounts[username] = { password, contactEmail, property };
+  saveDemoAccounts(accounts);
+  sessionStorage.setItem(SESSION_KEY, username);
+  showSignedIn(username, property);
+});
+
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  loginError.classList.add('hidden');
+  const loginEmail = usernameToLoginEmail(document.getElementById('login-username').value);
+  const username = displayNameForEmail(loginEmail);
+  const password = document.getElementById('login-password').value;
+
+  if (sb){
+    setFormBusy(loginForm, true);
+    try{
+      const { data, error } = await sb.auth.signInWithPassword({ email: loginEmail, password });
+      if (error){ loginError.textContent = 'Email or password not recognized.'; loginError.classList.remove('hidden'); return; }
+      const sub = await ensureSubscriptionForSession(data.user.id, username);
+      showSignedIn(sub.username, sub.property);
+    } finally { setFormBusy(loginForm, false); }
+    return;
+  }
+
+  // Demo fallback
+  const accounts = loadDemoAccounts();
+  const acct = accounts[username];
+  if (!acct || acct.password !== password){
+    loginError.textContent = 'Email or password not recognized.';
+    loginError.classList.remove('hidden');
+    return;
+  }
+  sessionStorage.setItem(SESSION_KEY, username);
+  showSignedIn(username, acct.property);
+});
+
+document.getElementById('logout-link').addEventListener('click', async (e) => {
+  e.preventDefault();
+  if (sb) await sb.auth.signOut();
+  else sessionStorage.removeItem(SESSION_KEY);
+  showSignedOut();
+});
+
+// Restore session on page load, if any.
+(async function restoreSession(){
+  if (sb){
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    // Defensive: a session without a readable user would otherwise throw here,
+    // on the path that runs on every single page load, leaving the page half
+    // initialised with no visible error.
+    const email = (session.user && session.user.email) || '';
+    const guessUsername = email ? email.split('@')[0] : '';
+    const sub = await ensureSubscriptionForSession(session.user.id, guessUsername);
+    showSignedIn(sub.username, sub.property);
+    return;
+  }
+  const username = sessionStorage.getItem(SESSION_KEY);
+  if (!username) return;
+  const accounts = loadDemoAccounts();
+  if (accounts[username]) showSignedIn(username, accounts[username].property);
+  else sessionStorage.removeItem(SESSION_KEY);
+})();
+
+/* ==========================================================================
+   Onboarding and the licence dashboard
+   ==========================================================================
+   A brand-new account has a login but no licence, so it cannot open anything.
+   Rather than show an empty dashboard with three dead buttons, the first
+   screen after signing up asks for the one property the free trial covers.
+
+   The property is created by start_trial_property() in the database, never by
+   an insert from here. That function is the only self-service path that
+   exists, and it enforces what the browser cannot be trusted with: one
+   property per account, name and address both required, 30-day expiry. There
+   is deliberately no INSERT policy on `properties` -- if there were, anyone
+   could grant themselves a licence and the whole gate would be decorative. */
+
+// Property names and addresses are customer-entered text rendered into
+// innerHTML below, so they have to be escaped. Without this, a property named
+// with a stray angle bracket would break the page -- and worse, a name is one
+// of the few strings here that an outsider could influence.
+function escapeHtml(v){
+  return String(v == null ? '' : v)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function propStatusClass(st){
+  if (st === 'trialing') return 'trialing';
+  if (st === 'active') return 'active';
+  return 'other';
+}
+function daysLeft(iso){
+  if (!iso) return null;
+  const ms = new Date(iso).getTime() - Date.now();
+  return ms <= 0 ? 0 : Math.ceil(ms / 86400000);
+}
+
+function renderDashboard(props){
+  const list = document.getElementById('prop-list');
+  const rows = document.getElementById('prop-rows');
+  const banner = document.getElementById('trial-banner');
+  if (!list || !rows || !banner) return;
+
+  if (!props.length){
+    list.classList.add('hidden');
+    banner.classList.add('hidden');
+    return;
+  }
+
+  list.classList.remove('hidden');
+  rows.innerHTML = props.map(function(p){
+    return '<div class="prop-row">' +
+      '<div><div class="nm">' + escapeHtml(p.name || '') + '</div>' +
+      '<div class="ad">' + escapeHtml(p.address || 'No address on file') + '</div></div>' +
+      '<div class="st ' + propStatusClass(p.status) + '">' + escapeHtml(p.status || '') + '</div>' +
+      '</div>';
+  }).join('');
+
+  // Surface the soonest-expiring trial: that is the one about to cost them
+  // access, and it is the only deadline worth interrupting them with.
+  const trials = props.filter(function(p){ return p.status === 'trialing' && p.trial_ends_at; })
+                      .sort(function(a,b){ return new Date(a.trial_ends_at) - new Date(b.trial_ends_at); });
+  if (!trials.length){ banner.classList.add('hidden'); return; }
+
+  const d = daysLeft(trials[0].trial_ends_at);
+  const payBtn = '<button class="banner-btn" type="button" onclick="startCheckout(this)">Add payment method</button>';
+  banner.classList.remove('hidden');
+  if (d === 0){
+    banner.className = 'trial-banner warn';
+    banner.innerHTML = '<div><b>Your free month has ended.</b> Add a payment method to keep auditing ' +
+      escapeHtml(trials[0].name) + '. Nothing has been deleted.</div>' + payBtn;
+  } else if (d <= 7){
+    banner.className = 'trial-banner warn';
+    banner.innerHTML = '<div><b>' + d + ' day' + (d === 1 ? '' : 's') + ' left</b> in your free month for ' +
+      escapeHtml(trials[0].name) + '.</div>' + payBtn;
+  } else {
+    banner.className = 'trial-banner ok';
+    banner.innerHTML = '<div><b>Free trial active.</b> ' + d + ' days left for ' +
+      escapeHtml(trials[0].name) + ' &mdash; no card needed until it ends.</div>' + payBtn;
+  }
+}
+
+// Starts a Stripe Checkout session for the signed-in account and redirects to
+// it. Price, quantity and which account gets billed are all decided server
+// side by create-checkout -- this only asks for a session and follows it.
+async function startCheckout(btn){
+  if (!sb){
+    alert('Billing isn’t available in this preview — it opens from the live site.');
+    return;
+  }
+  let token = null;
+  try {
+    const {data} = await sb.auth.getSession();
+    token = data && data.session ? data.session.access_token : null;
+  } catch(e){ token = null; }
+  if (!token){
+    alert('Your session has expired. Please sign in again.');
+    showSignedOut();
+    return;
+  }
+
+  const original = btn ? btn.textContent : null;
+  if (btn){ btn.disabled = true; btn.textContent = 'Redirecting…'; }
+
+  let res;
+  try {
+    res = await fetch(SUPABASE_URL + '/functions/v1/create-checkout', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + token,
+        apikey: SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: '{}',
+    });
+  } catch(e){
+    if (btn){ btn.disabled = false; btn.textContent = original; }
+    alert('Could not reach the server to start checkout. Check your connection and try again.');
+    return;
+  }
+
+  let payload = null;
+  try { payload = await res.json(); } catch(e){}
+
+  if (!res.ok || !payload || !payload.url){
+    if (btn){ btn.disabled = false; btn.textContent = original; }
+    alert((payload && payload.error) || 'Could not start checkout. Please try again in a moment.');
+    return;
+  }
+
+  window.location.href = payload.url;
+}
+
+// Decide which of the three states this account is in: needs onboarding,
+// or ready to work. Called after any sign-in and on page load.
+async function refreshAccountState(){
+  const onboarding = document.getElementById('onboarding-card');
+  const panel = document.getElementById('signedin-panel');
+  if (!sb || !isSignedIn) return;
+
+  let props = [];
+  try {
+    const { data, error } = await sb.from('properties').select('name, address, status, trial_ends_at');
+    if (!error && Array.isArray(data)) props = data;
+  } catch(e){ /* treated as "none", which shows onboarding rather than a dead dashboard */ }
+
+  licensedProperties = props
+    .filter(function(p){ return p.status === 'active' || p.status === 'trialing'; })
+    .map(function(p){ return { name: p.name || '', address: p.address || '' }; });
+
+  if (!props.length){
+    if (onboarding) onboarding.classList.remove('hidden');
+    if (panel) panel.classList.add('hidden');
+    signedoutView.classList.add('hidden');
+    document.getElementById('signin-heading').textContent = 'One more step';
+    document.getElementById('signin-sub').textContent = 'Tell us which property you are auditing.';
+  } else {
+    if (onboarding) onboarding.classList.add('hidden');
+    if (panel) panel.classList.remove('hidden');
+    renderDashboard(props);
+  }
+}
+
+const onboardingForm = document.getElementById('onboarding-form');
+if (onboardingForm){
+  onboardingForm.addEventListener('submit', async function(e){
+    e.preventDefault();
+    const err = document.getElementById('onboarding-error');
+    err.classList.add('hidden');
+    const name = document.getElementById('onboard-name').value.trim();
+    const address = document.getElementById('onboard-address').value.trim();
+    // Returning silently here made the button look broken whenever the browser's
+    // own `required` check was bypassed. Say what is missing instead.
+    if (!name || !address){
+      err.textContent = !name
+        ? 'Property name is required.'
+        : 'Property address is required — the tools use it to confirm your documents belong to this property.';
+      err.classList.remove('hidden');
+      return;
+    }
+    if (!sb){
+      err.textContent = 'Not available in this preview.';
+      err.classList.remove('hidden');
+      return;
+    }
+    setFormBusy(onboardingForm, true);
+    try {
+      const { error } = await sb.rpc('start_trial_property', { p_name: name, p_address: address });
+      if (error){
+        // The database messages here are written to be read by a customer
+        // ("Property address is required"), so show them rather than a generic
+        // failure that tells them nothing about what to fix.
+        err.textContent = error.message || 'That did not go through. Please try again.';
+        err.classList.remove('hidden');
+        return;
+      }
+      currentProperty = name;
+      document.getElementById('signedin-property').textContent = name;
+      document.getElementById('signedin-property-2').textContent = name;
+      document.getElementById('signin-heading').textContent = 'Welcome back';
+      document.getElementById('signin-sub').textContent = 'Your tools are ready below.';
+      await refreshAccountState();
+    } finally { setFormBusy(onboardingForm, false); }
+  });
+}
+
+// showSignedIn() renders immediately from the subscription row; the licence
+// state needs a second round trip, so it is layered on afterwards.
+const _origShowSignedIn = showSignedIn;
+showSignedIn = function(username, property){
+  _origShowSignedIn(username, property);
+  refreshAccountState();
+};
+const _origShowSignedOut = showSignedOut;
+showSignedOut = function(){
+  _origShowSignedOut();
+  const onboarding = document.getElementById('onboarding-card');
+  if (onboarding) onboarding.classList.add('hidden');
+};
+
+// Arriving from the pricing page's CTA should open the create-account form,
+// not the sign-in form -- they have just told us they are new.
+if (/[?&]start=trial\b/.test(location.search)){
+  const showSignup = document.getElementById('show-signup');
+  if (showSignup) showSignup.click();
+}
+
+// Coming back from Stripe Checkout. The webhook -- not this page -- is what
+// actually licenses the property, so this is only a friendly status note; it
+// does not itself flip anything to active.
+(function(){
+  const params = new URLSearchParams(location.search);
+  const outcome = params.get('checkout');
+  if (outcome !== 'success' && outcome !== 'cancelled') return;
+  const note = document.getElementById('checkout-note');
+  if (note){
+    note.classList.remove('hidden');
+    if (outcome === 'success'){
+      note.className = 'checkout-note ok';
+      note.textContent = 'Payment received. Your properties are switching over to active now — this can take a few seconds to show below.';
+    } else {
+      note.className = 'checkout-note info';
+      note.textContent = 'Checkout was cancelled. Nothing was charged and nothing changed.';
+    }
+  }
+  // Don't leave the flag in the URL, so a refresh doesn't re-show the note.
+  params.delete('checkout');
+  const rest = params.toString();
+  history.replaceState(null, '', location.pathname + (rest ? '?' + rest : ''));
+
+  // The webhook updates the database within a second or two of a real
+  // payment, but this page has no way to be told when that lands, so it
+  // just checks again a few times. refreshAccountState() is a no-op until
+  // sign-in has resolved, so calling it early is harmless.
+  if (outcome === 'success'){
+    [2000, 5000, 10000].forEach(function(ms){
+      setTimeout(function(){ if (isSignedIn) refreshAccountState(); }, ms);
+    });
+  }
+})();
+
+
+// Someone already signed in does not need "Sign in" or "Start free trial"
+// shouting at them from the nav of the app they are using.
+function syncNavForAuth(signedIn){
+  document.querySelectorAll('nav.top .links .nav-signin, nav.top .links .nav-cta')
+    .forEach(function(el){ el.classList.toggle('hidden', !!signedIn); });
+  const kicker = document.getElementById('signin-kicker');
+  if (kicker) kicker.textContent = signedIn ? 'Your account' : 'Sign In';
+}
+const _showSignedIn2 = showSignedIn;
+showSignedIn = function(u, p){ _showSignedIn2(u, p); syncNavForAuth(true); };
+const _showSignedOut2 = showSignedOut;
+showSignedOut = function(){ _showSignedOut2(); syncNavForAuth(false); };
+
+</script>
+</body>
+</html>

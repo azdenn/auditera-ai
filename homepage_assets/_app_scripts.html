@@ -1,0 +1,575 @@
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+<script>
+// Mobile nav toggle
+const navToggle = document.getElementById('nav-toggle');
+const navLinks = document.getElementById('nav-links');
+navToggle.addEventListener('click', () => {
+  const isOpen = navLinks.classList.toggle('open');
+  navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+});
+navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+  navLinks.classList.remove('open');
+  navToggle.setAttribute('aria-expanded', 'false');
+}));
+
+// Accordion -- single item open at a time
+document.querySelectorAll('#accordion [data-trigger]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item = btn.closest('[data-item]');
+    const wasOpen = item.classList.contains('open');
+    document.querySelectorAll('#accordion [data-item]').forEach(i => i.classList.remove('open'));
+    if (!wasOpen) item.classList.add('open');
+  });
+});
+
+// Each tool's full HTML is embedded below as base64 so this page stays a single
+// self-contained file. Launching a tool decodes it into a Blob and opens that
+// in a new tab -- nothing is downloaded or hosted anywhere.
+/* The tools are NOT embedded in this page any more.
+   Embedding them meant anyone who could load the homepage already had all
+   three files -- view source, save, use forever, no login. They are now
+   fetched from /tools/, which a Cloudflare Worker serves only to a request
+   carrying a valid Supabase session that holds at least one active property
+   licence. A shared URL is worthless without a working login, and revoking an
+   account revokes something real.
+   This is a gate, not DRM: someone who signs in legitimately can still save a
+   copy. That is a detection problem (see usage analytics), not a lock. */
+const TOOL_PATHS = {
+  concession: '/tools/concessionverify.html',
+  reconciler: '/tools/leaseverify.html',
+  deposit:    '/tools/depositverify.html',
+};
+const TOOL_NAMES = {
+  concession: 'ConcessionVerify',
+  reconciler: 'LeaseVerify',
+  deposit:    'DepositVerify',
+};
+
+// The tools are 2.3-2.6 MB each, so the tab that opens on click is visible for
+// a real moment before the tool paints. A bare white page reading "Checking
+// your licence" looked broken against a dark site, so the interstitial is
+// branded and reports what's actually happening: licence check, then download
+// progress. Written into the new tab as a standalone document -- it cannot
+// share the homepage's stylesheet, so the tokens below are duplicated
+// deliberately. Keep them in sync with :root if the palette changes.
+function launchShellHTML(toolName){
+  return '<!doctype html><html><head><meta charset="utf-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>Opening ' + toolName + '…</title><style>' +
+    'html,body{height:100%;margin:0}' +
+    'body{background:#0d0f16;color:#eef0f6;display:flex;align-items:center;justify-content:center;' +
+    'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}' +
+    '.w{text-align:center;padding:32px;max-width:380px;width:100%}' +
+    '.bug{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#767d94;margin-bottom:26px}' +
+    '.bug b{font-weight:600;background:linear-gradient(90deg,#7c8cff,#b083f0);-webkit-background-clip:text;' +
+    'background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.1em}' +
+    '.tool{font-size:20px;font-weight:600;margin-bottom:20px}' +
+    '.track{height:4px;border-radius:99px;background:#232838;overflow:hidden;margin-bottom:16px}' +
+    '.bar{height:100%;width:30%;border-radius:99px;background:linear-gradient(90deg,#7c8cff,#b083f0);' +
+    'transition:width .18s ease;animation:idle 1.15s ease-in-out infinite}' +
+    '.bar.known{animation:none}' +
+    '@keyframes idle{0%{margin-left:-32%}100%{margin-left:102%}}' +
+    '.msg{font-size:14px;color:#a7adc0}' +
+    '@media (prefers-reduced-motion:reduce){.bar{animation:none;width:100%}}' +
+    '</style></head><body><div class="w">' +
+    '<div class="bug"><b>Auditera AI</b></div>' +
+    '<div class="tool">Opening ' + toolName + '</div>' +
+    '<div class="track"><div class="bar" id="bar"></div></div>' +
+    '<div class="msg" id="msg">Checking your licence…</div>' +
+    '</div></body></html>';
+}
+// Safe no-ops if the tab was blocked or has already navigated away.
+function shellSay(tab, text){
+  try { if (tab && !tab.closed){ const el = tab.document.getElementById('msg'); if (el) el.textContent = text; } } catch(e){}
+}
+function shellProgress(tab, fraction){
+  try {
+    if (!tab || tab.closed) return;
+    const bar = tab.document.getElementById('bar');
+    if (!bar) return;
+    bar.className = 'bar known';
+    bar.style.width = Math.max(4, Math.min(100, Math.round(fraction * 100))) + '%';
+  } catch(e){}
+}
+function b64ToBlob(b64, mime){
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}
+let isSignedIn = false;
+let currentProperty = null; // the property name tied to the signed-in account, if any
+
+// Every property this account actually holds a licence for: [{name, address}].
+// Loaded from Supabase after sign-in and handed to each tool, which refuses to
+// audit documents belonging to a property that isn't in this list. RLS scopes
+// the query to the caller's own account, so this can never return someone
+// else's properties even if the query were tampered with client-side.
+let licensedProperties = [];
+
+async function loadLicensedProperties(){
+  licensedProperties = [];
+  if (!sb) return;
+  try {
+    const { data, error } = await sb.from('properties')
+      .select('name, address, status')
+      .eq('status', 'active');
+    if (!error && Array.isArray(data)){
+      licensedProperties = data.map(p => ({ name: p.name || '', address: p.address || '' }));
+    }
+  } catch(e){ /* leave empty; the tool then has nothing to match against */ }
+}
+async function launchTool(key){
+  if (!isSignedIn){ alert('Please sign in first.'); return; }
+  const toolPath = TOOL_PATHS[key];
+  if (!toolPath){ alert('Tool not available yet.'); return; }
+
+  // A pop-up opened inside an await is treated as unrequested by the browser
+  // and blocked, so the tab is opened synchronously on the click and filled in
+  // once the bytes arrive.
+  const tab = window.open('', '_blank');
+  if (tab){
+    try {
+      tab.document.write(launchShellHTML(TOOL_NAMES[key] || 'your tool'));
+      tab.document.close();
+    } catch(e){}
+  }
+
+  // "No Supabase configured" and "your session expired" are different things
+  // and must not be confused: the first happens in a local preview or demo
+  // account, where signing the user out is simply wrong and looks like a bug.
+  if (!sb){
+    if (tab) tab.close();
+    alert('The tools aren\u2019t available in this preview \u2014 they open from the live site, where your licence can be checked.');
+    return;
+  }
+  let token = null;
+  try {
+    const {data} = await sb.auth.getSession();
+    token = data && data.session ? data.session.access_token : null;
+  } catch(e){ token = null; }
+  if (!token){
+    if (tab) tab.close();
+    alert('Your session has expired. Please sign in again.');
+    showSignedOut();
+    return;
+  }
+
+  let res;
+  try {
+    res = await fetch(toolPath, {headers: {Authorization: 'Bearer ' + token}, cache: 'no-store'});
+  } catch(e){
+    if (tab) tab.close();
+    alert('Could not reach the server to open this tool. Check your connection and try again.');
+    return;
+  }
+  if (!res.ok){
+    if (tab) tab.close();
+    let msg = 'This tool could not be opened.';
+    try { const j = await res.json(); if (j && j.message) msg = j.message; } catch(e){}
+    alert(msg);
+    if (res.status === 401){ showSignedOut(); }
+    return;
+  }
+
+  // Licence check passed by this point -- the rest is just moving ~2.5 MB.
+  shellSay(tab, 'Licence confirmed — loading the tool…');
+  let html;
+  // Content-Length describes the *compressed* bytes when the response is
+  // encoded, while the reader below yields decompressed ones -- comparing them
+  // would run the bar to 100% a third of the way in. Better an honest
+  // indeterminate bar than a lying determinate one.
+  const total = res.headers.get('Content-Encoding')
+    ? 0
+    : (Number(res.headers.get('Content-Length')) || 0);
+  if (res.body && res.body.getReader){
+    // Streamed so the progress bar reflects reality rather than guessing.
+    // Any failure here falls back to a plain read rather than breaking launch.
+    try {
+      const reader = res.body.getReader();
+      const chunks = [];
+      let loaded = 0;
+      for(;;){
+        const {done, value} = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        loaded += value.length;
+        if (total) shellProgress(tab, loaded / total);
+      }
+      const merged = new Uint8Array(loaded);
+      let at = 0;
+      for (const c of chunks){ merged.set(c, at); at += c.length; }
+      html = new TextDecoder('utf-8').decode(merged);
+    } catch(e){ html = null; }
+  }
+  if (html == null){
+    try { html = await res.text(); }
+    catch(e){
+      if (tab) tab.close();
+      alert('This tool could not be opened. Please try again.');
+      return;
+    }
+  }
+  shellProgress(tab, 1);
+  shellSay(tab, 'Starting…');
+  const blob = new Blob([html], {type: 'text/html'});
+  let url = URL.createObjectURL(blob);
+  // Hand the tool the account's licensed properties as a URL hash. A hash is
+  // never sent to any server -- it's a same-page fragment on a blob: URL -- so
+  // this stays consistent with "documents and account data never leave the
+  // browser". The tool refuses to audit documents that belong to a property
+  // not in this list (see LICENSED_PROPERTIES in each tool).
+  // If sign-in's background load hasn't landed yet, wait for it now rather
+  // than launching a tool with an empty licence list -- an empty list would
+  // read as "no licences" and block a legitimate audit.
+  if (sb && !licensedProperties.length) await loadLicensedProperties();
+
+  const hashBits = [];
+  if (currentProperty) hashBits.push('property=' + encodeURIComponent(currentProperty));
+  if (licensedProperties.length){
+    // encodeURIComponent on the JSON rather than base64: keeps it readable in
+    // devtools, and there is nothing secret here -- it's the customer's own
+    // property list, which they can already see on the homepage.
+    hashBits.push('lic=' + encodeURIComponent(JSON.stringify(licensedProperties)));
+  }
+  if (hashBits.length) url += '#' + hashBits.join('&');
+  if (tab) tab.location.replace(url); else window.open(url, '_blank');
+}
+
+/* ==========================================================================
+   Sign in / account gating
+   ==========================================================================
+   Real accounts live in Supabase (hosted Postgres + auth), NOT in this file
+   -- passwords are checked server-side by Supabase, never in this page's
+   JavaScript. Fill in SUPABASE_URL and SUPABASE_ANON_KEY below once you've
+   created a free Supabase project (see SUPABASE_SETUP.md). The anon key is
+   safe to put in a public file -- it's the publishable key Supabase is
+   designed to have embedded in front-end code; the real protection comes
+   from the Row Level Security policies on the `subscriptions` table (set up
+   by that same SQL script), which only ever let a signed-in user read or
+   create THEIR OWN row, never anyone else's.
+
+   Until you fill those in, the page automatically runs in a local-only demo
+   mode instead (accounts stored in this browser's localStorage) so you can
+   still click through the whole flow -- that mode is NOT real security and
+   is only meant for previewing the UI.
+   ========================================================================== */
+const SUPABASE_URL = 'https://kyfvrkghqohkhwidqwst.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5ZnZya2docW9oa2h3aWRxd3N0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0MTE4ODcsImV4cCI6MjEwMTk4Nzg4N30.PZQsIhFAxM-PiHwSuSfSWeIx2mVeDZ4FgVR3wDJLXu4';
+
+function isBackendReady(){
+  return typeof window.supabase !== 'undefined'
+    && SUPABASE_URL && !SUPABASE_URL.startsWith('YOUR_')
+    && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.startsWith('YOUR_');
+}
+const sb = isBackendReady() ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+if (!sb) console.warn('[Auditera AI] Running in local demo sign-in mode -- see SUPABASE_SETUP.md to turn on real accounts.');
+
+// ---- Local-only demo fallback (used only when the real backend isn't configured) ----
+const ACCOUNTS_KEY = 'leaseproof_demo_accounts';
+const SESSION_KEY = 'leaseproof_demo_session';
+function loadDemoAccounts(){
+  try { return JSON.parse(localStorage.getItem(ACCOUNTS_KEY)) || {}; }
+  catch(e){ return {}; }
+}
+function saveDemoAccounts(accounts){
+  localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+}
+
+const signedoutView = document.getElementById('signedout-view');
+const signedinPanel = document.getElementById('signedin-panel');
+const loginCard = document.getElementById('login-card');
+const signupCard = document.getElementById('signup-card');
+const loginForm = document.getElementById('login-form');
+const signupForm = document.getElementById('signup-form');
+const loginError = document.getElementById('login-error');
+const signupError = document.getElementById('signup-error');
+const demoBadge = document.getElementById('demo-mode-badge');
+
+if (demoBadge) demoBadge.classList.toggle('hidden', !!sb);
+
+document.getElementById('show-signup').addEventListener('click', (e) => {
+  e.preventDefault();
+  loginCard.classList.add('hidden');
+  signupCard.classList.remove('hidden');
+});
+document.getElementById('show-login').addEventListener('click', (e) => {
+  e.preventDefault();
+  signupCard.classList.add('hidden');
+  loginCard.classList.remove('hidden');
+});
+
+function showSignedIn(username, property){
+  isSignedIn = true;
+  currentProperty = property;
+  // Fire-and-forget: the licence list is only needed when a tool is launched,
+  // which is always a later user action, so there's no reason to block the
+  // sign-in render on a network round trip. launchTool() re-checks and waits
+  // if this hasn't landed yet.
+  loadLicensedProperties();
+  document.getElementById('signedin-email').textContent = username;
+  document.getElementById('signedin-property').textContent = property || '(not set)';
+  document.getElementById('signedin-property-2').textContent = property || '(not set)';
+  signedoutView.classList.add('hidden');
+  signedinPanel.classList.remove('hidden');
+  document.getElementById('signin-heading').textContent = 'Welcome back';
+  document.getElementById('signin-sub').textContent = 'Your tools are ready below.';
+}
+
+function showSignedOut(){
+  isSignedIn = false;
+  currentProperty = null;
+  licensedProperties = [];
+  signedinPanel.classList.add('hidden');
+  signedoutView.classList.remove('hidden');
+  signupCard.classList.add('hidden');
+  loginCard.classList.remove('hidden');
+  loginForm.reset();
+  signupForm.reset();
+  loginError.classList.add('hidden');
+  signupError.classList.add('hidden');
+  document.getElementById('signin-heading').textContent = 'Access your tools';
+  document.getElementById('signin-sub').textContent = 'Sign in with your username and password.';
+}
+
+function setFormBusy(form, busy){
+  form.querySelector('button[type=submit]').disabled = busy;
+}
+
+// Supabase's own login check needs something shaped like an email -- that's
+// not changeable. So customers type a plain username, and it's translated
+// here into a synthetic address under a fixed internal domain before ever
+// talking to Supabase. They never see or need a working inbox for THIS
+// address -- their real email is collected separately, purely as a contact
+// field on the subscriptions row (see signup handler below).
+// Normalization has to be simple and deterministic, since the exact same
+// function has to produce the exact same address every time someone logs
+// in with "Texoplex" (or however they capitalized/spaced it originally).
+// Logins are real email addresses.
+//
+// This used to manufacture a synthetic address (`name@login.texoplex.com`)
+// so customers could sign in with a username. That worked while this was a
+// tool for a handful of known people, and breaks a real product in ways that
+// are invisible until someone needs them:
+//   - password reset mails the LOGIN address, which nobody could ever read,
+//     so no account was recoverable;
+//   - email confirmation could never be completed, so it had to stay off;
+//   - Stripe would identify a customer by an address the database didn't hold.
+// Email as the login fixes all three at once. Kept as a function so the one
+// place that decides "what do we hand Supabase" is still obvious.
+function usernameToLoginEmail(email){
+  return String(email || '').trim().toLowerCase();
+}
+// What to show as the signed-in identity. The local part reads better than
+// the full address in a header, but stays recognisably theirs.
+function displayNameForEmail(email){
+  const e = String(email || '').trim();
+  const at = e.indexOf('@');
+  return at > 0 ? e.slice(0, at) : e;
+}
+
+// If the Supabase project still has "Confirm email" turned on, signUp()
+// returns no active session -- which means there's no auth.uid() yet, so
+// the subscriptions insert (gated by RLS to auth.uid() = user_id) can't
+// happen at signup time. Rather than depend on that dashboard setting being
+// flipped correctly, the intended signup details are cached here by
+// username and written to the subscriptions table the first time that
+// account actually gets a real session (immediately, if confirmation is
+// off; on their first post-confirmation login, if it's on).
+const PENDING_SIGNUP_KEY = 'leaseproof_pending_signup';
+// Keyed by the NORMALIZED username, because the only name available when a
+// session is restored is the local part of the internal login address, which
+// is always lowercase. Stashing under "Texoplex" and looking up "texoplex"
+// silently found nothing, and the property was quietly lost.
+function stashPendingSignup(username, contactEmail, property){
+  try{
+    const m = JSON.parse(localStorage.getItem(PENDING_SIGNUP_KEY) || '{}');
+    m[pendingKey(username)] = { username, contactEmail, property };
+    localStorage.setItem(PENDING_SIGNUP_KEY, JSON.stringify(m));
+  }catch(e){}
+}
+function pendingKey(username){
+  return (username || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+// Read WITHOUT consuming. The old version deleted the entry before attempting
+// the write, so a single failed write (RLS, offline, duplicate row) destroyed
+// the signup details permanently and the account could never get its property.
+function peekPendingSignup(username){
+  try{
+    const m = JSON.parse(localStorage.getItem(PENDING_SIGNUP_KEY) || '{}');
+    return m[pendingKey(username)] || null;
+  }catch(e){ return null; }
+}
+// Only called once the property is actually saved.
+function clearPendingSignup(username){
+  try{
+    const m = JSON.parse(localStorage.getItem(PENDING_SIGNUP_KEY) || '{}');
+    delete m[pendingKey(username)];
+    localStorage.setItem(PENDING_SIGNUP_KEY, JSON.stringify(m));
+  }catch(e){}
+}
+
+// Called any time we have a live session for a user. Looks up their
+// subscriptions row; if it doesn't exist yet (first login after email
+// confirmation), creates it from the details stashed at signup time.
+// Returns { username, property }.
+async function ensureSubscriptionForSession(userId, fallbackUsername){
+  const { data: sub, error: subErr } = await sb.from('subscriptions').select('username, property_name').eq('user_id', userId).maybeSingle();
+  if (!subErr && sub && sub.property_name) return { username: sub.username, property: sub.property_name };
+
+  const pending = peekPendingSignup(fallbackUsername);
+  if (pending && pending.property){
+    // A database trigger now creates the account row the moment the login is
+    // created, so by the time we get here the row almost always EXISTS with
+    // an empty property -- an insert would just collide with itself. Update
+    // the existing row, and only fall back to inserting if there genuinely
+    // isn't one (an account predating the trigger).
+    let saved = false;
+    if (sub){
+      const { error: updErr } = await sb.from('subscriptions')
+        .update({ property_name: pending.property, contact_email: pending.contactEmail })
+        .eq('user_id', userId);
+      saved = !updErr;
+    } else {
+      const { error: insErr } = await sb.from('subscriptions')
+        .insert({ user_id: userId, username: pending.username || fallbackUsername, contact_email: pending.contactEmail, property_name: pending.property });
+      saved = !insErr;
+    }
+    if (saved){
+      clearPendingSignup(fallbackUsername);
+      return { username: (sub && sub.username) || pending.username || fallbackUsername, property: pending.property };
+    }
+    // Not saved: the stash is deliberately left in place so the next sign-in
+    // gets another chance rather than losing the property for good.
+  }
+  return { username: (sub && sub.username) || fallbackUsername, property: null };
+}
+
+signupForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  signupError.classList.add('hidden');
+  const password = document.getElementById('signup-password').value;
+  const contactEmail = document.getElementById('signup-contact-email').value.trim().toLowerCase();
+  const property = document.getElementById('signup-property').value.trim();
+  if (!password || !contactEmail || !property) return;
+  const loginEmail = usernameToLoginEmail(contactEmail);
+  // The username column still exists and is still unique, so derive one rather
+  // than leaving it null. It is a display label now, not a credential.
+  const username = displayNameForEmail(loginEmail);
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(loginEmail)){
+    signupError.textContent = 'That doesn’t look like a valid email address.';
+    signupError.classList.remove('hidden');
+    return;
+  }
+
+  if (sb){
+    setFormBusy(signupForm, true);
+    try{
+      const { data, error } = await sb.auth.signUp({ email: loginEmail, password });
+      if (error){
+        signupError.textContent = /already registered|already exists/i.test(error.message) ? 'There is already an account with that email. Try signing in instead.' : error.message;
+        signupError.classList.remove('hidden');
+        return;
+      }
+      stashPendingSignup(username, contactEmail, property);
+      // Record which property this account is licensed for. RLS policies
+      // (see SUPABASE_SETUP.md) only allow inserting a row for your own
+      // user_id, and there's no update policy -- so once set, a signed-in
+      // user can't quietly change their own licensed property later.
+      if (data.user && data.session){
+        // The row itself is created by the on_auth_user_created trigger, so
+        // this only claims the property. The claim is allowed exactly once by
+        // RLS -- see the "Users can claim their property once" policy.
+        const saved = await ensureSubscriptionForSession(data.user.id, username);
+        if (!saved.property){
+          signupError.textContent = 'Account created, but saving your property didn\u2019t go through. Sign in again and it will retry, or ask us to set it.';
+          signupError.classList.remove('hidden');
+        }
+      }
+      if (!data.session){
+        // Email confirmation is turned on for this project -- can't sign in
+        // yet. The stashed details above get written the moment they log in
+        // for the first time after confirming.
+        signupError.textContent = 'Account created! Check your email to confirm it, then sign in.';
+        signupError.classList.remove('hidden');
+        signupCard.classList.add('hidden');
+        loginCard.classList.remove('hidden');
+        return;
+      }
+      showSignedIn(username, property);
+    } finally { setFormBusy(signupForm, false); }
+    return;
+  }
+
+  // Demo fallback
+  const accounts = loadDemoAccounts();
+  if (accounts[username]){
+    signupError.textContent = 'That username is taken -- try another.';
+    signupError.classList.remove('hidden');
+    return;
+  }
+  accounts[username] = { password, contactEmail, property };
+  saveDemoAccounts(accounts);
+  sessionStorage.setItem(SESSION_KEY, username);
+  showSignedIn(username, property);
+});
+
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  loginError.classList.add('hidden');
+  const loginEmail = usernameToLoginEmail(document.getElementById('login-username').value);
+  const username = displayNameForEmail(loginEmail);
+  const password = document.getElementById('login-password').value;
+
+  if (sb){
+    setFormBusy(loginForm, true);
+    try{
+      const { data, error } = await sb.auth.signInWithPassword({ email: loginEmail, password });
+      if (error){ loginError.textContent = 'Email or password not recognized.'; loginError.classList.remove('hidden'); return; }
+      const sub = await ensureSubscriptionForSession(data.user.id, username);
+      showSignedIn(sub.username, sub.property);
+    } finally { setFormBusy(loginForm, false); }
+    return;
+  }
+
+  // Demo fallback
+  const accounts = loadDemoAccounts();
+  const acct = accounts[username];
+  if (!acct || acct.password !== password){
+    loginError.textContent = 'Email or password not recognized.';
+    loginError.classList.remove('hidden');
+    return;
+  }
+  sessionStorage.setItem(SESSION_KEY, username);
+  showSignedIn(username, acct.property);
+});
+
+document.getElementById('logout-link').addEventListener('click', async (e) => {
+  e.preventDefault();
+  if (sb) await sb.auth.signOut();
+  else sessionStorage.removeItem(SESSION_KEY);
+  showSignedOut();
+});
+
+// Restore session on page load, if any.
+(async function restoreSession(){
+  if (sb){
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    // Defensive: a session without a readable user would otherwise throw here,
+    // on the path that runs on every single page load, leaving the page half
+    // initialised with no visible error.
+    const email = (session.user && session.user.email) || '';
+    const guessUsername = email ? email.split('@')[0] : '';
+    const sub = await ensureSubscriptionForSession(session.user.id, guessUsername);
+    showSignedIn(sub.username, sub.property);
+    return;
+  }
+  const username = sessionStorage.getItem(SESSION_KEY);
+  if (!username) return;
+  const accounts = loadDemoAccounts();
+  if (accounts[username]) showSignedIn(username, accounts[username].property);
+  else sessionStorage.removeItem(SESSION_KEY);
+})();
+</script>

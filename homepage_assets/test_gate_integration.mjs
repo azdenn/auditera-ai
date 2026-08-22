@@ -49,10 +49,13 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(token === VALID_TOKEN ? 200 : 401, {'Content-Type':'application/json'});
     return res.end('{}');
   }
-  if (url.pathname === '/rest/v1/properties'){
-    if (token !== VALID_TOKEN){ res.writeHead(401); return res.end('[]'); }
+  // The gate asks the database whether the caller is entitled, rather than
+  // deciding from a status column -- a trialing property counts too. The RPC
+  // returns a bare boolean.
+  if (url.pathname === '/rest/v1/rpc/has_active_licence'){
+    if (token !== VALID_TOKEN){ res.writeHead(401); return res.end('false'); }
     res.writeHead(200, {'Content-Type':'application/json'});
-    return res.end(LICENSED ? '[{"id":"p1"}]' : '[]');
+    return res.end(LICENSED ? 'true' : 'false');
   }
 
   // --- everything else goes through the real Worker ----------------------
@@ -132,7 +135,8 @@ await page.route('**/supabase-js@2/**', route => route.fulfill({
     },
   };`,
 }));
-await page.goto(ORIGIN + '/');
+// The tool launcher moved to the app page; the homepage is marketing only.
+await page.goto(ORIGIN + '/app.html');
 await page.waitForTimeout(400);
 await page.evaluate(() => { isSignedIn = true; currentProperty = 'Blanco Oaks Apartments'; });
 

@@ -1,0 +1,23 @@
+<script>
+// Mobile nav toggle
+const navToggle = document.getElementById('nav-toggle');
+const navLinks = document.getElementById('nav-links');
+navToggle.addEventListener('click', () => {
+  const isOpen = navLinks.classList.toggle('open');
+  navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+});
+navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+  navLinks.classList.remove('open');
+  navToggle.setAttribute('aria-expanded', 'false');
+}));
+
+// Accordion -- single item open at a time
+document.querySelectorAll('#accordion [data-trigger]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item = btn.closest('[data-item]');
+    const wasOpen = item.classList.contains('open');
+    document.querySelectorAll('#accordion [data-item]').forEach(i => i.classList.remove('open'));
+    if (!wasOpen) item.classList.add('open');
+  });
+});
+</script>

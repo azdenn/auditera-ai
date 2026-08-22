@@ -1,4 +1,4 @@
 Push log 
 [branch] testing 
-[message] Email login, 30-day trials, licence check via database function 
+[message] Add Stripe checkout button to the trial dashboard 
  

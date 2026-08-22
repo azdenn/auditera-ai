@@ -8,7 +8,7 @@ const path = require('path');
   const page = await browser.newPage({viewport:{width:1280,height:900}});
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  await page.goto('file://' + path.resolve('./homepage_final.html'));
+  await page.goto('file://' + path.resolve('../dist/index.html'));
   await page.waitForTimeout(700);
 
   const hero = await page.evaluate(() => {
@@ -57,6 +57,11 @@ const path = require('path');
     const after = all();
     return { clockAdvanced: t0 !== null && t1 !== null && t1 > t0, strokesChanged: before !== after, animCount: anims.length };
   });
+
+  // The tools and the tutorial moved to the app page; the homepage is marketing
+  // only now. Both still need checking, so the suite visits each in turn.
+  await page.goto('file://' + path.resolve('../dist/app.html'));
+  await page.waitForTimeout(500);
 
   const cards = await page.evaluate(() => ({
     names: Array.from(document.querySelectorAll('.tool-card h3')).map(h=>h.textContent.trim()),

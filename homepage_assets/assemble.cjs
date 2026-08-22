@@ -43,6 +43,28 @@ for (const [name, src] of Object.entries(TOOLS)){
 fs.copyFileSync(path.join(dir, 'worker.js'), path.join(dist, '_worker.js'));
 console.log('Wrote', dist, '- homepage', (Buffer.byteLength(out)/1024).toFixed(0), 'KB (was ~9.6 MB with tools embedded)');
 
+// ---- Standalone pages (pricing, sign in, app) ----
+// These share the homepage's design tokens, nav and footer by injection rather
+// than by copy-paste, so a palette or nav change lands everywhere at once
+// instead of silently drifting on the pages nobody remembered to update.
+const sharedStyles = fs.readFileSync(path.join(dir, '_shared_styles.html'), 'utf8');
+const sharedNav    = fs.readFileSync(path.join(dir, '_shared_nav.html'), 'utf8');
+const sharedFooter = fs.readFileSync(path.join(dir, '_shared_footer.html'), 'utf8');
+
+for (const page of ['pricing', 'signin', 'app']) {
+  const tpl = path.join(dir, page + '_template.html');
+  if (!fs.existsSync(tpl)) continue;
+  let out = fs.readFileSync(tpl, 'utf8')
+    .split('__SHARED_STYLES__').join(sharedStyles)
+    .split('__SHARED_NAV__').join(sharedNav)
+    .split('__SHARED_FOOTER__').join(sharedFooter);
+  for (const ph of ['__SHARED_STYLES__','__SHARED_NAV__','__SHARED_FOOTER__']) {
+    if (out.includes(ph)) throw new Error('Placeholder not replaced in ' + page + ': ' + ph);
+  }
+  fs.writeFileSync(path.join(dist, page + '.html'), out);
+  console.log('  ' + page + '.html -', (Buffer.byteLength(out)/1024).toFixed(0), 'KB');
+}
+
 // ---- Client Results page ----
 // Single constant for the homepage's filename -- if you rename
 // homepage_final.html when you deploy it (e.g. to index.html), update
