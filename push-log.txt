@@ -1,4 +1,4 @@
 Push log 
 [branch] testing 
-[message] Restore root wrangler config; cross-reference both configs 
+[message] Email login, 30-day trials, licence check via database function 
  

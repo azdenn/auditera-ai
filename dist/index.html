@@ -507,8 +507,8 @@ footer.page .flinks a:hover{color:var(--ink-soft);}
     <div id="signedout-view">
       <div class="signin-card" id="login-card">
         <form class="auth-form" id="login-form">
-          <label>Username
-            <input type="text" id="login-username" autocomplete="username" required>
+          <label>Email
+            <input type="email" id="login-username" autocomplete="email" required>
           </label>
           <label>Password
             <input type="password" id="login-password" autocomplete="current-password" required>
@@ -521,14 +521,11 @@ footer.page .flinks a:hover{color:var(--ink-soft);}
 
       <div class="signin-card hidden" id="signup-card">
         <form class="auth-form" id="signup-form">
-          <label>Username
-            <input type="text" id="signup-username" autocomplete="username" required>
+          <label>Email <span style="font-weight:400;color:var(--ink-faint);">(this is how you sign in)</span>
+            <input type="email" id="signup-contact-email" autocomplete="email" required>
           </label>
           <label>Password
             <input type="password" id="signup-password" autocomplete="new-password" required>
-          </label>
-          <label>Email <span style="font-weight:400;color:var(--ink-faint);">(for account contact &amp; password resets &mdash; not used to log in)</span>
-            <input type="email" id="signup-contact-email" autocomplete="email" required>
           </label>
           <label>Property name
             <input type="text" id="signup-property" placeholder="e.g. Blanco Oaks Apartments" required>
@@ -797,6 +794,26 @@ function b64ToBlob(b64, mime){
 }
 let isSignedIn = false;
 let currentProperty = null; // the property name tied to the signed-in account, if any
+
+// Every property this account actually holds a licence for: [{name, address}].
+// Loaded from Supabase after sign-in and handed to each tool, which refuses to
+// audit documents belonging to a property that isn't in this list. RLS scopes
+// the query to the caller's own account, so this can never return someone
+// else's properties even if the query were tampered with client-side.
+let licensedProperties = [];
+
+async function loadLicensedProperties(){
+  licensedProperties = [];
+  if (!sb) return;
+  try {
+    const { data, error } = await sb.from('properties')
+      .select('name, address, status')
+      .eq('status', 'active');
+    if (!error && Array.isArray(data)){
+      licensedProperties = data.map(p => ({ name: p.name || '', address: p.address || '' }));
+    }
+  } catch(e){ /* leave empty; the tool then has nothing to match against */ }
+}
 async function launchTool(key){
   if (!isSignedIn){ alert('Please sign in first.'); return; }
   const toolPath = TOOL_PATHS[key];
@@ -892,11 +909,25 @@ async function launchTool(key){
   shellSay(tab, 'Starting…');
   const blob = new Blob([html], {type: 'text/html'});
   let url = URL.createObjectURL(blob);
-  // Pass the account's licensed property along as a URL hash -- never sent
-  // anywhere, just read by the tool's own JS on load (see EXPECTED_PROPERTY
-  // in the reconciler) so it can flag a rent roll that looks like the wrong
-  // property.
-  if (currentProperty) url += '#property=' + encodeURIComponent(currentProperty);
+  // Hand the tool the account's licensed properties as a URL hash. A hash is
+  // never sent to any server -- it's a same-page fragment on a blob: URL -- so
+  // this stays consistent with "documents and account data never leave the
+  // browser". The tool refuses to audit documents that belong to a property
+  // not in this list (see LICENSED_PROPERTIES in each tool).
+  // If sign-in's background load hasn't landed yet, wait for it now rather
+  // than launching a tool with an empty licence list -- an empty list would
+  // read as "no licences" and block a legitimate audit.
+  if (sb && !licensedProperties.length) await loadLicensedProperties();
+
+  const hashBits = [];
+  if (currentProperty) hashBits.push('property=' + encodeURIComponent(currentProperty));
+  if (licensedProperties.length){
+    // encodeURIComponent on the JSON rather than base64: keeps it readable in
+    // devtools, and there is nothing secret here -- it's the customer's own
+    // property list, which they can already see on the homepage.
+    hashBits.push('lic=' + encodeURIComponent(JSON.stringify(licensedProperties)));
+  }
+  if (hashBits.length) url += '#' + hashBits.join('&');
   if (tab) tab.location.replace(url); else window.open(url, '_blank');
 }
 
@@ -966,6 +997,11 @@ document.getElementById('show-login').addEventListener('click', (e) => {
 function showSignedIn(username, property){
   isSignedIn = true;
   currentProperty = property;
+  // Fire-and-forget: the licence list is only needed when a tool is launched,
+  // which is always a later user action, so there's no reason to block the
+  // sign-in render on a network round trip. launchTool() re-checks and waits
+  // if this hasn't landed yet.
+  loadLicensedProperties();
   document.getElementById('signedin-email').textContent = username;
   document.getElementById('signedin-property').textContent = property || '(not set)';
   document.getElementById('signedin-property-2').textContent = property || '(not set)';
@@ -978,6 +1014,7 @@ function showSignedIn(username, property){
 function showSignedOut(){
   isSignedIn = false;
   currentProperty = null;
+  licensedProperties = [];
   signedinPanel.classList.add('hidden');
   signedoutView.classList.remove('hidden');
   signupCard.classList.add('hidden');
@@ -1003,10 +1040,27 @@ function setFormBusy(form, busy){
 // Normalization has to be simple and deterministic, since the exact same
 // function has to produce the exact same address every time someone logs
 // in with "Texoplex" (or however they capitalized/spaced it originally).
-const LOGIN_EMAIL_DOMAIN = 'login.texoplex.com';
-function usernameToLoginEmail(username){
-  const normalized = (username || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-  return normalized + '@' + LOGIN_EMAIL_DOMAIN;
+// Logins are real email addresses.
+//
+// This used to manufacture a synthetic address (`name@login.texoplex.com`)
+// so customers could sign in with a username. That worked while this was a
+// tool for a handful of known people, and breaks a real product in ways that
+// are invisible until someone needs them:
+//   - password reset mails the LOGIN address, which nobody could ever read,
+//     so no account was recoverable;
+//   - email confirmation could never be completed, so it had to stay off;
+//   - Stripe would identify a customer by an address the database didn't hold.
+// Email as the login fixes all three at once. Kept as a function so the one
+// place that decides "what do we hand Supabase" is still obvious.
+function usernameToLoginEmail(email){
+  return String(email || '').trim().toLowerCase();
+}
+// What to show as the signed-in identity. The local part reads better than
+// the full address in a header, but stays recognisably theirs.
+function displayNameForEmail(email){
+  const e = String(email || '').trim();
+  const at = e.indexOf('@');
+  return at > 0 ? e.slice(0, at) : e;
 }
 
 // If the Supabase project still has "Confirm email" turned on, signUp()
@@ -1089,14 +1143,16 @@ async function ensureSubscriptionForSession(userId, fallbackUsername){
 signupForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   signupError.classList.add('hidden');
-  const username = document.getElementById('signup-username').value.trim();
   const password = document.getElementById('signup-password').value;
   const contactEmail = document.getElementById('signup-contact-email').value.trim().toLowerCase();
   const property = document.getElementById('signup-property').value.trim();
-  if (!username || !password || !contactEmail || !property) return;
-  const loginEmail = usernameToLoginEmail(username);
-  if (!loginEmail || loginEmail.startsWith('@')){
-    signupError.textContent = 'Username needs at least one letter or number.';
+  if (!password || !contactEmail || !property) return;
+  const loginEmail = usernameToLoginEmail(contactEmail);
+  // The username column still exists and is still unique, so derive one rather
+  // than leaving it null. It is a display label now, not a credential.
+  const username = displayNameForEmail(loginEmail);
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(loginEmail)){
+    signupError.textContent = 'That doesn’t look like a valid email address.';
     signupError.classList.remove('hidden');
     return;
   }
@@ -1106,7 +1162,7 @@ signupForm.addEventListener('submit', async (e) => {
     try{
       const { data, error } = await sb.auth.signUp({ email: loginEmail, password });
       if (error){
-        signupError.textContent = /already registered|already exists/i.test(error.message) ? 'That username is taken -- try another.' : error.message;
+        signupError.textContent = /already registered|already exists/i.test(error.message) ? 'There is already an account with that email. Try signing in instead.' : error.message;
         signupError.classList.remove('hidden');
         return;
       }
@@ -1156,14 +1212,15 @@ signupForm.addEventListener('submit', async (e) => {
 loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   loginError.classList.add('hidden');
-  const username = document.getElementById('login-username').value.trim();
+  const loginEmail = usernameToLoginEmail(document.getElementById('login-username').value);
+  const username = displayNameForEmail(loginEmail);
   const password = document.getElementById('login-password').value;
 
   if (sb){
     setFormBusy(loginForm, true);
     try{
-      const { data, error } = await sb.auth.signInWithPassword({ email: usernameToLoginEmail(username), password });
-      if (error){ loginError.textContent = 'Username or password not recognized.'; loginError.classList.remove('hidden'); return; }
+      const { data, error } = await sb.auth.signInWithPassword({ email: loginEmail, password });
+      if (error){ loginError.textContent = 'Email or password not recognized.'; loginError.classList.remove('hidden'); return; }
       const sub = await ensureSubscriptionForSession(data.user.id, username);
       showSignedIn(sub.username, sub.property);
     } finally { setFormBusy(loginForm, false); }
@@ -1174,7 +1231,7 @@ loginForm.addEventListener('submit', async (e) => {
   const accounts = loadDemoAccounts();
   const acct = accounts[username];
   if (!acct || acct.password !== password){
-    loginError.textContent = 'Username or password not recognized.';
+    loginError.textContent = 'Email or password not recognized.';
     loginError.classList.remove('hidden');
     return;
   }

@@ -4,9 +4,13 @@ node_modules/
 .DS_Store
 Thumbs.db
 
-# Diagnostic output — regenerated on demand, never worth committing
-diagnose.txt
+# Control + diagnostic files. These are rewritten constantly and must NOT be
+# tracked - a modified tracked file blocks `git checkout`, which silently
+# breaks promote-to-main.
+.commitmsg
 push-log.txt
+promote-log.txt
+diagnose.txt
 
 # Large test fixtures — regenerate with the gen_*.cjs scripts
 **/a105_test/

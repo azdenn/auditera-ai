@@ -75,23 +75,34 @@ export default {
     }
     if (!who.ok) return deny(503, 'Could not verify your sign-in just now. Please try again in a moment.');
 
-    // 3. Does the account behind it hold an active property licence? The query
-    // runs as the USER, so row level security scopes it to their own account --
-    // this Worker cannot see, and cannot be tricked into seeing, anyone else's.
+    // 3. Is the account behind it entitled to use the tools right now?
+    //
+    // This asks the database rather than deciding here, because "licensed" is
+    // not a simple status check any more -- a trialing property counts until
+    // its trial expires. has_active_licence() is the single definition of it;
+    // duplicating that rule in this Worker would guarantee the two drift, and
+    // a gate that disagrees with billing fails open or locks out customers.
+    //
+    // The call runs as the USER, so row level security and auth.uid() scope it
+    // to their own account. This Worker cannot see, and cannot be tricked into
+    // seeing, anyone else's.
     let licences;
     try {
       licences = await fetch(
-        env.SUPABASE_URL + '/rest/v1/properties?select=id&status=eq.active&limit=1',
-        {headers: auth});
+        env.SUPABASE_URL + '/rest/v1/rpc/has_active_licence',
+        {method: 'POST', headers: Object.assign({'Content-Type': 'application/json'}, auth), body: '{}'});
     } catch (e){
       return deny(503, 'Could not check your licence just now. Please try again in a moment.');
     }
     if (!licences.ok) return deny(503, 'Could not check your licence just now. Please try again in a moment.');
 
-    let rows = [];
-    try { rows = await licences.json(); } catch (e){ rows = []; }
-    if (!Array.isArray(rows) || rows.length === 0){
-      return deny(403, 'There is no active property on this account yet. Get in touch and we\'ll add one.');
+    // The function returns a bare boolean. Anything that is not exactly true
+    // -- null, a parse failure, an unexpected shape -- is treated as "no",
+    // because this gate must fail closed.
+    let entitled = false;
+    try { entitled = (await licences.json()) === true; } catch (e){ entitled = false; }
+    if (!entitled){
+      return deny(403, 'There is no active property on this account yet. Add one to start your free trial, or get in touch if your trial has ended.');
     }
 
     // Cleared. Serve the tool, and make sure no shared cache keeps a copy.
