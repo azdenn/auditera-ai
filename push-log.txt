@@ -1,4 +1,4 @@
 Push log 
 [branch] testing 
-[message] Remove redundant root wrangler config; dist config is authoritative 
+[message] Restore root wrangler config; cross-reference both configs 
  

@@ -1,19 +1,21 @@
 {
   // ---------------------------------------------------------------------
-  // dist config — used by local `cd dist && wrangler deploy`, and when
-  // Cloudflare's build "Root directory" is "dist".
-  // A SECOND config exists at the repo root (../wrangler.jsonc) for when
-  // the root directory is "/". BOTH EXIST ON PURPOSE.
-  // If you change one, change the other.
+  // ROOT config — used when Cloudflare's build "Root directory" is "/".
+  // There is a SECOND config at dist/wrangler.jsonc used when the root
+  // directory is "dist" (and by local `cd dist && wrangler deploy`).
+  // BOTH EXIST ON PURPOSE so the build works either way.
+  // If you change one, change the other. They must stay identical apart
+  // from the paths.
   // ---------------------------------------------------------------------
-  "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "auditera",
-  "main": "./_worker.js",
+  "main": "./dist/_worker.js",
   "compatibility_date": "2026-08-21",
   "assets": {
-    "directory": "./",
+    "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
+    // Load-bearing. Without this Cloudflare serves the tool files directly
+    // and NEVER runs the licence gate.
     "run_worker_first": ["/tools/*"]
   },
   "vars": {
