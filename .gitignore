@@ -4,6 +4,10 @@ node_modules/
 .DS_Store
 Thumbs.db
 
+# Diagnostic output — regenerated on demand, never worth committing
+diagnose.txt
+push-log.txt
+
 # Large test fixtures — regenerate with the gen_*.cjs scripts
 **/a105_test/
 **/gca_test/
