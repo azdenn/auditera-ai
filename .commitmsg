@@ -1,1 +1,1 @@
-Add changelog and cleanup; fix build config
+Add root wrangler config so Cloudflare builds find the Worker
