@@ -1,1 +1,1 @@
-Add root wrangler config so Cloudflare builds find the Worker
+Remove redundant root wrangler config; dist config is authoritative

@@ -1,4 +1,4 @@
 Push log 
 [branch] testing 
-[message] Add root wrangler config so Cloudflare builds find the Worker 
+[message] Remove redundant root wrangler config; dist config is authoritative 
  
