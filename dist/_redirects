@@ -1,0 +1,3 @@
+# Old Netlify paths, if any were shared, land on the homepage rather than a 404.
+/home    /    301
+/index   /    301

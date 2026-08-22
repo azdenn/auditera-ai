@@ -1,0 +1,1884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DepositVerify — Auditera AI</title>
+<style>
+:root{
+  --ink:#eef0f6; --ink-soft:#a7adc0; --ink-faint:#767d94;
+  --line:#2a3040; --line-soft:#232838; --bg:#0d0f16; --card:#161926;
+  --accent:#7c8cff; --accent-2:#b083f0; --accent-soft:#232849; --accent-line:#3d4570;
+  --ok:#3ddc9a; --ok-bg:#132a24; --ok-line:#1f5a44;
+  --bad:#ff6b6b; --bad-bg:#2c1a1e; --bad-line:#5c2b30;
+  --warn:#ffc069; --warn-bg:#2c2313; --warn-line:#5c4a22;
+  --muted:#767d94; --muted-bg:#1c2030;
+  --purple:#c19dff; --purple-bg:#241c3a;
+  --teal:#5fe3d0; --teal-bg:#122a2c;
+  --shadow-xs:0 1px 2px rgba(0,0,0,.3);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
+  --shadow-md:0 8px 30px -8px rgba(0,0,0,.6);
+  --shadow-lg:0 20px 50px -18px rgba(0,0,0,.7);
+  --radius-lg:16px; --radius-md:12px; --radius-sm:9px;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+html{-webkit-font-smoothing:antialiased;}
+body{
+  margin:0;color:var(--ink);line-height:1.5;
+  background:
+    radial-gradient(1000px 520px at 10% -10%, #1d2450 0%, rgba(29,36,80,0) 60%),
+    radial-gradient(800px 460px at 105% 0%, #14312f 0%, rgba(20,49,47,0) 55%),
+    var(--bg);
+  background-attachment:fixed;
+}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 90px;}
+header.page{margin-bottom:30px;display:flex;align-items:flex-start;gap:14px;}
+.brand-mark{flex:none;width:40px;height:40px;border-radius:11px;margin-top:2px;background:linear-gradient(140deg,var(--accent),var(--accent-2));box-shadow:0 0 24px -4px rgba(124,140,255,.55);display:flex;align-items:center;justify-content:center;}
+.brand-mark svg{width:20px;height:20px;}
+header.page h1{font-size:23px;margin:0 0 6px;letter-spacing:-.01em;font-weight:700;color:#fff;}
+header.page p{margin:0;color:var(--ink-soft);font-size:14px;max-width:640px;}
+.how-it-works{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:22px;padding:16px 20px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);}
+.hiw-step{display:flex;align-items:center;gap:11px;}
+.hiw-step .hiw-num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:linear-gradient(140deg,var(--accent),var(--accent-2));color:#0d0f16;font-size:12px;font-weight:700;flex:none;box-shadow:0 0 12px -2px rgba(124,140,255,.6);}
+.hiw-step b{display:block;font-size:13px;color:#fff;}
+.hiw-step span{font-size:11.5px;color:var(--ink-faint);}
+.hiw-arrow{color:var(--ink-faint);font-size:15px;flex:none;}
+@media (max-width:760px){.how-it-works{flex-direction:column;align-items:flex-start;gap:12px;} .hiw-arrow{display:none;}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:24px 26px;margin-bottom:22px;box-shadow:var(--shadow-sm);}
+.card h2{font-size:15px;margin:0 0 16px;display:flex;align-items:center;gap:10px;letter-spacing:-.005em;color:#fff;}
+.card h2 .sub{font-weight:400;font-size:12px;color:var(--ink-soft);}
+.card h2 details{flex:none;}
+#alias-panel{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--line);}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:linear-gradient(140deg,var(--accent),var(--accent-2));color:#0d0f16;font-size:12px;font-weight:700;flex:none;box-shadow:0 0 12px -2px rgba(124,140,255,.6);}
+.upload-mode-picker{margin-bottom:20px;padding:16px 18px;border-radius:var(--radius-lg);border:1.5px solid var(--accent-line);background:var(--accent-soft);}
+.ump-label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#fff;margin-bottom:12px;}
+.ump-label .ump-step-badge{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:linear-gradient(140deg,var(--accent),var(--accent-2));color:#0d0f16;font-size:11px;font-weight:800;flex:none;}
+.ump-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media (max-width:640px){.ump-options{grid-template-columns:1fr;}}
+.mode-btn{display:flex;flex-direction:column;align-items:flex-start;gap:5px;text-align:left;border:2px solid var(--line);background:#12141f;border-radius:12px;padding:14px 16px;font-family:inherit;cursor:pointer;transition:border-color .15s,background .15s,transform .12s,box-shadow .15s;}
+.mode-btn:hover:not(.active){border-color:var(--ink-faint);transform:translateY(-1px);}
+.mode-btn.active{background:#232849;border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,140,255,.18),var(--shadow-xs);}
+.mode-btn .mbt-title{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:700;color:var(--ink);}
+.mode-btn .mbt-title:before{content:'';width:16px;height:16px;border-radius:50%;border:2px solid var(--ink-faint);flex:none;box-sizing:border-box;transition:border-color .15s,background .15s;}
+.mode-btn.active .mbt-title{color:var(--accent);}
+.mode-btn.active .mbt-title:before{border-color:var(--accent);background:radial-gradient(circle,var(--accent) 0 40%,transparent 44%);}
+.mode-btn .mbt-desc{font-size:12px;color:var(--ink-faint);padding-left:24px;}
+.drop-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media (max-width:640px){.drop-row{grid-template-columns:1fr;}}
+.zip-error{margin-top:10px;font-size:12px;color:var(--bad);background:var(--bad-bg);border:1px solid var(--bad-line);border-radius:8px;padding:8px 11px;text-align:left;}
+.drop{position:relative;border:1.5px dashed var(--line);border-radius:var(--radius-md);padding:22px 18px;text-align:center;background:#12141f;transition:border-color .15s,background .15s,transform .12s;}
+.drop.has-file{border-style:solid;border-color:var(--accent-line);background:var(--accent-soft);}
+.drop.drag-over{border-style:solid;border-color:var(--accent);background:var(--accent-soft);transform:scale(1.01);}
+.drop label.filelabel{display:block;font-size:13px;font-weight:600;margin-bottom:10px;color:var(--ink);}
+.drop input[type=file]{width:100%;font-size:12.5px;color:var(--ink-soft);}
+.drop input[type=file]::file-selector-button{background:#1c2030;border:1px solid var(--line);border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;margin-right:10px;transition:background .15s;}
+.drop input[type=file]::file-selector-button:hover{background:#262b3d;}
+.drop .filename{margin-top:10px;font-size:12.5px;color:var(--accent);word-break:break-all;max-height:90px;overflow-y:auto;text-align:left;}
+.drop .hint{font-size:11.5px;color:var(--ink-faint);margin-top:8px;}
+button.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#0d0f16;border:none;border-radius:9px;padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(124,140,255,.35);transition:filter .15s,transform .12s,box-shadow .15s;}
+button.primary:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 6px 26px rgba(124,140,255,.45);}
+button.primary:active{transform:translateY(0);}
+button.primary:disabled{background:var(--muted);color:#0d0f16;box-shadow:none;cursor:not-allowed;filter:none;transform:none;}
+button.ghost{background:#171a28;border:1px solid var(--line);border-radius:9px;padding:9px 15px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--ink);transition:background .15s,border-color .15s,box-shadow .15s;}
+button.ghost:hover{background:#1f2333;border-color:#3a415a;}
+button.ghost:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
+button.tiny{background:none;border:1px solid var(--line);border-radius:6px;padding:4px 9px;font-size:11.5px;cursor:pointer;color:var(--ink-soft);transition:background .15s;}
+button.tiny:hover{background:var(--muted-bg);}
+.actions{margin-top:18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.status-msg{font-size:13px;color:var(--ink-soft);}
+.status-msg.err{color:var(--bad);font-weight:600;}
+.hidden{display:none !important;}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid var(--muted-bg);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:7px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.progress-wrap{margin-top:18px;}
+.progress-track{width:100%;height:8px;border-radius:6px;background:var(--muted-bg);overflow:hidden;}
+.progress-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent),var(--accent-2));width:0%;transition:width .2s ease;}
+.progress-label{font-size:12.5px;color:var(--ink-soft);margin-top:8px;display:flex;justify-content:space-between;}
+.progress-label #progress-pct{font-weight:700;color:var(--ink);}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:8px;}
+@media (max-width:760px){.kpi-row{grid-template-columns:repeat(2,1fr);}}
+.kpi-tile{position:relative;border-radius:var(--radius-md);padding:17px 18px 17px 20px;background:#151827;border:1px solid var(--line);box-shadow:var(--shadow-xs);overflow:hidden;}
+.kpi-tile:before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--muted);}
+.kpi-tile b{display:block;font-size:27px;line-height:1.15;letter-spacing:-.02em;color:#fff;}
+.kpi-tile span{font-size:12px;color:var(--ink-soft);font-weight:500;}
+.kpi-tile .kpi-note{font-size:11px;color:var(--ink-faint);margin-top:4px;}
+.kpi-tile.total:before{background:var(--ink-faint);}
+.kpi-tile.total b{color:#fff;}
+.kpi-tile.clean{background:var(--ok-bg);border-color:var(--ok-line);} .kpi-tile.clean:before{background:var(--ok);} .kpi-tile.clean b{color:var(--ok);}
+.kpi-tile.mismatch{background:var(--bad-bg);border-color:var(--bad-line);} .kpi-tile.mismatch:before{background:var(--bad);} .kpi-tile.mismatch b{color:var(--bad);}
+.kpi-tile.missing{background:var(--warn-bg);border-color:var(--warn-line);} .kpi-tile.missing:before{background:var(--warn);} .kpi-tile.missing b{color:var(--warn);}
+.kpi-tile.review{background:var(--purple-bg);border-color:#3a2c5c;} .kpi-tile.review:before{background:var(--purple);} .kpi-tile.review b{color:var(--purple);}
+.kpi-tile.vacant{background:var(--teal-bg);border-color:#1c4a48;} .kpi-tile.vacant:before{background:var(--teal);} .kpi-tile.vacant b{color:var(--teal);}
+.kpi-tile.hidden-filter{background:var(--muted-bg);border-color:var(--line);} .kpi-tile.hidden-filter:before{background:var(--muted);} .kpi-tile.hidden-filter b{color:var(--ink-soft);}
+.kpi-tile.hidden-filter .kpi-note a{color:var(--accent);}
+.kpi-sub{font-size:12.5px;color:var(--ink-soft);margin:8px 2px 20px;}
+.kpi-sub b{color:var(--ink);font-weight:700;}
+.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;background:#12141f;padding:5px;border-radius:12px;width:fit-content;border:1px solid var(--line);}
+.tab{border:1px solid transparent;background:transparent;border-radius:8px;padding:7px 14px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--ink-soft);transition:background .15s,color .15s,box-shadow .15s;}
+.tab:hover:not(.active){color:var(--ink);}
+.tab.active{background:#232849;border-color:var(--accent-line);color:var(--accent);box-shadow:var(--shadow-xs);}
+.tab .count{opacity:.65;font-weight:500;margin-left:3px;}
+table.results{width:100%;border-collapse:collapse;font-size:13.5px;}
+table.results th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);padding:10px 12px;border-bottom:1px solid var(--line);font-weight:700;}
+table.results td{padding:11px 12px;border-bottom:1px solid var(--line-soft);vertical-align:top;color:var(--ink);}
+table.results tbody tr:last-child td{border-bottom:none;}
+table.results tr.unit-row{cursor:pointer;transition:background .1s;}
+table.results tr.unit-row:hover{background:var(--accent-soft);}
+table.results tr.unit-row.open{background:var(--accent-soft);}
+.amt{font-variant-numeric:tabular-nums;white-space:nowrap;}
+.results-shell{border:1px solid var(--line);border-radius:var(--radius-md);overflow:hidden;background:#12141f;}
+.results-shell table.results{font-size:13.5px;}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 8px;border-radius:20px;font-size:11.5px;font-weight:700;white-space:nowrap;border:1px solid transparent;}
+.badge:before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex:none;}
+.badge.match{background:var(--ok-bg);color:var(--ok);border-color:var(--ok-line);}
+.badge.probable{background:var(--teal-bg);color:var(--teal);border-color:#1c4a48;}
+.badge.mismatch{background:var(--bad-bg);color:var(--bad);border-color:var(--bad-line);}
+.badge.leaseonly{background:var(--warn-bg);color:var(--warn);border-color:var(--warn-line);}
+.badge.resmanonly{background:var(--warn-bg);color:var(--warn);border-color:var(--warn-line);}
+.badge.clean{background:var(--ok-bg);color:var(--ok);border-color:var(--ok-line);}
+.badge.missing{background:var(--warn-bg);color:var(--warn);border-color:var(--warn-line);}
+.badge.unmatched{background:var(--warn-bg);color:var(--warn);border-color:var(--warn-line);}
+.badge.error{background:var(--bad-bg);color:var(--bad);border-color:var(--bad-line);}
+.badge.vacant{background:var(--muted-bg);color:var(--muted);border-color:var(--line);}
+.badge.duplicate{background:var(--purple-bg);color:var(--purple);border-color:#3a2c5c;}
+.badge.needs-review{background:var(--purple-bg);color:var(--purple);border-color:#3a2c5c;}
+.candidate-label{font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.04em;}
+.chevron{display:inline-block;transition:transform .18s;color:var(--ink-faint);margin-right:6px;font-size:11px;}
+.chevron.open{transform:rotate(90deg);color:var(--accent);}
+.table-hint{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-soft);margin:0 2px 12px;}
+.table-hint svg{flex:none;color:var(--accent);}
+.flat-view-toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);margin:2px 2px 14px;cursor:pointer;user-select:none;}
+.flat-view-toggle input{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;}
+.help-tip{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;border:1px solid var(--line);color:var(--ink-faint);font-size:10px;cursor:help;}
+.legend{display:flex;flex-wrap:wrap;gap:9px 16px;margin:0 2px 18px;padding:13px 15px;background:#12141f;border:1px solid var(--line);border-radius:var(--radius-md);}
+.legend-title{width:100%;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:700;margin-bottom:2px;}
+.legend-chip{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-soft);}
+.legend-chip .badge{flex:none;}
+.details-btn{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--accent-line);background:var(--accent-soft);color:var(--accent);border-radius:20px;padding:5px 12px 5px 12px;font-size:11.5px;font-weight:700;white-space:nowrap;transition:background .15s,filter .15s;}
+tr.unit-row:hover .details-btn{filter:brightness(1.15);}
+.details-btn .dbtn-icon{display:inline-block;transition:transform .18s;font-size:9px;}
+.details-btn.open .dbtn-icon{transform:rotate(90deg);}
+.details-btn.small{padding:3px 10px 3px 10px;font-size:10.5px;margin-left:auto;}
+.detail-row td{background:#101320;padding:0;}
+.detail-inner{padding:16px 20px 20px 36px;border-top:1px solid var(--line-soft);}
+.detail-inner .note{font-size:12.5px;color:var(--ink-soft);background:var(--muted-bg);border-radius:8px;padding:10px 13px;margin-bottom:12px;border:1px solid var(--line);}
+.detail-inner table.results{background:#161926;border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden;}
+.detail-inner table.results th, .detail-inner table.results td{padding:8px 11px;}
+.filenames-list{font-size:12px;color:var(--ink-soft);margin-top:4px;}
+details.excluded{margin-top:10px;font-size:12px;color:var(--ink-soft);}
+details.excluded summary{cursor:pointer;font-weight:600;color:var(--ink);}
+.empty-state{padding:36px;text-align:center;color:var(--muted);font-size:13.5px;}
+.raw-toggle{margin-top:14px;}
+.raw-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px;}
+@media (max-width:640px){.raw-grid{grid-template-columns:1fr;}}
+.raw-col h4{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin:0 0 7px;font-weight:700;}
+.raw-col table{width:100%;border-collapse:collapse;font-size:12px;background:#161926;border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden;}
+.raw-col th{text-align:left;padding:7px 9px;background:var(--muted-bg);font-weight:700;color:var(--ink-soft);font-size:10.5px;text-transform:uppercase;}
+.raw-col td{padding:7px 9px;border-top:1px solid var(--line-soft);color:var(--ink);}
+.cat-chip{display:inline-block;padding:2px 8px;border-radius:10px;background:var(--accent-soft);color:var(--accent);font-size:10.5px;font-weight:700;}
+.cat-chip.unmapped{background:var(--muted-bg);color:var(--muted);}
+.alias-cat{margin-bottom:14px;}
+.alias-cat .cat-name{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:7px;display:block;}
+.alias-chips{display:flex;flex-wrap:wrap;gap:7px;}
+.alias-chip{display:inline-flex;align-items:center;gap:6px;background:var(--muted-bg);border:1px solid var(--line);border-radius:16px;padding:4px 6px 4px 12px;font-size:12px;transition:background .15s;color:var(--ink);}
+.alias-chip button{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:13px;line-height:1;padding:2px 5px;border-radius:50%;transition:background .15s,color .15s;}
+.alias-chip button:hover{background:var(--bad-bg);color:var(--bad);}
+.alias-add-row{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
+.alias-add-row input[type=text]{flex:1;min-width:180px;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:13px;background:#12141f;color:var(--ink);transition:border-color .15s,box-shadow .15s;}
+.alias-add-row input[type=text]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+.alias-add-row select{border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:13px;background:#12141f;color:var(--ink);}
+details.alias-panel summary{cursor:pointer;font-size:13.5px;font-weight:600;color:var(--ink);list-style:none;padding:2px 0;}
+details.alias-panel summary::-webkit-details-marker{display:none;}
+details.alias-panel summary:before{content:'▸ ';color:var(--accent);}
+details.alias-panel[open] summary:before{content:'▾ ';}
+details.alias-panel{margin-top:2px;}
+.discrepancy-filter-checks{display:flex;flex-wrap:wrap;gap:10px 20px;}
+.choose-lead{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 16px;}
+.btn-choose{display:inline-flex;align-items:center;gap:9px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#0d0f16;border:none;border-radius:10px;padding:13px 22px;font-family:inherit;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(124,140,255,.28);transition:filter .15s,transform .12s;}
+.btn-choose:hover{filter:brightness(1.08);transform:translateY(-1px);}
+.btn-choose svg{width:17px;height:17px;}
+.choose-current{font-size:12.5px;color:var(--ink-faint);}
+.choose-current b{color:var(--ink-soft);font-weight:600;}
+.upload-mode-picker.compact .ump-label{font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;}
+.modal-backdrop{position:fixed;inset:0;background:rgba(6,8,14,.72);backdrop-filter:blur(3px);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal-box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px;max-width:470px;width:100%;box-shadow:0 24px 60px -18px rgba(0,0,0,.8);}
+.modal-box h3{margin:0 0 6px;font-size:18px;color:#fff;font-weight:800;letter-spacing:-.01em;}
+.modal-sub{margin:0 0 18px;font-size:13px;color:var(--ink-soft);}
+.choice-opt{display:flex;align-items:flex-start;gap:13px;width:100%;text-align:left;background:#12141f;border:2px solid var(--line);border-radius:12px;padding:15px 16px;margin-bottom:11px;font-family:inherit;cursor:pointer;transition:border-color .15s,background .15s,transform .12s;}
+.choice-opt:hover{border-color:var(--accent);background:#1b1f33;transform:translateY(-1px);}
+.co-icon{flex:none;width:36px;height:36px;border-radius:10px;background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent);display:flex;align-items:center;justify-content:center;}
+.co-icon svg{width:18px;height:18px;}
+.co-text{display:flex;flex-direction:column;gap:3px;}
+.co-text b{font-size:14.5px;color:var(--ink);font-weight:700;}
+.co-text span{font-size:12px;color:var(--ink-faint);line-height:1.5;}
+.modal-cancel{display:block;width:100%;margin-top:4px;background:none;border:0;padding:9px;font-family:inherit;font-size:13px;font-weight:600;color:var(--ink-faint);cursor:pointer;border-radius:8px;}
+.modal-cancel:hover{color:var(--ink);background:#12141f;}
+th.sortable{cursor:pointer;user-select:none;position:relative;padding-right:20px;transition:color .12s;}
+th.sortable:hover{color:var(--accent);}
+th.sortable:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
+th.sortable:after{content:'';position:absolute;right:7px;top:50%;transform:translateY(-50%);opacity:.28;
+  border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:5px solid currentColor;}
+th.sortable.sorted-asc:after{opacity:1;color:var(--accent);}
+th.sortable.sorted-desc:after{opacity:1;color:var(--accent);border-bottom:0;border-top:5px solid currentColor;}
+.filter-group{margin:0 0 16px;}
+.filter-group:last-child{margin-bottom:0;}
+.filter-group-title{display:flex;align-items:center;gap:10px;font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 9px;}
+.filter-group-all{background:none;border:0;padding:0;font:inherit;font-size:11px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--accent);cursor:pointer;text-decoration:underline;}
+.setting-row{margin:16px 0 2px;padding-top:14px;border-top:1px solid var(--line);}
+.setting-row>label{display:block;font-size:13px;font-weight:600;color:var(--ink);margin-bottom:7px;}
+/* Dark, like every other input on the page. (LeaseVerify's copy of this rule
+   sets a white background, which leaves light --ink text nearly unreadable.) */
+.setting-input-wrap{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:8px;padding:7px 11px;background:#12141f;transition:border-color .15s,box-shadow .15s;}
+.setting-input-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+.setting-input-wrap span{color:var(--ink-soft);font-size:14px;}
+.setting-input-wrap input{border:0;outline:0;width:82px;font-size:14px;font-family:inherit;color:var(--ink);background:transparent;}
+.setting-help{margin:8px 0 0;max-width:640px;}
+.filter-check-item{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--ink);cursor:pointer;user-select:none;}
+.filter-check-item input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;}
+footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(--ink-faint);}
+.badge.unable{background:var(--muted-bg);color:var(--ink-faint);border-color:var(--line);}
+.badge.info{background:var(--accent-soft);color:var(--accent);border-color:var(--accent-line);}
+.verify-card{border:1px solid var(--line);border-radius:var(--radius-md);padding:16px 18px;margin-top:14px;background:#12141f;}
+.verify-card h4{margin:0 0 12px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:700;}
+.verify-summary{font-size:12.5px;color:var(--ink-soft);margin-bottom:12px;}
+.verify-summary b{color:var(--ink);}
+.verify-list{display:flex;flex-direction:column;gap:2px;}
+.verify-item{border-radius:8px;}
+.verify-item-head{display:flex;align-items:center;gap:9px;padding:8px 10px;font-size:13px;color:var(--ink);border-radius:8px;}
+.verify-item.expandable .verify-item-head{cursor:pointer;}
+.verify-item.expandable .verify-item-head:hover{background:var(--muted-bg);}
+.verify-icon{flex:none;width:16px;text-align:center;font-weight:800;font-size:13px;}
+.verify-item.pass .verify-icon{color:var(--ok);}
+.verify-item.fail .verify-icon{color:var(--bad);}
+.verify-item.unable .verify-icon{color:var(--ink-faint);}
+.verify-item .verify-chevron{margin-left:auto;color:var(--ink-faint);font-size:10px;transition:transform .15s;}
+.verify-item .verify-chevron.open{transform:rotate(90deg);color:var(--accent);}
+.verify-item-detail{padding:2px 12px 14px 35px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;}
+.verify-item-detail b{color:var(--ink);}
+.verify-fact-row{display:flex;gap:18px;flex-wrap:wrap;margin-top:4px;}
+.verify-fact-row .src{display:block;font-size:10.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px;}
+.verify-sig-loc{margin-top:8px;padding:9px 11px;background:var(--bad-bg);border:1px solid var(--bad-line);border-radius:8px;font-size:12.5px;}
+.verify-sig-loc:first-child{margin-top:0;}
+.verify-sig-loc .loc-title{font-weight:700;color:var(--bad);margin-bottom:3px;}
+.verify-sig-loc .loc-where{color:var(--ink-faint);font-size:11.5px;margin-top:2px;}
+.property-banner{display:flex;align-items:flex-start;gap:11px;border-radius:var(--radius-md);padding:13px 16px;margin-bottom:18px;font-size:13px;line-height:1.55;}
+.property-banner svg{flex:none;margin-top:1px;}
+.property-banner b{font-weight:700;}
+.property-banner.info{background:var(--muted-bg);border:1px solid var(--line);color:var(--ink-soft);}
+.property-banner.info svg{color:var(--ink-faint);}
+.property-banner.warn{background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--ink);}
+.property-banner.warn svg{color:var(--warn);}
+/* ---- DepositVerify additions ---- */
+.kpi-tile.leaselock{background:var(--accent-soft);border-color:var(--accent-line);} .kpi-tile.leaselock:before{background:var(--accent);} .kpi-tile.leaselock b{color:var(--accent);}
+.kpi-tile.surety{background:var(--purple-bg);border-color:#3a2c5c;} .kpi-tile.surety:before{background:var(--purple);} .kpi-tile.surety b{color:var(--purple);}
+.kpi-tile.deposit{background:var(--teal-bg);border-color:#1c4a48;} .kpi-tile.deposit:before{background:var(--teal);} .kpi-tile.deposit b{color:var(--teal);}
+.badge.leaselock{background:var(--accent-soft);color:var(--accent);border-color:var(--accent-line);}
+.badge.surety{background:var(--purple-bg);color:var(--purple);border-color:#3a2c5c;}
+.badge.deposit{background:var(--teal-bg);color:var(--teal);border-color:#1c4a48;}
+.badge.none{background:var(--bad-bg);color:var(--bad);border-color:var(--bad-line);}
+.badge.soft{background:var(--muted-bg);color:var(--ink-soft);border-color:var(--line);}
+.badge.hidden-filter{background:var(--muted-bg);color:var(--ink-faint);border-color:var(--line);}
+.finding{border:1px solid var(--line);border-left-width:3px;border-radius:9px;padding:11px 13px;margin-bottom:9px;background:#12141f;}
+.finding.flag{border-left-color:var(--bad);}
+.finding.softf{border-left-color:var(--ok);}
+.finding.muted{opacity:.55;border-left-color:var(--muted);}
+.finding .f-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:5px;}
+.finding .f-note{font-size:12.5px;color:var(--ink-soft);line-height:1.55;}
+.finding .f-facts{display:flex;gap:20px;flex-wrap:wrap;margin-top:8px;}
+.finding .f-facts .src{display:block;font-size:10.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px;}
+.finding .f-facts b{font-variant-numeric:tabular-nums;}
+.coverage-strip{display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-soft);background:var(--muted-bg);border:1px solid var(--line);border-radius:8px;padding:10px 13px;margin-bottom:12px;}
+.coverage-strip b{color:var(--ink);}
+
+/* ---------- coverage chips ---------- */
+.cov-chips{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:12px 0 4px;}
+.cov-chip-label{font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin-right:2px;}
+.cov-chip{display:inline-flex;align-items:center;gap:7px;background:#12141f;border:1px solid var(--line);border-radius:999px;
+  padding:6px 13px;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;
+  transition:border-color .15s,background .15s,color .15s;}
+.cov-chip:hover{border-color:var(--ink-faint);color:var(--ink);}
+.cov-chip .count{font-size:11px;font-weight:800;color:var(--ink-faint);background:#1c2030;border-radius:999px;padding:1px 7px;}
+.cov-chip.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);}
+.cov-chip.active .count{background:var(--accent);color:#0d0f16;}
+.cov-chip.cov-none.active{background:#2a1c1c;border-color:#b45454;color:#ff9f9f;}
+.cov-chip.cov-none.active .count{background:#b45454;color:#fff;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3.2 4.8 6.1V12c0 4.4 3 7.6 7.2 8.9 4.2-1.3 7.2-4.5 7.2-8.9V6.1L12 3.2Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 12.2l2.1 2.1 4-4.3" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div>
+      <h1>DepositVerify &mdash; Auditera AI</h1>
+      <p>Upload your LeaseLock invoice plus the ResMan rent roll &mdash; this checks that every resident's deposit is covered by exactly one of LeaseLock, a surety bond, or a Traditional Security Deposit, and that what you bill the resident lines up with what LeaseLock bills you.</p>
+    </div>
+  </header>
+
+  <div class="how-it-works">
+    <div class="hiw-step"><span class="hiw-num">1</span><div><b>Set your markup</b><span>What you add on top of the LeaseLock premium</span></div></div>
+    <span class="hiw-arrow">&rarr;</span>
+    <div class="hiw-step"><span class="hiw-num">2</span><div><b>Upload two files</b><span>LeaseLock invoice + ResMan rent roll</span></div></div>
+    <span class="hiw-arrow">&rarr;</span>
+    <div class="hiw-step"><span class="hiw-num">3</span><div><b>Review the results</b><span>Click any row to see exactly what was checked</span></div></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-num">1</span> Set up <span class="sub">&mdash; optional, but this is where you tune what gets checked</span></h2>
+
+    <details class="alias-panel" id="discrepancy-filter-panel">
+      <summary>Option Filters &mdash; choose what doesn't get analyzed</summary>
+      <p class="status-msg" style="margin:10px 0 6px;">Tick anything you don't want counted as a Mismatch. Useful when something is reviewed by hand on a separate schedule and you don't want it cluttering these results. Nothing is ever deleted: ticked items still show (muted, marked <b>Hidden by Filter</b>) in that unit's own detail, and the true property-wide total always appears above your results. Changes apply immediately and are remembered on this device.</p>
+      <div id="discrepancy-filter-checks"></div>
+      <div class="setting-row">
+        <label for="markup-input">Markup this property adds to the LeaseLock premium</label>
+        <div class="setting-input-wrap"><span>$</span><input type="number" id="markup-input" min="0" step="0.01"></div>
+        <p class="status-msg setting-help">The property charges the resident more than LeaseLock bills the property. With the default $2.00, a $31.00 invoice line means the resident should be charged $33.00 on the Rent Roll. Every LeaseLock unit is checked against <b>invoice amount + this markup</b>. Set to 0 if you pass the premium straight through.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-num">2</span> Upload documents</h2>
+    <div class="drop-row">
+      <div class="drop" id="drop-invoice">
+        <label class="filelabel" for="invoice-file">LeaseLock invoice (.pdf, .xlsx or .csv)</label>
+        <input type="file" id="invoice-file" accept=".pdf,application/pdf,.xlsx,.xls,.csv,text/csv">
+        <div class="filename" id="invoice-filename">No file selected</div>
+        <div class="hint">Whatever LeaseLock sends you. Column names are matched loosely &mdash; unit, resident, amount, and coverage start/end dates if present. Drag &amp; drop works too.</div>
+      </div>
+      <div class="drop" id="drop-rentroll">
+        <label class="filelabel" for="rentroll-file">ResMan Rent Roll (.xlsx)</label>
+        <input type="file" id="rentroll-file" accept=".xlsx,.xls">
+        <div class="filename" id="rentroll-filename">No file selected</div>
+        <div class="hint">The full property export &mdash; the "Rent Roll" report, not the "Rent Roll Summary". Drag &amp; drop works too.</div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="primary" id="process-btn" disabled>Process</button>
+      <span class="status-msg" id="parse-status"></span>
+    </div>
+  </div>
+
+  <div class="card hidden" id="results-card">
+    <h2><span class="step-num">3</span> Results</h2>
+
+    <div class="hidden" id="property-match-banner"></div>
+
+    <div class="kpi-row" id="kpi-row"></div>
+    <div class="kpi-sub" id="kpi-sub"></div>
+
+    <div class="legend" id="status-legend">
+      <div class="legend-title">What the coverage badges mean</div>
+      <span class="legend-chip"><span class="badge leaselock">LeaseLock</span> Rent Roll carries a Deposit Waiver Fee</span>
+      <span class="legend-chip"><span class="badge surety">Surety bond</span> Surety Bonds column is greater than zero</span>
+      <span class="legend-chip"><span class="badge deposit">Traditional Security Deposit</span> Deposits column is greater than zero</span>
+      <span class="legend-chip"><span class="badge none">No coverage</span> None of the three &mdash; nobody is covering this deposit</span>
+    </div>
+
+    <div class="tabs" id="filter-tabs"></div>
+    <div class="cov-chips" id="coverage-chips"></div>
+    <div class="actions" style="margin-top:0;margin-bottom:14px;">
+      <button class="ghost" id="export-csv-btn">Export findings (.csv)</button>
+      <button class="ghost" id="export-pdf-btn">Export report (.pdf)</button>
+    </div>
+
+    <div class="table-hint" id="unit-view-hint">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 16v-4m0-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Click anywhere on a row &mdash; or the <b>Details</b> button &mdash; to see exactly what was checked for that unit.
+    </div>
+
+    <div class="results-shell" id="unit-view-shell">
+      <table class="results">
+        <thead><tr>
+          <th style="width:96px;">Details</th>
+          <th class="sortable" data-sort="unit">Unit</th>
+          <th class="sortable" data-sort="residents">Residents</th>
+          <th class="sortable" data-sort="coverage">Coverage</th>
+          <th class="sortable amt" data-sort="charged">Recurring charge</th>
+          <th class="sortable amt" data-sort="invoiced">Invoiced</th>
+          <th class="sortable amt" data-sort="expected">Expected</th>
+          <th class="sortable" data-sort="status">Status</th>
+          <th class="sortable" data-sort="issues">Summary</th>
+        </tr></thead>
+        <tbody id="results-body"></tbody>
+      </table>
+      <div class="empty-state hidden" id="empty-state">No units match this filter.</div>
+    </div>
+  </div>
+
+  <footer class="page-footer">Everything runs locally in your browser &mdash; no files ever leave this page.</footer>
+</div>
+
+<!--PDFJS_LIB-->
+<!--PDF_WORKER_SRC-->
+<!--XLSX_LIB-->
+
+<script>
+/* =========================================================================
+   DepositVerify — Auditera AI
+   Reconciles LeaseLock invoices against the ResMan Rent Roll.
+
+   Every occupied resident must be covered by exactly one of three things:
+     1. LeaseLock  — a "Deposit Waiver Fee (LeaseLock)" charge on the Rent Roll
+     2. Surety bond — the Rent Roll's Surety Bonds column is > 0
+     3. Traditional Security Deposit — the Rent Roll's Deposits column is > 0
+   A resident with none of the three is a genuine, flagged discrepancy: nobody
+   is covering that deposit.
+
+   100% client-side. No network calls, nothing uploaded anywhere.
+   ========================================================================= */
+
+/* ---------- Small shared helpers (same conventions as LeaseVerify) ---------- */
+const money = v => (v===null||v===undefined||v==='') ? '—' : '$' + (Math.round((v||0)*100)/100).toFixed(2);
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function parseSlashDate(str){
+  if (!str) return null;
+  str = String(str).trim();
+  let m = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/.exec(str);
+  if (m){
+    let mo = parseInt(m[1],10), da = parseInt(m[2],10), yr = parseInt(m[3],10);
+    if (yr < 100) yr += (yr < 70 ? 2000 : 1900);
+    const d = new Date(Date.UTC(yr, mo-1, da));
+    if (d.getUTCFullYear()===yr && d.getUTCMonth()===mo-1 && d.getUTCDate()===da) return d;
+    return null;
+  }
+  // ISO 8601 (yyyy-mm-dd) — common in machine-generated vendor exports.
+  m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(str);
+  if (m){
+    const d = new Date(Date.UTC(parseInt(m[1],10), parseInt(m[2],10)-1, parseInt(m[3],10)));
+    return isNaN(d.getTime()) ? null : d;
+  }
+  const monthNames = {january:0,february:1,march:2,april:3,may:4,june:5,july:6,august:7,september:8,october:9,november:10,december:11,
+    jan:0,feb:1,mar:2,apr:3,jun:5,jul:6,aug:7,sep:8,sept:8,oct:9,nov:10,dec:11};
+  m = /^([A-Za-z]+)\.?\s+(\d{1,2}),?\s+(\d{4})$/.exec(str);
+  if (m){
+    const mo = monthNames[m[1].toLowerCase()];
+    if (mo === undefined) return null;
+    return new Date(Date.UTC(parseInt(m[3],10), mo, parseInt(m[2],10)));
+  }
+  return null;
+}
+function excelSerialToDate(serial){
+  if (typeof serial !== 'number' || isNaN(serial)) return null;
+  const utc_days = Math.floor(serial - 25569);
+  return new Date(utc_days * 86400 * 1000);
+}
+function anyToDate(v){
+  if (v === null || v === undefined || v === '') return null;
+  if (v instanceof Date) return new Date(Date.UTC(v.getFullYear(), v.getMonth(), v.getDate()));
+  if (typeof v === 'number') return excelSerialToDate(v);
+  return parseSlashDate(String(v));
+}
+function fmtDateShort(d){
+  if (!d) return '';
+  const mo = d.getUTCMonth()+1, da = d.getUTCDate(), yr = d.getUTCFullYear();
+  return String(mo).padStart(2,'0')+'/'+String(da).padStart(2,'0')+'/'+yr;
+}
+// Inclusive day count: 09/01 – 09/30 is 30 days, not 29.
+function inclusiveDays(start, end){
+  if (!start || !end) return null;
+  const ms = end.getTime() - start.getTime();
+  if (!isFinite(ms) || ms < 0) return null;
+  return Math.round(ms / 86400000) + 1;
+}
+function toNumber(v){
+  if (v === null || v === undefined || v === '') return null;
+  if (typeof v === 'number') return isFinite(v) ? v : null;
+  const n = parseFloat(String(v).replace(/[$,\s]/g, ''));
+  return isFinite(n) ? n : null;
+}
+// Unit keys are compared with punctuation and any "Unit"/"Apt" prefix removed,
+// so "#203", "Unit 203" and "203" from three different systems all line up.
+function normalizeUnitKey(v){
+  if (v === null || v === undefined) return '';
+  let s = String(v).trim().toUpperCase();
+  s = s.replace(/^(UNIT|APT|APARTMENT|STE|SUITE)\b[\s.#:-]*/,'');
+  s = s.replace(/[^A-Z0-9]/g,'');
+  return s;
+}
+
+/* LeaseLock writes units building-first -- "2-203", "3-301", "4-408" -- while
+   the ResMan Rent Roll for the same property just says "203", "301", "408".
+   Normalising alone turns "2-203" into "2203", which matches nothing, so
+   every line on a real invoice would look like a unit that isn't in the Rent
+   Roll. These build the alternative keys to try.
+
+   The Rent Roll stays the source of truth: an alternative is only ever
+   accepted when it lands on exactly one real Rent Roll unit. If a candidate
+   is ambiguous (two buildings genuinely both have a "203"), nothing is
+   matched and the line is reported as unmatched rather than being guessed
+   onto the wrong resident. */
+function unitKeyAlternatives(rawUnit){
+  const out = [];
+  const raw = String(rawUnit == null ? '' : rawUnit).trim();
+  if (!raw) return out;
+  const push = v => { const k = normalizeUnitKey(v); if (k && out.indexOf(k) === -1) out.push(k); };
+  push(raw);
+  // "2-203" / "B-203" -> the part after the separator
+  // "2-203" -> "203", and "A-A104" -> "A104". The right-hand side may itself
+  // start with a letter, which the previous digits-only pattern rejected.
+  const sep = /^([A-Za-z0-9]{1,4})\s*[-–—_/]\s*([A-Za-z]{0,3}\d{1,5}[A-Za-z]?)$/.exec(raw);
+  if (sep) push(sep[2]);
+  // Fall back to the trailing digit-run, which also covers "BLDG2 203".
+  const trailing = /(\d{1,5}[A-Za-z]?)$/.exec(raw);
+  if (trailing) push(trailing[1]);
+  return out;
+}
+
+// Resolve an invoice line's unit against the Rent Roll. Returns the matching
+// Rent Roll key, or null when nothing matches unambiguously.
+function resolveInvoiceUnitKey(rawUnit, blocks){
+  const alts = unitKeyAlternatives(rawUnit);
+  for (const k of alts){ if (blocks.has(k)) return k; }
+  // Last resort: compare on digits only, and only accept a unique hit.
+  for (const k of alts){
+    const digits = k.replace(/[^0-9]/g,'');
+    if (!digits) continue;
+    const hits = [];
+    for (const bKey of blocks.keys()){
+      if (bKey.replace(/[^0-9]/g,'') === digits) hits.push(bKey);
+    }
+    if (hits.length === 1) return hits[0];
+  }
+  return null;
+}
+
+/* =========================================================================
+   Settings — markup, and the Option Filters that switch finding types off.
+   Both persist in localStorage, exactly like LeaseVerify's MTM_FEE_EXPECTED.
+   ========================================================================= */
+
+/* The property charges the resident MORE than LeaseLock bills the property.
+   LeaseLock invoices $31; the resident is charged $33. That $2 spread is the
+   property's margin, and it is intentional — so the check is not "do the two
+   numbers match", it's "does the resident charge equal the invoice plus the
+   markup". The amount differs by property, hence configurable. */
+const MARKUP_STORAGE_KEY = 'auditly_leaselock_markup';
+const MARKUP_DEFAULT = 2.00;
+function loadMarkup(){
+  try{
+    const raw = localStorage.getItem(MARKUP_STORAGE_KEY);
+    if (raw == null || raw === '') return MARKUP_DEFAULT;
+    const n = parseFloat(raw);
+    return (isFinite(n) && n >= 0) ? n : MARKUP_DEFAULT;
+  }catch(err){ return MARKUP_DEFAULT; } // localStorage unavailable (private browsing) — session-only default
+}
+function saveMarkup(){
+  try{ localStorage.setItem(MARKUP_STORAGE_KEY, String(LEASELOCK_MARKUP)); }catch(err){ /* best-effort only */ }
+}
+let LEASELOCK_MARKUP = loadMarkup();
+
+// Dollar comparisons are done to the cent; anything inside half a cent is the
+// same number as far as a rent roll is concerned.
+const CENT = 0.005;
+
+/* A "normal month" of LeaseLock coverage. Anything longer than this is a
+   legitimate reason for the invoice to be bigger than one month's premium —
+   a resident who transferred mid-cycle, or a first bill that spans a partial
+   month plus a full one. 31 is the longest real calendar month, so a period
+   longer than that cannot be a single ordinary month. */
+const NORMAL_MONTH_MAX_DAYS = 31;
+
+const FINDING_TYPES = [
+  {key:'llAmountMismatch', label:'LeaseLock charge doesn\'t match invoice + markup', group:'Deposit coverage checks'},
+  {key:'llNotOnInvoice',   label:'Recurring LeaseLock charge on the Rent Roll, but not on the invoice', group:'Deposit coverage checks'},
+  {key:'llNotCharged',     label:'On the LeaseLock invoice, but no recurring charge on the Rent Roll', group:'Deposit coverage checks'},
+  {key:'noCoverage',       label:'No deposit coverage at all (no LeaseLock, bond, or deposit)', group:'Deposit coverage checks'},
+];
+const FINDING_LABEL = {};
+FINDING_TYPES.forEach(t => { FINDING_LABEL[t.key] = t.label; });
+
+const HIDDEN_CHECKS_STORAGE_KEY = 'auditly_deposit_hidden_checks';
+function loadHiddenCheckKeys(){
+  try{
+    const raw = localStorage.getItem(HIDDEN_CHECKS_STORAGE_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr.filter(k => FINDING_TYPES.some(t=>t.key===k)) : []);
+  }catch(err){ return new Set(); }
+}
+function saveHiddenCheckKeys(){
+  try{ localStorage.setItem(HIDDEN_CHECKS_STORAGE_KEY, JSON.stringify(Array.from(HIDDEN_CHECK_KEYS))); }catch(err){ /* best-effort only */ }
+}
+let HIDDEN_CHECK_KEYS = loadHiddenCheckKeys();
+function isCheckHidden(key){ return HIDDEN_CHECK_KEYS.has(key); }
+
+/* =========================================================================
+   Rent Roll parsing — same shape as LeaseVerify, plus the Surety Bonds column
+   ========================================================================= */
+const RENT_ROLL_SUMMARY_MESSAGE = 'This looks like the "Rent Roll Summary" export, which only has property-level totals — there are no per-unit charges in it to check. In ResMan, run the "Rent Roll" report instead (the one that lists each unit with its own Description/Amount charge breakdown) and upload that.';
+
+function looksLikeRentRollSummary(rows){
+  // Only the masthead block (before any real data) is examined, so a unit
+  // whose charge description happens to contain the words can't trip it.
+  const limit = Math.min(rows.length, 15);
+  for (let r=0;r<limit;r++){
+    for (const cell of (rows[r]||[])){
+      if (typeof cell !== 'string') continue;
+      if (/^\s*rent\s*roll\s*summary\s*$/i.test(cell)) return true;
+    }
+  }
+  return false;
+}
+
+async function parseRentRoll(file){
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, {type:'array'});
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
+
+  if (looksLikeRentRollSummary(rows)){
+    throw new Error(RENT_ROLL_SUMMARY_MESSAGE);
+  }
+
+  let headerRowIdx = -1;
+  for (let r=0;r<rows.length;r++){
+    const row = rows[r];
+    const hasDesc = row.some(c=>typeof c==='string' && c.trim().toLowerCase()==='description');
+    const hasAmt = row.some(c=>typeof c==='string' && c.trim().toLowerCase()==='amount');
+    if (hasDesc && hasAmt){ headerRowIdx = r; break; }
+  }
+  if (headerRowIdx === -1) throw new Error('Could not find a header row with "Description" and "Amount" columns. In ResMan, this tool needs the "Rent Roll" report (the one with a Description/Amount charge breakdown under each unit) — not the "Rent Roll Summary".');
+
+  const propertyName = extractPropertyNameFromRentRoll(rows, headerRowIdx);
+
+  function findCol(label){
+    const row = rows[headerRowIdx];
+    for (let c=0;c<row.length;c++){
+      if (typeof row[c]==='string' && row[c].trim().toLowerCase()===label.toLowerCase()) return c;
+    }
+    return -1;
+  }
+  const colDesc = findCol('Description');
+  const colAmount = findCol('Amount');
+  const colResidents = findCol('Residents');
+  const colStatus = findCol('Status');
+  const colLeaseStart = findCol('Lease Start');
+  const colLeaseEnd = findCol('Lease End');
+  const colDeposits = findCol('Deposits');
+  // The other two legs of the three-way coverage test. If an export doesn't
+  // carry them, findCol returns -1 and the relevant leg reads as "not
+  // present" rather than being silently treated as zero — see parseSurety().
+  const colSurety = findCol('Surety Bonds');
+
+  let colUnit = -1;
+  for (let r=headerRowIdx+1; r<rows.length; r++){
+    const row = rows[r];
+    const desc = row[colDesc];
+    if (desc !== null && desc !== undefined && String(desc).trim() !== ''){
+      for (let c=0;c<colDesc;c++){
+        if (row[c]!==null && row[c]!==undefined && String(row[c]).trim()!==''){ colUnit = c; break; }
+      }
+      if (colUnit !== -1) break;
+    }
+  }
+  if (colUnit === -1) throw new Error('Could not locate the Unit column in this spreadsheet.');
+
+  return { rows, headerRowIdx, colUnit, colDesc, colAmount, colResidents, colStatus,
+           colLeaseStart, colLeaseEnd, colDeposits, colSurety, propertyName };
+}
+
+function extractPropertyNameFromRentRoll(rows, headerRowIdx){
+  const limit = Math.min(headerRowIdx, 10);
+  for (let r = 0; r < limit; r++){
+    const row = rows[r];
+    if (!row) continue;
+    const cell = row[0];
+    if (cell === null || cell === undefined) continue;
+    if (cell instanceof Date) continue;
+    const text = String(cell).trim();
+    if (!text) continue;
+    if (/^printed\b/i.test(text)) continue;
+    if (/^rent roll$/i.test(text)) continue;
+    if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(text)) continue;
+    return text;
+  }
+  return null;
+}
+
+// Real ResMan exports append summary/subtotal tables under the per-unit
+// detail. Their first column is non-empty just like a unit number, so without
+// an explicit boundary they get misread as extra "units".
+const RENT_ROLL_TRAILING_SECTION_MARKERS = new Set([
+  'TOTAL CHARGES', 'CHARGE TOTALS', 'PROPERTY OCCUPANCY', 'UNIT TYPE OCCUPANCY', 'COLLECTIONS',
+]);
+
+function getAllUnitBlocks(rr){
+  const { rows, headerRowIdx, colUnit, colDesc, colAmount, colResidents, colStatus,
+          colLeaseStart, colLeaseEnd, colDeposits, colSurety } = rr;
+  const map = new Map();
+  let block = null;
+  function commit(){ if (block) map.set(block.unit.toUpperCase(), block); }
+  for (let r = headerRowIdx + 1; r < rows.length; r++){
+    const row = rows[r];
+    const unitVal = row[colUnit];
+    const unitStr = (unitVal !== null && unitVal !== undefined) ? String(unitVal).trim() : '';
+    if (unitStr && RENT_ROLL_TRAILING_SECTION_MARKERS.has(unitStr.toUpperCase())){
+      commit();
+      break;
+    }
+    const isNewUnitRow = unitStr !== '';
+    if (isNewUnitRow){
+      commit();
+      const num = (v) => (typeof v === 'number') ? v : (v!=null && v!=='' ? (isFinite(parseFloat(v)) ? parseFloat(v) : null) : null);
+      block = { unit: String(unitVal).trim(), residents: row[colResidents], status: row[colStatus], charges: [], total: null,
+        leaseStart: anyToDate(colLeaseStart >= 0 ? row[colLeaseStart] : null),
+        leaseEnd: anyToDate(colLeaseEnd >= 0 ? row[colLeaseEnd] : null),
+        deposits: colDeposits >= 0 ? num(row[colDeposits]) : null,
+        surety: colSurety >= 0 ? num(row[colSurety]) : null,
+        hasDepositsColumn: colDeposits >= 0, hasSuretyColumn: colSurety >= 0 };
+    }
+    if (block){
+      const desc = row[colDesc], amt = row[colAmount];
+      if (desc !== null && desc !== undefined && String(desc).trim() !== ''){
+        const d = String(desc).trim();
+        if (d.toLowerCase() === 'total') block.total = amt;
+        else block.charges.push({ description: d, amount: (typeof amt === 'number') ? amt : parseFloat(amt) || 0 });
+      } else if (!isNewUnitRow){
+        if (block.charges.length > 0 || block.total !== null){ commit(); block = null; }
+      }
+    }
+  }
+  commit();
+  return map;
+}
+
+function isVacant(block){
+  if (!block) return false;
+  const res = block.residents==null ? '' : String(block.residents).toLowerCase();
+  if (res.includes('vacant')) return true;
+  if (!res && block.charges.length===0 && !block.total) return true;
+  return false;
+}
+
+/* LeaseLock shows up on a rent roll under several names depending on how the
+   charge code was set up: "Deposit Waiver Fee (LeaseLock)" here, but plain
+   "LeaseLock", "Lease Lock" or "Deposit Waiver" elsewhere. Matched loosely on
+   purpose — a missed alias would make a covered resident look uncovered, which
+   is the single most damaging false positive this tool can produce. */
+const LEASELOCK_PATTERNS = [
+  /lease\s*lock/i,
+  /leaselock/i,
+  /deposit\s*waiver/i,
+];
+function isLeaseLockCharge(description){
+  const d = String(description||'');
+  return LEASELOCK_PATTERNS.some(re => re.test(d));
+}
+function leaseLockChargesOf(block){
+  return (block.charges||[]).filter(c => isLeaseLockCharge(c.description));
+}
+
+/* =========================================================================
+   LeaseLock invoice parsing
+   Deliberately tolerant: LeaseLock's own export format varies by account and
+   by whether it came out of their portal or an emailed statement, so columns
+   are matched on meaning rather than exact header text. Anything that can't
+   be located is reported as absent rather than guessed at.
+   ========================================================================= */
+const normHeader = s => String(s==null?'':s).toLowerCase().replace(/[^a-z0-9]/g,'');
+
+function headerRole(raw){
+  const h = normHeader(raw);
+  if (!h) return null;
+  // Order matters: a header like "coveragestartdate" must be read as a start
+  // date, not as a generic "coverage" amount column.
+  const hasStart = /(start|begin|from|effective|inception)/.test(h);
+  const hasEnd = /(end|thru|through|expir|termination|until)/.test(h) || h === 'to';
+  const dateish = /(date|period|coverage|policy|service|term|bill|cycle|month)/.test(h) || hasStart || hasEnd;
+  if (hasStart && dateish) return 'start';
+  if (hasEnd && dateish) return 'end';
+  if (/(unit|apt|apartment|space|suite)/.test(h) && !/type|sqft|squarefeet/.test(h)) return 'unit';
+  if (/(resident|tenant|lessee|occupant|renter|customer)/.test(h) || h === 'name' || /(residentname|tenantname|fullname|lastfirst)/.test(h)) return 'resident';
+  if (/(amount|premium|total|billed|charge|price|cost|rate|fee|due|invoiceamt)/.test(h)) return 'amount';
+  return null;
+}
+
+/* ---------- Real LeaseLock invoices are PDFs ----------
+   LeaseLock issues the invoice as a PDF, not a spreadsheet. Page 1 is the
+   remittance summary; the per-unit detail lives in a table on the following
+   pages with these columns:
+
+     Certificate# | Resident ID | Unit | Affected Dates | Activity Type
+                  | Insurance Premium | Technology Srvs Fees | Total Amount
+
+   and rows that look like:
+
+     10654210898 a68c8336- 2-203 8/1/26-8/31/26 Current $24.00 $7.00 $31.00
+
+   The resident-ID UUID soft-wraps across several output lines, so the text
+   layer interleaves fragments between real rows. Rather than trying to
+   reconstruct the table geometrically, each line is matched on the one
+   unambiguous shape a detail row has: a unit token, a date range, then a
+   trailing run of dollar amounts. Fragment lines simply don't match.
+
+   Amounts: the LAST dollar figure on the row is the Total (premium +
+   technology fees). That total is what the property actually pays, so it is
+   what the resident's charge must be compared against -- not the premium
+   alone. */
+const LL_ROW_RE = new RegExp(
+  '(?:^|\\s)' +
+  // Unit token. LeaseLock writes the building prefix differently per
+  // property: Blanco Oaks uses "2-203" (digits) while Garden Creek uses
+  // "A-A104" (letters, and the part AFTER the dash also starts with a
+  // letter). The old pattern only allowed digits before the dash and digits
+  // after it, so every Garden Creek line failed to match and the whole
+  // invoice came back as "no per-unit lines could be read".
+  '([A-Za-z0-9]{1,4}[-\u2010-\u2015][A-Za-z]{0,3}\\d{1,5}[A-Za-z]?|[A-Za-z]{0,3}\\d{1,5}[A-Za-z]?)' +
+  '\\s+' +
+  '(\\d{1,2}\\/\\d{1,2}\\/\\d{2,4})\\s*[-\u2010-\u2015]\\s*(\\d{1,2}\\/\\d{1,2}\\/\\d{2,4})' +  // affected dates
+  '\\s+([A-Za-z][A-Za-z ]*?)' +                                                     // activity type
+  // Money columns. Credits appear on real invoices for terminated and
+  // nullified policies, and accounting formats put the sign in three
+  // different places: "-$12.00", "$-12.00" and "($12.00)". All three have to
+  // parse, because dropping a credit silently overstates what is owed.
+  '\\s+((?:\\(?\\s*-?\\$\\s*-?[\\d,]+(?:\\.\\d{2})?\\s*\\)?\\s*){1,6})$'
+);
+
+// Parses a run of money columns, preserving sign whichever way it's written.
+function parseInvoiceMoneyTokens(str){
+  const out = [];
+  const re = /(\()?\s*(-)?\$\s*(-)?([\d,]+(?:\.\d{2})?)\s*(\))?/g;
+  let m;
+  while ((m = re.exec(str)) !== null){
+    const negative = !!(m[2] || m[3] || (m[1] && m[5]));
+    const n = parseFloat(m[4].replace(/,/g, ''));
+    if (isFinite(n)) out.push(negative ? -n : n);
+  }
+  return out;
+}
+
+async function parseLeaseLockInvoicePdf(file){
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  const pageTexts = [];
+  for (let i=1; i<=pdf.numPages; i++){
+    const page = await pdf.getPage(i);
+    const tc = await page.getTextContent();
+    // Rebuild lines from item Y positions -- pdf.js hands back positioned
+    // fragments, not lines.
+    const byLine = new Map();
+    for (const it of tc.items){
+      if (!it.str || !it.str.trim()) continue;
+      const y = Math.round(it.transform[5]);
+      if (!byLine.has(y)) byLine.set(y, []);
+      byLine.get(y).push({x: it.transform[4], s: it.str});
+    }
+    const lines = Array.from(byLine.entries())
+      .sort((a,b) => b[0]-a[0])
+      .map(([,items]) => items.sort((a,b)=>a.x-b.x).map(i=>i.s).join(' ').replace(/\s+/g,' ').trim());
+    pageTexts.push(lines);
+  }
+
+  const rawLines = [].concat.apply([], pageTexts);
+  const parsed = [];
+  for (const line of rawLines){
+    const m = LL_ROW_RE.exec(line);
+    if (!m) continue;
+    const money = parseInvoiceMoneyTokens(m[5]);
+    if (!money.length) continue;
+    const total = money[money.length-1];
+    if (!isFinite(total)) continue;
+    parsed.push({
+      unitRaw: m[1].trim(),
+      startRaw: m[2], endRaw: m[3],
+      activity: m[4].trim(),
+      amount: total,
+      components: money.slice(0, -1),
+    });
+  }
+  if (!parsed.length){
+    throw new Error('No per-unit lines could be read out of this PDF. This tool expects a LeaseLock invoice whose detail pages list each unit with its affected dates and amounts. If this is a LeaseLock invoice in a layout we haven’t seen, send it over and it can be supported.');
+  }
+  // Invoice-level metadata, read off the summary page for the header line.
+  const flat = rawLines.join('\n');
+  const invNum = /Invoice\s*(?:Number|#)\s*:?\s*([A-Z0-9-]+)/i.exec(flat);
+  const invDate = /Invoice\s*Date\s*:?\s*([A-Za-z]{3,9}\s+\d{1,2},\s*\d{4})/i.exec(flat);
+  const balance = /Total Invoice Balance Due\s*\$?\s*([\d,]+\.\d{2})/i.exec(flat)
+               || /Balance Due\s*\$?\s*([\d,]+\.\d{2})/i.exec(flat);
+  return {
+    parsed,
+    meta: {
+      invoiceNumber: invNum ? invNum[1] : null,
+      invoiceDate: invDate ? invDate[1] : null,
+      balanceDue: balance ? parseFloat(balance[1].replace(/,/g,'')) : null,
+      source: 'pdf',
+    },
+  };
+}
+
+async function parseLeaseLockInvoice(file){
+  const name = (file.name || '').toLowerCase();
+  if (name.endsWith('.pdf') || file.type === 'application/pdf'){
+    const { parsed, meta } = await parseLeaseLockInvoicePdf(file);
+    const lines = [];
+    const seen = new Map();
+    const duplicates = [];
+    let hasDateColumns = false;
+    for (const p of parsed){
+      const key = normalizeUnitKey(p.unitRaw);
+      if (!key) continue;
+      const line = {
+        unitRaw: p.unitRaw, unitKey: key, resident: '',
+        amount: p.amount,
+        coverageStart: anyToDate(p.startRaw),
+        coverageEnd: anyToDate(p.endRaw),
+        activity: p.activity,
+      };
+      if (line.coverageStart && line.coverageEnd) hasDateColumns = true;
+      line.coverageDays = inclusiveDays(line.coverageStart, line.coverageEnd);
+      if (seen.has(key)){
+        const prev = seen.get(key);
+        prev.amount += line.amount;
+        prev.merged = (prev.merged || 1) + 1;
+        if (line.coverageStart && (!prev.coverageStart || line.coverageStart < prev.coverageStart)) prev.coverageStart = line.coverageStart;
+        if (line.coverageEnd && (!prev.coverageEnd || line.coverageEnd > prev.coverageEnd)) prev.coverageEnd = line.coverageEnd;
+        prev.coverageDays = inclusiveDays(prev.coverageStart, prev.coverageEnd);
+        duplicates.push(key);
+      } else { seen.set(key, line); lines.push(line); }
+    }
+    return { lines, byUnit: seen, hasDateColumns, duplicates, meta };
+  }
+  return parseLeaseLockInvoiceSheet(file);
+}
+
+async function parseLeaseLockInvoiceSheet(file){
+  const buf = await file.arrayBuffer();
+  // SheetJS reads .csv and .xlsx from the same ArrayBuffer, so a single path
+  // covers both accepted formats.
+  const wb = XLSX.read(buf, {type:'array', cellDates:true});
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null, raw:true});
+
+  let headerRowIdx = -1, cols = null;
+  const scanLimit = Math.min(rows.length, 40);
+  for (let r=0; r<scanLimit; r++){
+    const row = rows[r] || [];
+    const found = {};
+    for (let c=0;c<row.length;c++){
+      const role = headerRole(row[c]);
+      if (role && found[role] === undefined) found[role] = c;
+    }
+    if (found.unit !== undefined && found.amount !== undefined){
+      headerRowIdx = r; cols = found; break;
+    }
+  }
+  if (headerRowIdx === -1){
+    throw new Error('Could not find a header row in the LeaseLock invoice. This tool looks for a row containing a unit column and an amount column (names are matched loosely — "Unit", "Unit #", "Apt" and "Amount", "Premium", "Total" all work).');
+  }
+
+  const lines = [];
+  const seen = new Map();
+  const duplicates = [];
+  for (let r=headerRowIdx+1; r<rows.length; r++){
+    const row = rows[r] || [];
+    const unitRaw = row[cols.unit];
+    const key = normalizeUnitKey(unitRaw);
+    const amount = toNumber(cols.amount !== undefined ? row[cols.amount] : null);
+    if (!key || amount === null) continue;      // blank spacer / subtotal row
+    if (/^(total|subtotal|grandtotal)$/i.test(String(unitRaw).replace(/[^a-z]/gi,''))) continue;
+    const line = {
+      unitRaw: String(unitRaw).trim(),
+      unitKey: key,
+      resident: cols.resident !== undefined ? (row[cols.resident]==null?'':String(row[cols.resident]).trim()) : '',
+      amount,
+      coverageStart: cols.start !== undefined ? anyToDate(row[cols.start]) : null,
+      coverageEnd: cols.end !== undefined ? anyToDate(row[cols.end]) : null,
+    };
+    line.coverageDays = inclusiveDays(line.coverageStart, line.coverageEnd);
+    if (seen.has(key)){
+      // Two lines for the same unit normally means the invoice covers more
+      // than one billing period at once. Sum them rather than dropping one,
+      // and remember it so the detail view can say so.
+      const prev = seen.get(key);
+      prev.amount += line.amount;
+      prev.merged = (prev.merged || 1) + 1;
+      if (line.coverageStart && (!prev.coverageStart || line.coverageStart < prev.coverageStart)) prev.coverageStart = line.coverageStart;
+      if (line.coverageEnd && (!prev.coverageEnd || line.coverageEnd > prev.coverageEnd)) prev.coverageEnd = line.coverageEnd;
+      prev.coverageDays = inclusiveDays(prev.coverageStart, prev.coverageEnd);
+      duplicates.push(key);
+    } else {
+      seen.set(key, line);
+      lines.push(line);
+    }
+  }
+
+  return {
+    lines,
+    byUnit: seen,
+    hasDateColumns: cols.start !== undefined && cols.end !== undefined,
+    hasResidentColumn: cols.resident !== undefined,
+    duplicateUnits: Array.from(new Set(duplicates)),
+    headerRowIdx,
+  };
+}
+
+/* =========================================================================
+   Reconciliation
+   ========================================================================= */
+let invoiceData = null;       // parsed LeaseLock invoice
+let allUnitBlocks = new Map();// unit key -> rent roll block
+let detectedPropertyName = null;
+let unitEntries = [];
+let vacantUnitCount = 0;
+let invoiceOnlyCount = 0;
+let currentFilter = 'all';
+let coverageFilter = 'any';  // 'any' | 'leaselock' | 'surety' | 'deposit' | 'none'
+let expandedUnits = new Set();
+const EXPECTED_PROPERTY = (typeof window !== 'undefined' && window.AUDITLY_EXPECTED_PROPERTY) || null;
+
+function coverageOf(block){
+  const ll = leaseLockChargesOf(block);
+  const suretyVal = (typeof block.surety === 'number' && isFinite(block.surety)) ? block.surety : 0;
+  const depositVal = (typeof block.deposits === 'number' && isFinite(block.deposits)) ? block.deposits : 0;
+  return {
+    leaseLockCharges: ll,
+    onLeaseLock: ll.length > 0,
+    leaseLockAmount: ll.length ? ll.reduce((s,c)=>s+(c.amount||0),0) : null,
+    onSurety: suretyVal > 0,
+    suretyAmount: suretyVal,
+    onDeposit: depositVal > 0,
+    depositAmount: depositVal,
+  };
+}
+
+function mkFinding(key, severity, note, facts){
+  return {
+    key, severity,                    // 'flag' = a real discrepancy, 'soft' = explained / informational
+    label: FINDING_LABEL[key] || key,
+    note: note || '',
+    facts: facts || {},
+    hiddenByFilter: isCheckHidden(key),
+  };
+}
+
+/* The heart of the tool. One unit in, its findings out.
+
+   Rules, in the order they matter:
+     • Vacant units are excluded entirely — there is no resident whose deposit
+       could need covering.
+     • A unit with a Traditional Security Deposit or a surety bond has already covered its
+       deposit. It is NOT a LeaseLock unit and must never be reported as a
+       LeaseLock problem — no "missing LeaseLock charge", nothing.
+     • A unit with none of the three is a real, flagged discrepancy.
+     • For LeaseLock units, the resident should be charged the invoice amount
+       plus the property's markup. Anything else is flagged — UNLESS the
+       invoice's covered date range is longer than a normal month, which is a
+       legitimate reason for the invoice to be bigger, in which case it is
+       recorded as an explained non-issue.
+*/
+function reconcileUnitCoverage(block, invLine, opts){
+  opts = opts || {};
+  const cov = coverageOf(block);
+  const findings = [];
+
+  const charged = cov.onLeaseLock ? cov.leaseLockAmount : null;
+  const invoiced = invLine ? invLine.amount : null;
+  const expected = invLine ? (invLine.amount + LEASELOCK_MARKUP) : null;
+
+  if (cov.onLeaseLock && invLine){
+    const diff = charged - expected;
+    if (Math.abs(diff) > CENT){
+      if (diff < 0){
+        // The invoice is bigger than one month at the resident's charge rate.
+        // A longer covered period is the ordinary, legitimate explanation.
+        const days = invLine.coverageDays;
+        if (days !== null && days > NORMAL_MONTH_MAX_DAYS){
+          const extra = days - NORMAL_MONTH_MAX_DAYS;
+          findings.push(mkFinding('llAmountMismatch', 'soft',
+            'Invoice of ' + money(invoiced) + ' is higher than the ' + money(charged - LEASELOCK_MARKUP) +
+            ' implied by the resident\'s ' + money(charged) + ' charge, but it covers ' + days + ' days (' +
+            fmtDateShort(invLine.coverageStart) + ' – ' + fmtDateShort(invLine.coverageEnd) + ') — ' + extra +
+            ' day' + (extra===1?'':'s') + ' more than a normal month. The longer coverage period explains the higher invoice, so this is not counted as a Mismatch.',
+            {charged, invoiced, expected, coverageDays: days}));
+        } else if (days === null){
+          // No usable dates: say so rather than inventing an explanation.
+          findings.push(mkFinding('llAmountMismatch', 'flag',
+            'Resident is charged ' + money(charged) + ' but the invoice is ' + money(invoiced) +
+            ', which with a ' + money(LEASELOCK_MARKUP) + ' markup should mean a ' + money(expected) + ' charge (' +
+            money(Math.abs(diff)) + ' short). ' +
+            (opts.invoiceHasDateColumns
+              ? 'This invoice line has no usable coverage dates, so a longer coverage period could not be ruled out — check the period manually before treating it as an overcharge.'
+              : 'This invoice has no coverage start/end columns at all, so a longer coverage period could not be ruled out — check the period manually before treating it as an overcharge.'),
+            {charged, invoiced, expected, coverageDays: null}));
+        } else {
+          findings.push(mkFinding('llAmountMismatch', 'flag',
+            'Unexplained overcharge from LeaseLock. Resident is charged ' + money(charged) + ', so the invoice should be ' +
+            money(charged - LEASELOCK_MARKUP) + ' — it is ' + money(invoiced) + ', ' + money(Math.abs(diff)) +
+            ' more than expected. The invoice covers ' + days + ' day' + (days===1?'':'s') + ' (' +
+            fmtDateShort(invLine.coverageStart) + ' – ' + fmtDateShort(invLine.coverageEnd) +
+            '), a normal month, so a longer coverage period does not explain it.',
+            {charged, invoiced, expected, coverageDays: days}));
+        }
+      } else {
+        // Resident is being charged more than invoice + markup. A longer
+        // coverage period cannot explain this direction — it would make the
+        // invoice larger, not the resident's monthly charge.
+        findings.push(mkFinding('llAmountMismatch', 'flag',
+          'Resident is charged ' + money(charged) + ', but LeaseLock invoiced ' + money(invoiced) +
+          ' which with the ' + money(LEASELOCK_MARKUP) + ' markup should be a ' + money(expected) + ' charge — ' +
+          money(Math.abs(diff)) + ' over.',
+          {charged, invoiced, expected, coverageDays: invLine.coverageDays}));
+      }
+    }
+  } else if (cov.onLeaseLock && !invLine){
+    // We bill the resident, LeaseLock isn't billing us.
+    findings.push(mkFinding('llNotOnInvoice', 'flag',
+      'This unit is charged ' + money(charged) + ' for a LeaseLock deposit waiver on the Rent Roll, but there is no line for it on the LeaseLock invoice. Either the resident is being billed for coverage that was never placed, or the invoice is incomplete.',
+      {charged, invoiced: null, expected: null}));
+  } else if (!cov.onLeaseLock && invLine){
+    // LeaseLock bills us, we never charged the resident. Direct lost revenue.
+    // This is reported even when the unit also carries a deposit or a bond:
+    // being on the invoice is positive evidence that coverage was placed, and
+    // the property is paying for it out of pocket either way.
+    const alsoCovered = [];
+    if (cov.onSurety) alsoCovered.push('a surety bond of ' + money(cov.suretyAmount));
+    if (cov.onDeposit) alsoCovered.push('a Traditional Security Deposit of ' + money(cov.depositAmount));
+    // The right action differs completely depending on whether this resident
+    // is already covered, so the finding leads with whichever one applies.
+    // Telling someone to bill a resident who already has a deposit on file
+    // would be wrong advice: the policy is the thing to cancel, not the
+    // charge to add.
+    findings.push(mkFinding('llNotCharged', 'flag',
+      alsoCovered.length
+        ? 'LeaseLock is invoicing ' + money(invoiced) + ' a month for this unit, but the resident already has ' +
+          alsoCovered.join(' and ') + ' on the Rent Roll and is not being charged a deposit waiver. ' +
+          'The deposit is already covered, so this LeaseLock policy looks redundant — it should probably be cancelled with LeaseLock rather than billed to the resident. Until it is, the property is paying ' +
+          money(invoiced) + ' a month for coverage it does not need.'
+        : 'LeaseLock invoiced ' + money(invoiced) + ' for this unit, but the Rent Roll has no deposit waiver charge — the resident was never billed, so the premium plus the ' +
+          money(LEASELOCK_MARKUP) + ' markup (' + money(expected) + ' a month) is coming straight out of the property\'s pocket.',
+      {charged: null, invoiced, expected}));
+  } else if (!cov.onSurety && !cov.onDeposit){
+    // Nothing anywhere. Nobody is covering this deposit.
+    findings.push(mkFinding('noCoverage', 'flag',
+      'No deposit coverage of any kind: no LeaseLock deposit waiver charge on the Rent Roll, no surety bond, and no Traditional Security Deposit. Nobody is covering this resident\'s deposit.',
+      {charged: null, invoiced: null, expected: null}));
+  }
+
+  return { cov, findings, charged, invoiced, expected };
+}
+
+function coverageLabel(cov){
+  const parts = [];
+  if (cov.onLeaseLock) parts.push('LeaseLock');
+  if (cov.onSurety) parts.push('Surety bond');
+  if (cov.onDeposit) parts.push('Traditional Security Deposit');
+  return parts.length ? parts.join(' + ') : 'None';
+}
+function coverageBadgeClass(cov){
+  if (cov.onLeaseLock) return 'leaselock';
+  if (cov.onSurety) return 'surety';
+  if (cov.onDeposit) return 'deposit';
+  return 'none';
+}
+
+function reconcileAll(){
+  if (!allUnitBlocks.size) return;
+  unitEntries = [];
+  vacantUnitCount = 0;
+  invoiceOnlyCount = 0;
+
+  const invoiceByUnit = invoiceData ? invoiceData.byUnit : new Map();
+  const matchedInvoiceKeys = new Set();
+  // Re-key every invoice line onto the Rent Roll's own unit keys first, so a
+  // building-prefixed invoice unit ("2-203") lines up with the Rent Roll's
+  // "203" instead of looking like a unit that doesn't exist. Lines that can't
+  // be resolved keep their own key and fall through to the invoice-only pass
+  // below, where they're reported rather than silently dropped.
+  const invoiceByRentRollKey = new Map();
+  if (invoiceData){
+    for (const line of invoiceData.lines){
+      const resolved = resolveInvoiceUnitKey(line.unitRaw, allUnitBlocks);
+      line.resolvedKey = resolved;
+      if (resolved && !invoiceByRentRollKey.has(resolved)) invoiceByRentRollKey.set(resolved, line);
+    }
+  }
+  const opts = { invoiceHasDateColumns: invoiceData ? invoiceData.hasDateColumns : false };
+
+  for (const [key, block] of allUnitBlocks){
+    if (isVacant(block)){ vacantUnitCount++; continue; }
+    const unitKey = normalizeUnitKey(block.unit);
+    const invLine = invoiceByRentRollKey.get(unitKey) || invoiceByUnit.get(unitKey) || null;
+    if (invLine) matchedInvoiceKeys.add(invLine.unitKey);
+
+    const res = reconcileUnitCoverage(block, invLine, opts);
+    const visibleFlags = res.findings.filter(f => f.severity === 'flag' && !f.hiddenByFilter);
+    const hiddenFlags = res.findings.filter(f => f.severity === 'flag' && f.hiddenByFilter);
+
+    unitEntries.push({
+      unitKey,
+      unit: block.unit,
+      residents: block.residents == null ? '' : String(block.residents),
+      status: block.status == null ? '' : String(block.status),
+      block, invLine,
+      cov: res.cov,
+      charged: res.charged,
+      invoiced: res.invoiced,
+      expected: res.expected,
+      coverageLabel: coverageLabel(res.cov),
+      findings: res.findings,
+      issueCount: visibleFlags.length,
+      hiddenCount: hiddenFlags.length,
+      category: visibleFlags.length ? 'discrepancy' : 'clean',
+      leaseStart: block.leaseStart, leaseEnd: block.leaseEnd,
+    });
+  }
+
+  // Invoice lines that don't correspond to any occupied rent-roll unit at all
+  // (a unit number that isn't in the rent roll, or one that's vacant). These
+  // still cost the property money, so they get their own rows rather than
+  // being dropped.
+  if (invoiceData){
+    for (const line of invoiceData.lines){
+      if (matchedInvoiceKeys.has(line.unitKey)) continue;
+      const rrBlock = (line.resolvedKey ? allUnitBlocks.get(line.resolvedKey) : null)
+        || allUnitBlocks.get(line.unitRaw.toUpperCase()) || null;
+      const vacant = rrBlock ? isVacant(rrBlock) : false;
+      // LeaseLock writes units building-first ("4-403"); once that resolves
+      // to a real Rent Roll unit, show the Rent Roll's number -- it's the
+      // source of truth and it's what the user will search for -- while
+      // still quoting the invoice's own label so the line can be found on
+      // the invoice itself.
+      const shownUnit = rrBlock ? rrBlock.unit : line.unitRaw;
+      const asInvoiced = (String(shownUnit) !== String(line.unitRaw))
+        ? ' (billed as "' + line.unitRaw + '" on the invoice)' : '';
+      const finding = mkFinding('llNotCharged', 'flag',
+        vacant
+          ? 'LeaseLock is invoicing ' + money(line.amount) + ' for unit ' + shownUnit + asInvoiced +
+            ', but that unit is vacant on the Rent Roll — there is no resident to bill it to. ' +
+            'The property is paying this premium out of pocket for an empty unit; if the coverage should have ended when the resident moved out, it needs cancelling with LeaseLock.'
+          : (rrBlock
+              ? 'LeaseLock invoiced ' + money(line.amount) + ' for unit ' + shownUnit + asInvoiced +
+                ', but the Rent Roll has no deposit waiver charge for it. The property is paying the premium and not recovering it from the resident.'
+              : 'LeaseLock invoiced ' + money(line.amount) + ' for unit ' + line.unitRaw +
+                ', but that unit does not appear in the Rent Roll at all. Check the unit number against the invoice.'),
+        {charged: null, invoiced: line.amount, expected: line.amount + LEASELOCK_MARKUP});
+      const visible = finding.hiddenByFilter ? 0 : 1;
+      invoiceOnlyCount++;
+      unitEntries.push({
+        unitKey: line.resolvedKey || line.unitKey,
+        unit: shownUnit,
+        residents: line.resident || (rrBlock && rrBlock.residents ? String(rrBlock.residents) : ''),
+        status: '',
+        block: rrBlock, invLine: line,
+        cov: {onLeaseLock:false, onSurety:false, onDeposit:false, leaseLockCharges:[], leaseLockAmount:null, suretyAmount:0, depositAmount:0},
+        charged: null, invoiced: line.amount, expected: line.amount + LEASELOCK_MARKUP,
+        coverageLabel: 'Invoice only',
+        findings: [finding],
+        issueCount: visible,
+        hiddenCount: 1 - visible,
+        category: visible ? 'discrepancy' : 'clean',
+        invoiceOnly: true,
+        leaseStart: null, leaseEnd: null,
+      });
+    }
+  }
+
+  renderDashboard();
+}
+
+/* =========================================================================
+   Rendering
+   ========================================================================= */
+function renderDashboard(){
+  document.getElementById('results-card').classList.remove('hidden');
+
+  // Invoice-only rows aren't residents -- that's precisely what's wrong with
+  // them -- so they're excluded from the resident count and surfaced in their
+  // own tile instead.
+  const total = unitEntries.filter(e=>!e.invoiceOnly).length;
+  const clean = unitEntries.filter(e=>e.category==='clean').length;
+  const discrepancies = unitEntries.filter(e=>e.category==='discrepancy').length;
+  const onLeaseLock = unitEntries.filter(e=>e.cov.onLeaseLock).length;
+  const onSurety = unitEntries.filter(e=>e.cov.onSurety).length;
+  const onDeposit = unitEntries.filter(e=>e.cov.onDeposit).length;
+  const noCoverage = unitEntries.filter(e=>e.findings.some(f=>f.key==='noCoverage')).length;
+  // Findings suppressed by the Option Filters panel. Never zeroed out and
+  // never folded into the discrepancy count — the whole point is that these
+  // are real findings the user asked not to have popped up per-unit, so the
+  // property-wide total still has to be visible.
+  const hiddenTotal = unitEntries.reduce((n,e)=>n+e.hiddenCount, 0);
+  const totalFindings = unitEntries.reduce((n,e)=>n+e.issueCount, 0);
+
+  renderPropertyMatchBanner();
+
+  document.getElementById('kpi-row').innerHTML =
+    '<div class="kpi-tile total"><b>'+total+'</b><span>Residents checked</span>'+
+      (vacantUnitCount ? '<div class="kpi-note">'+vacantUnitCount+' vacant unit'+(vacantUnitCount===1?'':'s')+' excluded</div>' : '')+
+    '</div>'+
+    '<div class="kpi-tile leaselock"><b>'+onLeaseLock+'</b><span>On LeaseLock</span></div>'+
+    '<div class="kpi-tile surety"><b>'+onSurety+'</b><span>On a surety bond</span></div>'+
+    '<div class="kpi-tile deposit"><b>'+onDeposit+'</b><span>On a Traditional Security Deposit</span></div>'+
+    '<div class="kpi-tile mismatch"><b>'+discrepancies+'</b><span>Mismatch</span>'+
+      (totalFindings !== discrepancies ? '<div class="kpi-note">'+totalFindings+' finding'+(totalFindings===1?'':'s')+' in total</div>' : '')+
+    '</div>'+
+    (noCoverage ? '<div class="kpi-tile missing"><b>'+noCoverage+'</b><span>No coverage at all</span>'+
+      '<div class="kpi-note">No LeaseLock, bond, or deposit</div></div>' : '')+
+    (hiddenTotal ? '<div class="kpi-tile hidden-filter"><b>'+hiddenTotal+'</b><span>Hidden by your filters</span>'+
+      '<div class="kpi-note">Not counted as a Mismatch &mdash; <a href="#" id="kpi-open-filters-link">adjust filters</a></div></div>' : '');
+
+  const openFiltersLink = document.getElementById('kpi-open-filters-link');
+  if (openFiltersLink){
+    openFiltersLink.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      const panel = document.getElementById('discrepancy-filter-panel');
+      panel.open = true;
+      panel.scrollIntoView({behavior:'smooth', block:'center'});
+    });
+  }
+
+  document.getElementById('kpi-sub').innerHTML =
+    'Expected resident charge is the LeaseLock invoice amount plus a <b>'+escapeHtml(money(LEASELOCK_MARKUP))+'</b> markup.  ·  '+
+    '<b>'+invoiceOnlyCount+'</b> invoice line'+(invoiceOnlyCount===1?'':'s')+' with no matching occupied unit.';
+
+  const tabs = [
+    {key:'all', label:'All', count: unitEntries.length},
+    {key:'discrepancies', label:'Mismatch', count: discrepancies},
+    {key:'clean', label:'Match', count: clean},
+  ];
+  document.getElementById('filter-tabs').innerHTML = tabs.map(t =>
+    '<button class="tab'+(currentFilter===t.key?' active':'')+'" data-filter="'+t.key+'">'+t.label+' <span class="count">'+t.count+'</span></button>'
+  ).join('');
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => { currentFilter = btn.getAttribute('data-filter'); renderDashboard(); });
+  });
+
+  const covChips = [
+    {key:'any',       label:'All coverage', count: unitEntries.length},
+    {key:'leaselock', label:'LeaseLock',        count: onLeaseLock},
+    {key:'surety',    label:'Surety bonds',     count: onSurety},
+    {key:'deposit',   label:'Traditional Security Deposits',count: onDeposit},
+    {key:'none',      label:'No coverage',      count: noCoverage},
+  ];
+  document.getElementById('coverage-chips').innerHTML =
+    '<span class="cov-chip-label">Show only:</span>' + covChips.map(c =>
+      '<button class="cov-chip'+(coverageFilter===c.key?' active':'')+' cov-'+c.key+'" data-cov="'+c.key+'">'+
+      c.label+' <span class="count">'+c.count+'</span></button>').join('');
+  document.querySelectorAll('.cov-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const k = btn.getAttribute('data-cov');
+      // Clicking the active chip clears the filter, so there's always a way
+      // back to everything without hunting for "All".
+      coverageFilter = (coverageFilter === k && k !== 'any') ? 'any' : k;
+      renderDashboard();
+    });
+  });
+
+  renderTable();
+}
+
+function renderPropertyMatchBanner(){
+  const el = document.getElementById('property-match-banner');
+  if (!detectedPropertyName){ el.classList.add('hidden'); el.innerHTML=''; return; }
+  el.classList.remove('hidden');
+  el.className = 'property-banner info';
+  el.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>'+
+    '<div>Rent roll detected for <b>'+escapeHtml(detectedPropertyName)+'</b>.</div>';
+}
+
+function matchesCoverage(e){
+  const c = e.cov || {};
+  switch(coverageFilter){
+    case 'leaselock': return !!c.onLeaseLock;
+    case 'surety':    return !!c.onSurety;
+    case 'deposit':   return !!c.onDeposit;
+    // Residents covered by nothing at all -- the expensive case.
+    case 'none':      return !c.onLeaseLock && !c.onSurety && !c.onDeposit;
+    default: return true;
+  }
+}
+
+// The status tabs (All / Mismatch / Match) and the coverage chips are
+// deliberately independent, so "only the surety-bond residents, and only the
+// ones with a Mismatch" is expressible.
+function matchesFilter(e){
+  if (!matchesCoverage(e)) return false;
+  switch(currentFilter){
+    case 'all': return true;
+    case 'discrepancies': return e.category === 'discrepancy';
+    case 'clean': return e.category === 'clean';
+    default: return true;
+  }
+}
+
+/* ---------- Column sorting ----------
+   sortKey === null means "default": the order reconcileAll() produced, which
+   follows the rent roll. Clicking a column switches to it, clicking again
+   reverses, and a third click returns to the default rather than trapping the
+   user in a sort they can't undo. Rows with no value for the active column
+   always sink to the bottom regardless of direction. */
+let sortKey = null;
+let sortDir = 1;
+const UNIT_SORT_ACCESSORS = {
+  unit: e => String(e.unit || ''),
+  residents: e => String(e.residents || ''),
+  coverage: e => String(e.coverageLabel || ''),
+  charged: e => (e.charged == null ? null : e.charged),
+  invoiced: e => (e.invoiced == null ? null : e.invoiced),
+  expected: e => (e.expected == null ? null : e.expected),
+  status: e => String(e.category || ''),
+  issues: e => (typeof e.issueCount === 'number' ? e.issueCount : null),
+};
+function applyUnitSort(rows){
+  if (!sortKey || !UNIT_SORT_ACCESSORS[sortKey]) return rows;
+  const get = UNIT_SORT_ACCESSORS[sortKey];
+  return rows.slice().sort((a,b) => {
+    const av = get(a), bv = get(b);
+    const aEmpty = av == null || av === '';
+    const bEmpty = bv == null || bv === '';
+    if (aEmpty && bEmpty) return String(a.unit).localeCompare(String(b.unit), undefined, {numeric:true});
+    if (aEmpty) return 1;
+    if (bEmpty) return -1;
+    let cmp;
+    if (typeof av === 'number' && typeof bv === 'number') cmp = av - bv;
+    else cmp = String(av).localeCompare(String(bv), undefined, {numeric:true});
+    if (cmp === 0) return String(a.unit).localeCompare(String(b.unit), undefined, {numeric:true});
+    return cmp * sortDir;
+  });
+}
+function syncSortHeaderIndicators(){
+  document.querySelectorAll('#unit-view-shell th.sortable').forEach(th => {
+    const key = th.getAttribute('data-sort');
+    th.classList.toggle('sorted-asc', sortKey === key && sortDir === 1);
+    th.classList.toggle('sorted-desc', sortKey === key && sortDir === -1);
+    th.setAttribute('aria-sort', sortKey === key ? (sortDir === 1 ? 'ascending' : 'descending') : 'none');
+  });
+}
+function initSortableHeaders(){
+  document.querySelectorAll('#unit-view-shell th.sortable').forEach(th => {
+    th.setAttribute('tabindex','0');
+    th.setAttribute('role','button');
+    const activate = () => {
+      const key = th.getAttribute('data-sort');
+      if (sortKey !== key){ sortKey = key; sortDir = 1; }
+      else if (sortDir === 1){ sortDir = -1; }
+      else { sortKey = null; sortDir = 1; }
+      renderTable();
+    };
+    th.addEventListener('click', activate);
+    th.addEventListener('keydown', ev => { if (ev.key==='Enter' || ev.key===' '){ ev.preventDefault(); activate(); } });
+  });
+}
+initSortableHeaders();
+
+function renderTable(){
+  const body = document.getElementById('results-body');
+  const rows = applyUnitSort(unitEntries.filter(matchesFilter));
+  document.getElementById('empty-state').classList.toggle('hidden', rows.length>0);
+  syncSortHeaderIndicators();
+  body.innerHTML = '';
+
+  for (const e of rows){
+    const tr = document.createElement('tr');
+    tr.className = 'unit-row';
+    tr.setAttribute('data-unit', e.unit);
+    const isOpen = expandedUnits.has(e.unitKey);
+    let summary;
+    if (e.category === 'discrepancy'){
+      summary = e.issueCount + ' finding' + (e.issueCount===1 ? '' : 's');
+    } else if (e.hiddenCount){
+      summary = e.hiddenCount + ' finding' + (e.hiddenCount===1?'':'s') + ' hidden by filter';
+    } else if (e.findings.some(f=>f.severity==='soft')){
+      summary = 'Explained — longer coverage period';
+    } else {
+      summary = 'Deposit coverage verified';
+    }
+    const badgeClass = e.category === 'discrepancy' ? 'mismatch' : (e.hiddenCount ? 'hidden-filter' : 'clean');
+    const badgeText = e.category === 'discrepancy' ? 'Mismatch' : (e.hiddenCount ? 'Hidden by Filter' : 'Match');
+
+    tr.innerHTML =
+      '<td><span class="details-btn'+(isOpen?' open':'')+'">'+(isOpen?'Hide':'Details')+' <span class="dbtn-icon">&#9656;</span></span></td>'+
+      '<td><b>'+escapeHtml(e.unit)+'</b></td>'+
+      '<td>'+escapeHtml(e.residents||'—')+'</td>'+
+      '<td><span class="badge '+coverageBadgeClass(e.cov)+'">'+escapeHtml(e.coverageLabel)+'</span></td>'+
+      '<td class="amt">'+escapeHtml(money(e.charged))+'</td>'+
+      '<td class="amt">'+escapeHtml(money(e.invoiced))+'</td>'+
+      '<td class="amt">'+escapeHtml(money(e.expected))+'</td>'+
+      '<td><span class="badge '+badgeClass+'">'+badgeText+'</span></td>'+
+      '<td>'+escapeHtml(summary)+'</td>';
+    tr.addEventListener('click', () => {
+      if (expandedUnits.has(e.unitKey)) expandedUnits.delete(e.unitKey);
+      else expandedUnits.add(e.unitKey);
+      renderTable();
+    });
+    body.appendChild(tr);
+
+    if (isOpen){
+      const dtr = document.createElement('tr');
+      dtr.className = 'detail-row';
+      const td = document.createElement('td');
+      td.colSpan = 9;
+      td.appendChild(buildDetail(e));
+      dtr.appendChild(td);
+      body.appendChild(dtr);
+    }
+  }
+}
+
+function buildDetail(e){
+  const wrap = document.createElement('div');
+  wrap.className = 'detail-inner';
+
+  const strip = document.createElement('div');
+  strip.className = 'coverage-strip';
+  strip.innerHTML =
+    '<span>LeaseLock charge: <b>'+escapeHtml(e.cov.onLeaseLock ? money(e.cov.leaseLockAmount) : 'none')+'</b></span>'+
+    '<span>Surety Bonds: <b>'+escapeHtml(e.cov.onSurety ? money(e.cov.suretyAmount) : '$0.00')+'</b></span>'+
+    '<span>Deposits: <b>'+escapeHtml(e.cov.onDeposit ? money(e.cov.depositAmount) : '$0.00')+'</b></span>'+
+    '<span>Invoice: <b>'+escapeHtml(e.invLine ? money(e.invLine.amount) : 'not on invoice')+'</b></span>'+
+    (e.invLine && e.invLine.coverageDays !== null
+      ? '<span>Coverage: <b>'+escapeHtml(fmtDateShort(e.invLine.coverageStart)+' – '+fmtDateShort(e.invLine.coverageEnd))+'</b> ('+e.invLine.coverageDays+' days)</span>'
+      : (e.invLine ? '<span>Coverage: <b>no usable dates on the invoice</b></span>' : ''));
+  wrap.appendChild(strip);
+
+  if (e.cov.onLeaseLock && e.cov.leaseLockCharges.length){
+    const rawWrap = document.createElement('div');
+    rawWrap.className = 'note';
+    rawWrap.style.marginBottom = '12px';
+    rawWrap.innerHTML = 'Rent Roll charge line'+(e.cov.leaseLockCharges.length===1?'':'s')+' matched as LeaseLock: '+
+      e.cov.leaseLockCharges.map(c => '<b>'+escapeHtml(c.description)+'</b> '+escapeHtml(money(c.amount))).join(', ');
+    wrap.appendChild(rawWrap);
+  }
+
+  if (!e.findings.length){
+    const ok = document.createElement('div');
+    ok.className = 'finding softf';
+    ok.innerHTML = '<div class="f-head"><span class="badge clean">Match</span> Deposit coverage verified</div>'+
+      '<div class="f-note">This resident\'s deposit is covered by '+escapeHtml(e.coverageLabel)+
+      (e.cov.onLeaseLock ? ', and the Rent Roll charge matches the LeaseLock invoice plus the '+escapeHtml(money(LEASELOCK_MARKUP))+' markup.' : '.')+'</div>';
+    wrap.appendChild(ok);
+  }
+
+  for (const f of e.findings){
+    const div = document.createElement('div');
+    const cls = f.hiddenByFilter ? 'finding muted' : (f.severity==='flag' ? 'finding flag' : 'finding softf');
+    div.className = cls;
+    const badge = f.hiddenByFilter
+      ? '<span class="badge hidden-filter">Hidden by Filter</span>'
+      : (f.severity==='flag' ? '<span class="badge mismatch">Mismatch</span>' : '<span class="badge match">Match</span>');
+    const facts = [];
+    if (f.facts.charged != null) facts.push(['Recurring charge on Rent Roll', money(f.facts.charged)]);
+    if (f.facts.invoiced != null) facts.push(['LeaseLock invoice', money(f.facts.invoiced)]);
+    if (f.facts.expected != null) facts.push(['Expected charge (invoice + markup)', money(f.facts.expected)]);
+    if (f.facts.coverageDays != null) facts.push(['Coverage period', f.facts.coverageDays + ' days']);
+    div.innerHTML = '<div class="f-head">'+badge+' '+escapeHtml(f.label)+'</div>'+
+      '<div class="f-note">'+escapeHtml(f.note)+'</div>'+
+      (facts.length ? '<div class="f-facts">'+facts.map(([k,v]) =>
+        '<div><span class="src">'+escapeHtml(k)+'</span><b>'+escapeHtml(v)+'</b></div>').join('')+'</div>' : '');
+    wrap.appendChild(div);
+  }
+  return wrap;
+}
+
+/* =========================================================================
+   Option Filters panel + markup setting
+   ========================================================================= */
+function renderDiscrepancyFilterPanel(){
+  const wrap = document.getElementById('discrepancy-filter-checks');
+  const groups = [];
+  for (const t of FINDING_TYPES){
+    let g = groups.find(x => x.name === t.group);
+    if (!g){ g = {name:t.group, items:[]}; groups.push(g); }
+    g.items.push(t);
+  }
+  wrap.innerHTML = groups.map(g =>
+    '<div class="filter-group"><div class="filter-group-title">'+escapeHtml(g.name)+
+    '<button type="button" class="filter-group-all" data-group="'+escapeHtml(g.name)+'">toggle all</button></div>'+
+    '<div class="discrepancy-filter-checks">'+g.items.map(t =>
+      '<label class="filter-check-item"><input type="checkbox" data-check-key="'+escapeHtml(t.key)+'"'+(isCheckHidden(t.key)?' checked':'')+'> '+escapeHtml(t.label)+'</label>'
+    ).join('')+'</div></div>'
+  ).join('');
+
+  wrap.querySelectorAll('.filter-group-all').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const name = btn.getAttribute('data-group');
+      const items = FINDING_TYPES.filter(t => t.group === name);
+      const allOn = items.every(t => isCheckHidden(t.key));
+      for (const t of items){ if (allOn) HIDDEN_CHECK_KEYS.delete(t.key); else HIDDEN_CHECK_KEYS.add(t.key); }
+      saveHiddenCheckKeys();
+      renderDiscrepancyFilterPanel();
+      reconcileAll();
+    });
+  });
+  wrap.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const key = cb.getAttribute('data-check-key');
+      if (cb.checked) HIDDEN_CHECK_KEYS.add(key); else HIDDEN_CHECK_KEYS.delete(key);
+      saveHiddenCheckKeys();
+      // Re-derives against already-parsed in-memory data; a no-op until
+      // something's been uploaded, so no re-upload is ever needed.
+      reconcileAll();
+    });
+  });
+}
+renderDiscrepancyFilterPanel();
+
+(function initMarkupSetting(){
+  const input = document.getElementById('markup-input');
+  input.value = LEASELOCK_MARKUP.toFixed(2);
+  input.addEventListener('change', () => {
+    const n = parseFloat(input.value);
+    LEASELOCK_MARKUP = (isFinite(n) && n >= 0) ? n : MARKUP_DEFAULT;
+    input.value = LEASELOCK_MARKUP.toFixed(2);
+    saveMarkup();
+    reconcileAll();
+  });
+})();
+
+/* =========================================================================
+   Uploads
+   ========================================================================= */
+let invoiceFile = null, rentRollFile = null;
+
+function wireDropZone(dropEl, inputEl){
+  ['dragenter','dragover'].forEach(ev => dropEl.addEventListener(ev, e => {
+    e.preventDefault(); e.stopPropagation(); dropEl.classList.add('drag-over');
+  }));
+  ['dragleave','drop'].forEach(ev => dropEl.addEventListener(ev, e => {
+    e.preventDefault(); e.stopPropagation(); dropEl.classList.remove('drag-over');
+  }));
+  dropEl.addEventListener('drop', e => {
+    const dt = e.dataTransfer;
+    if (!dt || !dt.files || !dt.files.length) return;
+    inputEl.files = dt.files;
+    inputEl.dispatchEvent(new Event('change', {bubbles:true}));
+  });
+}
+wireDropZone(document.getElementById('drop-invoice'), document.getElementById('invoice-file'));
+wireDropZone(document.getElementById('drop-rentroll'), document.getElementById('rentroll-file'));
+
+function updateProcessBtn(){
+  document.getElementById('process-btn').disabled = !(invoiceFile && rentRollFile);
+}
+document.getElementById('invoice-file').addEventListener('change', e => {
+  invoiceFile = e.target.files[0] || null;
+  document.getElementById('invoice-filename').textContent = invoiceFile ? invoiceFile.name : 'No file selected';
+  document.getElementById('drop-invoice').classList.toggle('has-file', !!invoiceFile);
+  updateProcessBtn();
+});
+document.getElementById('rentroll-file').addEventListener('change', e => {
+  rentRollFile = e.target.files[0] || null;
+  document.getElementById('rentroll-filename').textContent = rentRollFile ? rentRollFile.name : 'No file selected';
+  document.getElementById('drop-rentroll').classList.toggle('has-file', !!rentRollFile);
+  updateProcessBtn();
+});
+
+document.getElementById('process-btn').addEventListener('click', async () => {
+  const status = document.getElementById('parse-status');
+  status.className = 'status-msg';
+  status.textContent = 'Reading files…';
+  try{
+    const rr = await parseRentRoll(rentRollFile);
+    detectedPropertyName = rr.propertyName;
+    allUnitBlocks = getAllUnitBlocks(rr);
+    invoiceData = await parseLeaseLockInvoice(invoiceFile);
+    expandedUnits = new Set();
+    reconcileAll();
+    status.className = 'status-msg';
+    status.textContent = 'Done.';
+  }catch(err){
+    status.className = 'status-msg err';
+    status.textContent = err && err.message ? err.message : String(err);
+  }
+});
+
+/* =========================================================================
+   Exports
+   ========================================================================= */
+function buildExportRows(){
+  const out = [];
+  for (const e of unitEntries){
+    if (!e.findings.length){
+      out.push({ Unit:e.unit, Residents:e.residents, Coverage:e.coverageLabel, Finding:'', Severity:'Match',
+        ChargedOnRentRoll: e.charged==null?'':e.charged, InvoiceAmount: e.invoiced==null?'':e.invoiced,
+        ExpectedCharge: e.expected==null?'':e.expected, SuretyBond:e.cov.suretyAmount||0, SecurityDeposit:e.cov.depositAmount||0,
+        CoverageDays: e.invLine && e.invLine.coverageDays!=null ? e.invLine.coverageDays : '', HiddenByFilter:'no', Note:'Deposit coverage verified' });
+      continue;
+    }
+    for (const f of e.findings){
+      out.push({ Unit:e.unit, Residents:e.residents, Coverage:e.coverageLabel, Finding:f.label,
+        Severity: f.severity === 'flag' ? 'Mismatch' : 'Match',
+        ChargedOnRentRoll: f.facts.charged==null?'':f.facts.charged,
+        InvoiceAmount: f.facts.invoiced==null?'':f.facts.invoiced,
+        ExpectedCharge: f.facts.expected==null?'':f.facts.expected,
+        SuretyBond: e.cov.suretyAmount||0, SecurityDeposit: e.cov.depositAmount||0,
+        CoverageDays: f.facts.coverageDays==null?'':f.facts.coverageDays,
+        HiddenByFilter: f.hiddenByFilter ? 'yes' : 'no', Note:f.note });
+    }
+  }
+  return out;
+}
+
+document.getElementById('export-csv-btn').addEventListener('click', () => {
+  const rows = buildExportRows();
+  if (!rows.length){ alert('Nothing to export yet.'); return; }
+  const headers = Object.keys(rows[0]);
+  const csvEscape = v => { const s = (v===null||v===undefined) ? '' : String(v); return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; };
+  const csv = [headers.join(',')].concat(rows.map(r => headers.map(h=>csvEscape(r[h])).join(','))).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'depositverify-findings.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+});
+
+/* ---------- Polished PDF report ----------
+   Built as a standalone print-styled HTML document handed to the browser's
+   own print-to-PDF, rather than pulling in a PDF library: the output is real
+   vector text, it adds nothing to this file's size, and it renders with the
+   same brand colours as the app.
+
+   Deliberately light-on-white rather than mirroring the app's dark theme —
+   this gets printed, emailed to owners and attached to audit files, where a
+   dark background is unreadable and wastes toner.
+
+   Only genuine, currently-visible findings are listed. Anything switched off
+   in Option Filters is excluded here exactly as everywhere else, and the
+   count of those is stated in the summary so the report never silently
+   understates what was found. */
+function buildPdfReportRows(){
+  const units = [];
+  for (const e of unitEntries){
+    const lines = e.findings.filter(f => f.severity==='flag' && !f.hiddenByFilter);
+    if (!lines.length) continue;
+    units.push({
+      unit: e.unit, residents: e.residents || '—', coverage: e.coverageLabel,
+      lines: lines.map(f => ({
+        item: f.label,
+        charged: money(f.facts.charged), invoiced: money(f.facts.invoiced), expected: money(f.facts.expected),
+        note: f.note,
+      })),
+    });
+  }
+  return units;
+}
+
+function buildPdfReportHtml(){
+  const units = buildPdfReportRows();
+  const totalFindings = units.reduce((n,u)=>n+u.lines.length, 0);
+  const clean = unitEntries.filter(e=>e.category==='clean').length;
+  const onLeaseLock = unitEntries.filter(e=>e.cov.onLeaseLock).length;
+  const onSurety = unitEntries.filter(e=>e.cov.onSurety).length;
+  const onDeposit = unitEntries.filter(e=>e.cov.onDeposit).length;
+  const hidden = unitEntries.reduce((n,e)=>n+e.hiddenCount, 0);
+  const explained = unitEntries.reduce((n,e)=>n+e.findings.filter(f=>f.severity==='soft').length, 0);
+  const now = new Date();
+  const dateStr = now.toLocaleDateString(undefined, {year:'numeric', month:'long', day:'numeric'});
+  const property = detectedPropertyName || 'Property';
+
+  const unitHtml = units.map(u => `
+    <section class="unit">
+      <div class="unit-head">
+        <div class="unit-id"><span class="unum">${escapeHtml(u.unit)}</span><span class="ures">${escapeHtml(u.residents)}</span></div>
+        <div class="unit-meta"><span class="tag">${escapeHtml(u.coverage)}</span></div>
+      </div>
+      <table>
+        <thead><tr><th class="c-item">Finding</th><th class="c-amt">Recurring charge</th><th class="c-amt">Invoiced</th><th class="c-amt">Expected</th></tr></thead>
+        <tbody>
+          ${u.lines.map(l => `<tr>
+            <td><b>${escapeHtml(l.item)}</b>${l.note ? `<div class="ln">${escapeHtml(l.note)}</div>` : ''}</td>
+            <td class="c-amt">${escapeHtml(l.charged)}</td>
+            <td class="c-amt">${escapeHtml(l.invoiced)}</td>
+            <td class="c-amt">${escapeHtml(l.expected)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </section>`).join('');
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>Auditera AI — Deposit Coverage Report — ${escapeHtml(property)}</title>
+<style>
+  @page { size: letter portrait; margin: 14mm 13mm 16mm; }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+       color:#171a24;font-size:10pt;line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .mast{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;
+        border-bottom:2.5px solid #5b68d6;padding-bottom:13px;margin-bottom:20px;}
+  .brand{display:flex;align-items:center;gap:9px;}
+  .mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(140deg,#5b68d6,#9a6fe0);
+        display:flex;align-items:center;justify-content:center;}
+  .mark svg{width:14px;height:14px;stroke:#fff;}
+  .bname{font-size:15pt;font-weight:800;letter-spacing:-.02em;}
+  .btag{font-size:8pt;color:#6b7185;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-top:1px;}
+  .mast-right{text-align:right;font-size:8.5pt;color:#6b7185;}
+  .mast-right .prop{font-size:11pt;font-weight:700;color:#171a24;}
+  h1{font-size:14pt;margin:0 0 4px;letter-spacing:-.01em;}
+  .lede{color:#525869;margin:0 0 18px;font-size:9.5pt;}
+  .stats{display:flex;gap:9px;margin:0 0 22px;flex-wrap:wrap;}
+  .stat{flex:1;min-width:90px;border:1px solid #dfe2ea;border-left:3px solid #5b68d6;border-radius:7px;padding:9px 11px;background:#f8f9fc;}
+  .stat b{display:block;font-size:17pt;font-weight:800;line-height:1.1;letter-spacing:-.02em;}
+  .stat span{font-size:7.5pt;color:#6b7185;text-transform:uppercase;letter-spacing:.05em;font-weight:700;}
+  .stat.warn{border-left-color:#d9822b;} .stat.ok{border-left-color:#1f9d68;}
+  .unit{margin:0 0 15px;border:1px solid #dfe2ea;border-radius:8px;overflow:hidden;page-break-inside:avoid;break-inside:avoid;}
+  .unit-head{display:flex;align-items:center;justify-content:space-between;gap:14px;
+             background:#f2f4f9;padding:8px 12px;border-bottom:1px solid #dfe2ea;}
+  .unit-id{display:flex;align-items:baseline;gap:9px;}
+  .unum{font-size:12pt;font-weight:800;letter-spacing:-.01em;}
+  .ures{font-size:9pt;color:#525869;}
+  .tag{font-size:7.5pt;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:2.5px 8px;border-radius:20px;
+       background:#eceefa;color:#414c9c;border:1px solid #c9cfee;}
+  table{width:100%;border-collapse:collapse;}
+  thead th{text-align:left;font-size:7.5pt;text-transform:uppercase;letter-spacing:.05em;color:#6b7185;
+           padding:6px 12px;border-bottom:1px solid #e6e9f0;font-weight:800;}
+  tbody td{padding:7px 12px;border-bottom:1px solid #f0f2f7;vertical-align:top;font-size:9pt;}
+  tbody tr:last-child td{border-bottom:none;}
+  .c-amt{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;width:74px;}
+  .ln{font-size:8pt;color:#6b7185;margin-top:3px;line-height:1.45;font-weight:400;}
+  .none{border:1px dashed #cfd4e0;border-radius:8px;padding:26px;text-align:center;color:#6b7185;font-size:10pt;}
+  .foot{margin-top:22px;padding-top:10px;border-top:1px solid #e6e9f0;font-size:7.5pt;color:#8a90a2;
+        display:flex;justify-content:space-between;gap:14px;}
+</style></head><body>
+  <div class="mast">
+    <div class="brand">
+      <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+      <div><div class="bname">Auditera AI</div><div class="btag">DepositVerify</div></div>
+    </div>
+    <div class="mast-right"><div class="prop">${escapeHtml(property)}</div><div>Generated ${escapeHtml(dateStr)}</div></div>
+  </div>
+
+  <h1>Deposit Coverage &amp; LeaseLock Reconciliation</h1>
+  <p class="lede">Every resident should be covered by exactly one of LeaseLock, a surety bond, or a Traditional Security Deposit. Each item below is a gap between the LeaseLock invoice and the Rent Roll that needs a second look. Residents whose coverage checks out are not listed.</p>
+
+  <div class="stats">
+    <div class="stat warn"><b>${totalFindings}</b><span>Findings</span></div>
+    <div class="stat warn"><b>${units.length}</b><span>Mismatch</span></div>
+    <div class="stat ok"><b>${clean}</b><span>Match</span></div>
+    <div class="stat"><b>${onLeaseLock}</b><span>On LeaseLock</span></div>
+    <div class="stat"><b>${onSurety}</b><span>On a bond</span></div>
+    <div class="stat"><b>${onDeposit}</b><span>On a Traditional Security Deposit</span></div>
+    ${explained ? `<div class="stat ok"><b>${explained}</b><span>Explained</span></div>` : ''}
+    ${hidden ? `<div class="stat"><b>${hidden}</b><span>Hidden by filters</span></div>` : ''}
+  </div>
+
+  ${units.length ? unitHtml : '<div class="none">No mismatches found — every resident\'s deposit is covered and every LeaseLock charge matches the invoice.</div>'}
+
+  <div class="foot">
+    <span>Auditera AI &middot; DepositVerify &middot; ${escapeHtml(property)}</span>
+    <span>Markup ${escapeHtml(money(LEASELOCK_MARKUP))} &middot; Generated ${escapeHtml(dateStr)}${hidden ? ' · ' + hidden + ' finding' + (hidden===1?'':'s') + ' hidden by your Option Filters' : ''}</span>
+  </div>
+</body></html>`;
+}
+
+function exportPdfReport(){
+  const html = buildPdfReportHtml();
+  const w = window.open('', '_blank');
+  if (!w){
+    alert('Your browser blocked the report window. Allow pop-ups for this page and try again.');
+    return false;
+  }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+  w.onload = () => { w.focus(); w.print(); };
+  setTimeout(() => { try{ w.focus(); w.print(); }catch(err){} }, 400);
+  return true;
+}
+document.getElementById('export-pdf-btn').addEventListener('click', () => { exportPdfReport(); });
+</script>
+</body>
+</html>

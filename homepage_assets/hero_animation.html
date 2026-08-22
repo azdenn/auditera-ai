@@ -1,0 +1,94 @@
+<div class="hero-anim-wrap">
+  <div class="glow"></div>
+  <div class="hero-anim" role="img" aria-label="Animated illustration: a signed lease and a rent roll are scanned and compared line by line; matching charges are ticked and a mismatched month-to-month fee is circled as money recovered.">
+    <svg viewBox="0 0 880 570" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Displacing every stroke through low-frequency noise is what makes
+             straight vector lines read as drawn by hand rather than plotted. -->
+        <filter id="rough" x="-8%" y="-8%" width="116%" height="116%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="3" seed="7" result="n"/>
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+        <filter id="roughSoft" x="-8%" y="-8%" width="116%" height="116%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="3" result="n2"/>
+          <feDisplacementMap in="SourceGraphic" in2="n2" scale="1.8" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+      </defs>
+
+      <g filter="url(#rough)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+
+        <!-- ============ 1. the signed lease ============ -->
+        <g class="s1">
+          <path class="ink" pathLength="1" d="M92 62 L286 54 L296 300 L102 310 Z" stroke="#8f9bd8" stroke-width="2.6"/>
+          <path class="ink" pathLength="1" d="M120 104 L246 99" stroke="#69719a" stroke-width="2.2"/>
+          <path class="ink" pathLength="1" d="M120 132 L262 127" stroke="#69719a" stroke-width="2.2"/>
+          <path class="ink" pathLength="1" d="M120 160 L232 156" stroke="#69719a" stroke-width="2.2"/>
+          <path class="ink" pathLength="1" d="M120 188 L258 183" stroke="#69719a" stroke-width="2.2"/>
+          <!-- a scribbled signature: the point is that this lease is executed -->
+          <path class="ink" pathLength="1" d="M124 252 C138 226 150 274 166 240 C180 210 194 268 210 236 C222 212 238 262 258 242"
+                stroke="#b083f0" stroke-width="2.8"/>
+          <path class="ink" pathLength="1" d="M124 272 L236 268" stroke="#4b5170" stroke-width="1.8"/>
+        </g>
+        <text class="lbl s1" x="118" y="340" fill="#a7adc0" font-size="17" font-weight="700" font-family="Georgia,serif">Signed lease</text>
+
+        <!-- ============ 2. the rent roll ============ -->
+        <g class="s2">
+          <path class="ink" pathLength="1" d="M592 54 L786 62 L776 310 L582 300 Z" stroke="#8f9bd8" stroke-width="2.6"/>
+          <path class="ink" pathLength="1" d="M614 104 L742 109" stroke="#69719a" stroke-width="2.2"/>
+          <path class="ink" pathLength="1" d="M614 132 L756 137" stroke="#69719a" stroke-width="2.2"/>
+          <path class="ink" pathLength="1" d="M614 160 L726 165" stroke="#69719a" stroke-width="2.2"/>
+          <path class="ink" pathLength="1" d="M614 188 L752 193" stroke="#69719a" stroke-width="2.2"/>
+          <path class="ink" pathLength="1" d="M614 216 L734 221" stroke="#69719a" stroke-width="2.2"/>
+          <path class="ink" pathLength="1" d="M614 244 L748 249" stroke="#69719a" stroke-width="2.2"/>
+          <path class="ink" pathLength="1" d="M600 82 L772 89" stroke="#7c8cff" stroke-width="2.4"/>
+        </g>
+        <text class="lbl s2" x="608" y="340" fill="#a7adc0" font-size="17" font-weight="700" font-family="Georgia,serif">Rent roll</text>
+
+        <!-- ============ 3. both feed into the scan ============ -->
+        <g class="s3">
+          <path class="ink" pathLength="1" d="M300 200 C352 200 372 196 404 190" stroke="#7c8cff" stroke-width="2.4"/>
+          <path class="ink" pathLength="1" d="M392 182 L406 190 L392 199" stroke="#7c8cff" stroke-width="2.4"/>
+          <path class="ink" pathLength="1" d="M578 200 C526 200 506 196 474 190" stroke="#7c8cff" stroke-width="2.4"/>
+          <path class="ink" pathLength="1" d="M486 182 L472 190 L486 199" stroke="#7c8cff" stroke-width="2.4"/>
+        </g>
+
+        <!-- ============ 4. the magnifier doing the comparing ============ -->
+        <g class="s4">
+          <path class="ink" pathLength="1"
+                d="M439 122 C476 122 502 152 502 188 C502 224 476 250 439 250 C402 250 378 222 378 187 C378 152 402 122 439 122 Z"
+                stroke="#b083f0" stroke-width="3"/>
+          <path class="ink" pathLength="1" d="M484 236 L520 276" stroke="#b083f0" stroke-width="4.2"/>
+          <path class="ink" pathLength="1" d="M406 170 C424 158 452 158 470 168" stroke="#6f78a8" stroke-width="1.8"/>
+          <path class="ink" pathLength="1" d="M404 196 C426 208 452 208 472 198" stroke="#6f78a8" stroke-width="1.8"/>
+        </g>
+
+        <!-- ============ 5. line-by-line verdicts ============ -->
+        <g class="s5">
+          <path class="ink" pathLength="1" d="M300 372 L578 372" stroke="#2f3550" stroke-width="1.6"/>
+          <path class="ink" pathLength="1" d="M300 410 L578 410" stroke="#2f3550" stroke-width="1.6"/>
+          <path class="ink" pathLength="1" d="M300 448 L578 448" stroke="#2f3550" stroke-width="1.6"/>
+          <!-- two charges agree -->
+          <path class="ink" pathLength="1" d="M312 362 L322 372 L340 352" stroke="#3ddc9a" stroke-width="3.4"/>
+          <path class="ink" pathLength="1" d="M312 400 L322 410 L340 390" stroke="#3ddc9a" stroke-width="3.4"/>
+          <!-- one does not -->
+          <path class="ink" pathLength="1" d="M312 430 L336 452" stroke="#ff8f6b" stroke-width="3.4"/>
+          <path class="ink" pathLength="1" d="M336 430 L312 452" stroke="#ff8f6b" stroke-width="3.4"/>
+        </g>
+        <g class="s5">
+          <text class="lbl" x="358" y="378" fill="#8d93a8" font-size="15.5" font-family="Georgia,serif">Rent &mdash; matches</text>
+          <text class="lbl" x="358" y="416" fill="#8d93a8" font-size="15.5" font-family="Georgia,serif">Trash &amp; pest &mdash; match</text>
+          <text class="lbl" x="358" y="454" fill="#ffb59a" font-size="15.5" font-weight="700" font-family="Georgia,serif">Month-to-month fee &mdash; missing</text>
+        </g>
+
+        <!-- ============ 6. the money that was being left behind ============ -->
+        <g class="s6">
+          <path class="ink" pathLength="1"
+                d="M318 492 C400 474 566 476 626 494 C660 504 646 534 580 542 C494 552 358 548 320 532 C292 521 300 498 318 492 Z"
+                stroke="#3ddc9a" stroke-width="2.8"/>
+          <path class="ink" pathLength="1" d="M300 486 C274 494 268 514 280 528" stroke="#3ddc9a" stroke-width="2.2"/>
+        </g>
+        <text class="lbl s6" x="346" y="527" fill="#3ddc9a" font-size="23" font-weight="800" font-family="Georgia,serif">$250/mo recovered</text>
+      </g>
+    </svg>
+  </div>
+</div>

@@ -1,0 +1,54 @@
+/* ---------- hand-drawn hero animation ----------
+   Every element shares ONE cycle length and carries its own keyframe
+   percentages rather than using animation-delay. With delays, each element's
+   cycle is permanently offset, so on the second loop the late elements are
+   still fading out while the early ones have started redrawing. Encoding the
+   timing in the keyframes keeps the whole scene perfectly in step, forever.
+
+   pathLength="1" on every path lets one dasharray value (1) drive the
+   draw-on for paths of wildly different real lengths. */
+.hero-anim-wrap{max-width:900px;margin:56px auto 0;position:relative;}
+.hero-anim{position:relative;border-radius:var(--radius-lg);border:1px solid var(--line);
+  background:linear-gradient(180deg,#141726,#101320);box-shadow:var(--shadow-lg);
+  padding:14px 18px;overflow:hidden;}
+.hero-anim svg{width:100%;height:auto;display:block;}
+.hero-anim .ink{stroke-dasharray:1;stroke-dashoffset:1;opacity:0;}
+
+@keyframes drawS1{0%{stroke-dashoffset:1;opacity:0}1%{opacity:1}9%{stroke-dashoffset:0;opacity:1}
+  92%{stroke-dashoffset:0;opacity:1}97%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:1;opacity:0}}
+@keyframes drawS2{0%,10%{stroke-dashoffset:1;opacity:0}11%{opacity:1}19%{stroke-dashoffset:0;opacity:1}
+  92%{stroke-dashoffset:0;opacity:1}97%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:1;opacity:0}}
+@keyframes drawS3{0%,21%{stroke-dashoffset:1;opacity:0}22%{opacity:1}28%{stroke-dashoffset:0;opacity:1}
+  92%{stroke-dashoffset:0;opacity:1}97%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:1;opacity:0}}
+@keyframes drawS4{0%,29%{stroke-dashoffset:1;opacity:0}30%{opacity:1}40%{stroke-dashoffset:0;opacity:1}
+  92%{stroke-dashoffset:0;opacity:1}97%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:1;opacity:0}}
+@keyframes drawS5{0%,44%{stroke-dashoffset:1;opacity:0}45%{opacity:1}58%{stroke-dashoffset:0;opacity:1}
+  92%{stroke-dashoffset:0;opacity:1}97%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:1;opacity:0}}
+@keyframes drawS6{0%,64%{stroke-dashoffset:1;opacity:0}65%{opacity:1}76%{stroke-dashoffset:0;opacity:1}
+  92%{stroke-dashoffset:0;opacity:1}97%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:1;opacity:0}}
+
+/* Text has no stroke to draw, so it just fades in on its stage's beat. */
+@keyframes fadeS1{0%,7%{opacity:0}12%{opacity:1}92%{opacity:1}97%,100%{opacity:0}}
+@keyframes fadeS2{0%,17%{opacity:0}22%{opacity:1}92%{opacity:1}97%,100%{opacity:0}}
+@keyframes fadeS5{0%,52%{opacity:0}60%{opacity:1}92%{opacity:1}97%,100%{opacity:0}}
+@keyframes fadeS6{0%,72%{opacity:0}79%{opacity:1}92%{opacity:1}97%,100%{opacity:0}}
+
+.hero-anim .s1 .ink{animation:drawS1 15s ease-in-out infinite;}
+.hero-anim .s2 .ink{animation:drawS2 15s ease-in-out infinite;}
+.hero-anim .s3 .ink{animation:drawS3 15s ease-in-out infinite;}
+.hero-anim .s4 .ink{animation:drawS4 15s ease-in-out infinite;}
+.hero-anim .s5 .ink{animation:drawS5 15s ease-in-out infinite;}
+.hero-anim .s6 .ink{animation:drawS6 15s ease-in-out infinite;}
+.hero-anim text.lbl{opacity:0;}
+.hero-anim text.s1{animation:fadeS1 15s ease-in-out infinite;}
+.hero-anim text.s2{animation:fadeS2 15s ease-in-out infinite;}
+.hero-anim .s5 text.lbl{animation:fadeS5 15s ease-in-out infinite;}
+.hero-anim text.s6{animation:fadeS6 15s ease-in-out infinite;}
+
+/* Respect a stated preference for less motion: show the finished drawing
+   rather than looping it. */
+@media (prefers-reduced-motion: reduce){
+  .hero-anim .ink{animation:none !important;stroke-dashoffset:0;opacity:1;}
+  .hero-anim text.lbl{animation:none !important;opacity:1;}
+}
+@media (max-width:640px){ .hero-anim{padding:8px 10px;} }

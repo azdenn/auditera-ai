@@ -1,0 +1,66 @@
+Unit,Residents,Category,Charge,LeaseAmount,ResManAmount,Status,Note
+A101,Tonya Rowlett,Mismatch,Pest control,12,8,Mismatch,
+A101,Tonya Rowlett,Mismatch,Yard Premium,,150,Mismatch,In ResMan only — the lease shows no matching charge.
+A101,Tonya Rowlett,Mismatch,Security Deposit Mismatch,12,0,Mismatch,
+A109,Joshua Maldonado,Mismatch,Deposit Waiver / LeaseLock,,33,Mismatch,In ResMan only — the lease shows no matching charge.
+A110,Cherie Moon,Mismatch,First Floor Premium,,50,Mismatch,In ResMan only — the lease shows no matching charge.
+A110,Cherie Moon,Mismatch,Security Deposit Mismatch,8,800,Mismatch,
+Z999,,Unmatched PDF,,,,Unmatched PDF,"No unit ""Z999"" was found in the rent roll. Double-check the unit number and that this is the right property's rent roll."
+A102,Raymond Grant,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A104,Rafal Korycki,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A105,Jimmy Hancock Jr,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A107,Lauren Parks,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A108,Kevin Barfield,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A111,Beverly Velasquez,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A112,Rebecca Clare,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A113,"Ashley Hominick, John Hominick",Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A114,"Sheryl Plantenga, Stephen Plantenga",Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A201,Regina Martin,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A202,Jesse  (Caleb) Maldonado,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A203,Adrian Verastegui,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A204,Kent Buckner,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A205,Erin Simpson,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A206,Abigail Wonder,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A207,Stephanie Jones,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A208,Shelby Nulisch,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A209,Colton Smith,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A211,Luis Contreras,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A212,Golden Magnolia LLC,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A213,Magaly Aguilar,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A214,Briana Harper,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A301,Skylar Magee,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A302,Susan Johnson,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A303,Nikolas Koval,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A304,Joe Renteria,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A305,Greg Hoyt,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A306,Aidan Wolfe,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A307,"James Huff, Jayda Huff",Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A308,Juan Munoz,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A309,Roni Amster,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A311,Jaclyn Sandler,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A312,Michele Mosmeyer,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A313,Alex Jenkins,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+A314,Leiha Sanborn,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+B102,David Sab,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+B103,Laura Castro,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+B106,Jonathan Munoz,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+B201,Andres Rubio,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+B202,Kate Guthrie,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+B203,Cari English-Borges,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+B204,Jasmine Harris,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+B205,Lauren Enloe,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+B206,Lesley Foster,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+B301,Rosario Hurel-Prado,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+B303,Anthony Walls,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+B304,Nick Cline,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+B305,Robert Colby,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+B306,Kristian Key,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+C101,Christopher McCloy,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+C102,Joseph Reeves,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+C103,Monica Mirele,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+C201,Kaleb Knapp,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+C202,Juan Vera,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+C203,Kisters North America,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+C301,"Gage Construction, LLC",Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+C302,James Jepson,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.
+C303,Anthony Koval,Missing lease,,,,Missing lease,This unit is in the rent roll but no lease PDF was uploaded for it.

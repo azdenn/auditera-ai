@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Client Results — Auditly AI</title>
+<meta name="description" content="Real properties, real results. See how multifamily operators are using Auditly AI to uncover discrepancies, reduce manual review, and improve the accuracy of their property records.">
+<style>
+:root{
+  --ink:#eef0f6; --ink-soft:#a7adc0; --ink-faint:#767d94;
+  --line:#2a3040; --line-soft:#232838; --bg:#0d0f16; --card:#161926;
+  --accent:#7c8cff; --accent-2:#b083f0; --accent-soft:#232849; --accent-line:#3d4570;
+  --ok:#3ddc9a; --ok-bg:#132a24; --ok-line:#1f5a44;
+  --warn:#ffc069; --warn-bg:#2a2011; --muted:#767d94; --muted-bg:#1c2030;
+  --shadow-xs:0 1px 2px rgba(0,0,0,.3);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
+  --shadow-md:0 8px 30px -8px rgba(0,0,0,.6);
+  --shadow-lg:0 20px 50px -18px rgba(0,0,0,.7);
+  --radius-lg:16px; --radius-md:12px; --radius-sm:9px;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+.hidden{display:none !important;}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth;}
+body{
+  margin:0;color:var(--ink);line-height:1.5;
+  background:
+    radial-gradient(1000px 520px at 10% -10%, #1d2450 0%, rgba(29,36,80,0) 60%),
+    radial-gradient(800px 460px at 105% 0%, #14312f 0%, rgba(20,49,47,0) 55%),
+    var(--bg);
+  background-attachment:fixed;
+}
+a{color:var(--accent);}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px;}
+
+/* ---------- nav (shared with homepage) ---------- */
+nav.top{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);background:rgba(13,15,22,.72);border-bottom:1px solid var(--line-soft);}
+nav.top .inner{max-width:1120px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;color:#fff;letter-spacing:-.01em;text-decoration:none;}
+.brand-mark{flex:none;width:30px;height:30px;border-radius:9px;background:linear-gradient(140deg,var(--accent),var(--accent-2));box-shadow:0 0 18px -4px rgba(124,140,255,.55);display:flex;align-items:center;justify-content:center;}
+.brand-mark svg{width:16px;height:16px;}
+nav.top .links{display:flex;gap:26px;align-items:center;}
+nav.top .links a{color:var(--ink-soft);text-decoration:none;font-size:13.5px;font-weight:600;transition:color .15s;}
+nav.top .links a:hover{color:#fff;}
+nav.top .links a.current{color:#fff;}
+.nav-toggle{display:none;background:none;border:1px solid var(--line);border-radius:8px;padding:8px;color:var(--ink);cursor:pointer;}
+@media (max-width:760px){
+  nav.top .links{position:fixed;top:60px;left:0;right:0;background:#11141f;border-bottom:1px solid var(--line-soft);flex-direction:column;align-items:stretch;padding:10px 20px 18px;gap:4px;display:none;box-shadow:var(--shadow-md);}
+  nav.top .links.open{display:flex;}
+  nav.top .links a{padding:11px 4px;border-bottom:1px solid var(--line-soft);}
+  nav.top .links a.btn-ghost{border:1px solid var(--line);margin-top:8px;text-align:center;justify-content:center;}
+  .nav-toggle{display:inline-flex;align-items:center;justify-content:center;}
+}
+
+/* ---------- buttons ---------- */
+.btn-primary{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#0d0f16;border:none;border-radius:9px;padding:12px 22px;font-size:14.5px;font-weight:700;cursor:pointer;text-decoration:none;box-shadow:0 4px 20px rgba(124,140,255,.3);transition:filter .15s,transform .12s,box-shadow .15s;}
+.btn-primary:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 6px 26px rgba(124,140,255,.4);}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none;filter:none;}
+.btn-ghost{display:inline-flex;align-items:center;gap:8px;background:#171a28;border:1px solid var(--line);border-radius:9px;padding:11px 21px;font-size:14px;font-weight:600;cursor:pointer;color:var(--ink);text-decoration:none;transition:background .15s,border-color .15s;}
+.btn-ghost:hover{background:#1f2333;border-color:#3a415a;}
+
+/* ---------- hero ---------- */
+header.hero{padding:88px 0 56px;text-align:center;}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent);font-size:12.5px;font-weight:700;padding:6px 14px;border-radius:999px;margin-bottom:24px;letter-spacing:.01em;}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);}
+header.hero h1{font-size:44px;line-height:1.15;letter-spacing:-.02em;font-weight:800;color:#fff;margin:0 0 20px;max-width:760px;margin-left:auto;margin-right:auto;}
+header.hero h1 span{background:linear-gradient(135deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+header.hero p.sub{font-size:17px;color:var(--ink-soft);max-width:640px;margin:0 auto 30px;}
+.hero-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:6px;}
+@media (max-width:640px){
+  header.hero{padding:60px 0 40px;}
+  header.hero h1{font-size:30px;}
+  header.hero p.sub{font-size:15px;}
+}
+
+/* ---------- sections ---------- */
+section{padding:72px 0;}
+section.alt{background:linear-gradient(180deg, rgba(22,25,38,0) 0%, rgba(22,25,38,.55) 12%, rgba(22,25,38,.55) 88%, rgba(22,25,38,0) 100%);}
+.section-head{text-align:center;max-width:640px;margin:0 auto 44px;}
+.section-head .kicker{font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;}
+.section-head h2{font-size:28px;line-height:1.2;letter-spacing:-.015em;color:#fff;margin:0 0 12px;font-weight:800;}
+.section-head p{font-size:15px;color:var(--ink-soft);margin:0;}
+@media (max-width:640px){section{padding:48px 0;}.section-head h2{font-size:23px;}}
+
+/* ---------- aggregate results ---------- */
+.aggregate-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;max-width:1000px;margin:0 auto;}
+@media (max-width:900px){.aggregate-grid{grid-template-columns:repeat(2,1fr);}}
+@media (max-width:520px){.aggregate-grid{grid-template-columns:1fr;}}
+.aggregate-tile{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:26px 22px;text-align:center;box-shadow:var(--shadow-sm);}
+.aggregate-tile .agg-num{font-size:32px;font-weight:800;color:#fff;letter-spacing:-.02em;background:linear-gradient(135deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent;display:block;}
+.aggregate-tile .agg-label{font-size:12.5px;color:var(--ink-soft);margin-top:6px;display:block;}
+.aggregate-note{text-align:center;font-size:12px;color:var(--ink-faint);max-width:560px;margin:20px auto 0;}
+
+/* ---------- case studies ---------- */
+.case-studies-stack{max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:28px;}
+.case-card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:34px 34px 30px;box-shadow:var(--shadow-md);overflow:hidden;}
+.case-card:before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--accent),var(--accent-2));}
+.case-card.featured{border-color:var(--accent-line);box-shadow:0 12px 40px -10px rgba(124,140,255,.25),var(--shadow-md);}
+@media (max-width:640px){.case-card{padding:26px 20px 24px;}}
+
+.case-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:6px;}
+.case-identity h3{font-size:21px;color:#fff;margin:0 0 3px;font-weight:800;letter-spacing:-.01em;}
+.case-identity .case-title{font-size:13.5px;color:var(--ink-soft);font-weight:600;}
+.featured-badge{display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent);font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:6px 12px;border-radius:999px;flex:none;}
+
+.case-meta{font-size:13px;color:var(--ink-faint);margin:10px 0 0;}
+.case-meta span:not(:last-child):after{content:'·';margin:0 8px;color:var(--line);}
+
+.case-divider{height:1px;background:var(--line-soft);margin:24px 0;}
+
+.case-coming-soon{display:flex;align-items:flex-start;gap:12px;background:var(--muted-bg);border:1px solid var(--line);border-radius:var(--radius-md);padding:16px 18px;font-size:13.5px;color:var(--ink-soft);line-height:1.55;}
+.case-coming-soon svg{flex:none;width:18px;height:18px;color:var(--ink-faint);margin-top:1px;}
+
+.metric-row{display:flex;flex-wrap:wrap;gap:16px;}
+.metric-tile{flex:1 1 160px;background:var(--muted-bg);border:1px solid var(--line);border-radius:var(--radius-md);padding:18px 18px 16px;}
+.metric-tile .m-num{font-size:26px;font-weight:800;color:#fff;letter-spacing:-.015em;display:block;}
+.metric-tile.money .m-num{background:linear-gradient(135deg,var(--ok),#68e8b8);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.metric-tile .m-label{font-size:12px;color:var(--ink-soft);margin-top:5px;display:block;line-height:1.4;}
+
+.case-cols{display:grid;grid-template-columns:1fr 1fr;gap:28px;}
+@media (max-width:640px){.case-cols{grid-template-columns:1fr;}}
+.case-col-h{font-size:11.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);margin:0 0 12px;}
+.tools-used-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px;}
+.tools-used-list li{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;color:var(--ink);font-weight:600;}
+.tools-used-list li svg{flex:none;width:16px;height:16px;margin-top:2px;color:var(--ok);}
+.issues-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px;}
+.issues-list li{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;color:var(--ink-soft);line-height:1.5;}
+.issues-list li svg{flex:none;width:15px;height:15px;margin-top:3px;color:var(--warn);}
+
+.testimonial-block{position:relative;background:var(--accent-soft);border:1px solid var(--accent-line);border-radius:var(--radius-md);padding:24px 26px 22px 52px;}
+.testimonial-block .quote-mark{position:absolute;left:18px;top:14px;font-size:34px;line-height:1;color:var(--accent);font-weight:800;font-family:Georgia,serif;opacity:.7;}
+.testimonial-block p{font-size:14.5px;color:var(--ink);margin:0 0 10px;line-height:1.6;font-style:italic;}
+.testimonial-block .attribution{font-size:12.5px;color:var(--ink-soft);font-weight:600;font-style:normal;}
+
+.reference-box{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:var(--ok-bg);border:1px solid var(--ok-line);border-radius:var(--radius-md);padding:20px 22px;}
+.reference-box p{margin:0;font-size:13.5px;color:var(--ink);line-height:1.5;max-width:480px;}
+.reference-box p b{color:#fff;}
+.reference-box .btn-primary{flex:none;}
+
+.savings-type-note{font-size:11px;color:var(--ink-faint);margin-top:4px;}
+
+/* ---------- bottom CTA ---------- */
+.cta-band{background:var(--card);border:1px solid var(--accent-line);border-radius:var(--radius-lg);padding:52px 40px;text-align:center;box-shadow:var(--shadow-md);position:relative;overflow:hidden;}
+.cta-band:before{content:'';position:absolute;inset:0;background:radial-gradient(500px 260px at 50% 0%, rgba(124,140,255,.14), transparent 70%);}
+.cta-band h2{font-size:26px;color:#fff;margin:0 0 12px;font-weight:800;letter-spacing:-.015em;position:relative;}
+.cta-band p{font-size:14.5px;color:var(--ink-soft);margin:0 0 28px;position:relative;}
+.cta-band .hero-ctas{position:relative;}
+
+/* ---------- footer ---------- */
+footer.page{border-top:1px solid var(--line-soft);padding:36px 0;margin-top:20px;}
+footer.page .inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;}
+footer.page .fbrand{display:flex;align-items:center;gap:10px;color:var(--ink-soft);font-size:13px;}
+footer.page .flinks{display:flex;gap:22px;flex-wrap:wrap;}
+footer.page .flinks a{color:var(--ink-faint);font-size:12.5px;text-decoration:none;}
+footer.page .flinks a:hover{color:var(--ink-soft);}
+
+/* ---------- reference request modal ---------- */
+.modal-overlay{position:fixed;inset:0;background:rgba(8,9,14,.72);backdrop-filter:blur(3px);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);max-width:460px;width:100%;max-height:90vh;overflow-y:auto;padding:30px 28px;position:relative;}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:1px solid var(--line);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--ink-soft);cursor:pointer;}
+.modal-close:hover{color:#fff;border-color:#3a415a;}
+.modal-card h3{font-size:19px;color:#fff;margin:0 0 6px;font-weight:800;letter-spacing:-.01em;padding-right:30px;}
+.modal-card p.modal-sub{font-size:13px;color:var(--ink-soft);margin:0 0 22px;line-height:1.55;}
+.auth-form{display:flex;flex-direction:column;gap:14px;}
+.auth-form label{display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink-soft);}
+.auth-form label .opt{font-weight:400;color:var(--ink-faint);}
+.auth-form input,.auth-form textarea{border:1px solid var(--line);border-radius:9px;padding:11px 13px;font-size:14px;background:#12141f;color:var(--ink);transition:border-color .15s,box-shadow .15s;font-family:inherit;resize:vertical;}
+.auth-form input:focus,.auth-form textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+.auth-form button{margin-top:6px;width:100%;justify-content:center;}
+.auth-err{font-size:12.5px;color:#ff6b6b;background:#2c1a1e;border:1px solid #5c2b30;border-radius:8px;padding:9px 12px;}
+.form-success{text-align:center;padding:10px 0 4px;}
+.form-success svg{width:40px;height:40px;color:var(--ok);margin-bottom:14px;}
+.form-success h4{font-size:17px;color:#fff;margin:0 0 8px;font-weight:800;}
+.form-success p{font-size:13.5px;color:var(--ink-soft);margin:0;line-height:1.55;}
+.privacy-note{font-size:11.5px;color:var(--ink-faint);margin-top:14px;line-height:1.5;text-align:center;}
+</style>
+</head>
+<body>
+
+<nav class="top">
+  <div class="inner">
+    <a class="brand" href="homepage_final.html">
+      <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#0d0f16" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+      Auditly AI
+    </a>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <div class="links" id="nav-links">
+      <a href="homepage_final.html#what-it-does">What It Does</a>
+      <a href="homepage_final.html#how">How It Works</a>
+      <a class="current" href="client_results.html" aria-current="page">Client Results</a>
+      <a href="homepage_final.html#signin">Sign In</a>
+      <a class="btn-ghost" href="mailto:azdenkumar@gmail.com" style="padding:8px 16px;font-size:13px;">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow"><span class="dot"></span> Verified results from real multifamily operators</div>
+    <h1>Real properties. <span>Real results.</span></h1>
+    <p class="sub">See how multifamily operators are using Auditly AI to uncover discrepancies, reduce manual review, and improve the accuracy of their property records.</p>
+    <div class="hero-ctas">
+      <a class="btn-primary" href="#case-studies">
+        See Client Case Studies
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- ==========================================================================
+  Aggregate results. Rendered only if AGGREGATE_STATS (in the script below) is
+  populated with verified figures -- there are no site-wide verified numbers
+  yet, so this whole section stays hidden rather than showing placeholder or
+  invented totals. See the AGGREGATE_STATS comment near the top of the script
+  for exactly how to turn it on later.
+========================================================================== -->
+<section id="aggregate-results" class="alt hidden">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker">Results at a Glance</div>
+      <h2>Verified impact across Auditly AI clients</h2>
+      <p>Aggregate figures pulled from completed, verified client case studies below.</p>
+    </div>
+    <div class="aggregate-grid" id="aggregate-grid"></div>
+    <p class="aggregate-note" id="aggregate-note"></p>
+  </div>
+</section>
+
+<section id="case-studies">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker">Client Case Studies</div>
+      <h2>What Auditly AI has found on real properties</h2>
+      <p>Every figure below is specific to the named client and shown only with their permission.</p>
+    </div>
+    <div class="case-studies-stack" id="case-studies-stack"></div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <div class="cta-band">
+      <h2>See what Auditly AI could uncover at your property.</h2>
+      <p>Turn hours of manual lease and ledger review into a clear list of items that actually need your attention.</p>
+      <div class="hero-ctas">
+        <a class="btn-primary" href="homepage_final.html#what-it-does">
+          Explore the Tools
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a class="btn-ghost" href="mailto:azdenkumar@gmail.com?subject=Auditly AI">Contact Auditly AI</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="page">
+  <div class="wrap inner">
+    <div class="fbrand">
+      <div class="brand-mark" style="width:24px;height:24px;border-radius:7px;"><svg viewBox="0 0 24 24" fill="none" stroke="#0d0f16" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+      Auditly AI
+    </div>
+    <div class="flinks">
+      <a href="homepage_final.html#what-it-does">What It Does</a>
+      <a href="homepage_final.html#how">How It Works</a>
+      <a href="client_results.html">Client Results</a>
+      <a href="homepage_final.html#signin">Sign In</a>
+      <a href="mailto:azdenkumar@gmail.com">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<!-- Reference request modal -- populated/opened by JS, one shared instance for every case study -->
+<div class="modal-overlay hidden" id="reference-modal-overlay">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="reference-modal-title">
+    <button class="modal-close" id="reference-modal-close" aria-label="Close">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+
+    <div id="reference-modal-form-state">
+      <h3 id="reference-modal-title">Request a Client Reference</h3>
+      <p class="modal-sub" id="reference-modal-sub"></p>
+      <form class="auth-form" id="reference-form">
+        <label>Your name
+          <input type="text" id="ref-name" required>
+        </label>
+        <label>Company
+          <input type="text" id="ref-company" required>
+        </label>
+        <label>Work email
+          <input type="email" id="ref-email" required>
+        </label>
+        <label>Phone <span class="opt">(optional)</span>
+          <input type="tel" id="ref-phone">
+        </label>
+        <label>Property / portfolio size <span class="opt">(optional)</span>
+          <input type="text" id="ref-portfolio" placeholder="e.g. 1 property, ~220 units">
+        </label>
+        <label>What would you like to discuss? <span class="opt">(optional)</span>
+          <textarea id="ref-message" rows="3" placeholder="A few words on what you'd like to ask about"></textarea>
+        </label>
+        <div class="auth-err hidden" id="reference-form-error"></div>
+        <button class="btn-primary" type="submit" id="reference-form-submit">Send Request</button>
+      </form>
+      <p class="privacy-note">This goes to Auditly AI, not directly to the client. We'll reach out to coordinate an introduction &mdash; your contact info is never shared without your consent, and the client's contact info is never shared with you directly.</p>
+    </div>
+
+    <div class="form-success hidden" id="reference-modal-success-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
+      <h4>Request received</h4>
+      <p>Thanks &mdash; Auditly AI will follow up by email to coordinate an introduction.</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+/* ==========================================================================
+   Mobile nav toggle (shared behavior with the homepage)
+   ========================================================================== */
+const navToggle = document.getElementById('nav-toggle');
+const navLinks = document.getElementById('nav-links');
+navToggle.addEventListener('click', () => {
+  const isOpen = navLinks.classList.toggle('open');
+  navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+});
+
+/* ==========================================================================
+   AGGREGATE_STATS
+   ==========================================================================
+   Site-wide "Results at a Glance" numbers. There is no verified aggregate
+   data yet, so this stays `null` and the whole section above stays hidden --
+   per explicit instruction, nothing here is ever invented or estimated to
+   fill the layout.
+
+   To turn the section on once real, verified numbers exist across your
+   completed client case studies, replace `null` with an object like:
+
+   const AGGREGATE_STATS = {
+     asOf: 'August 2026',                 // shown in the small note under the tiles
+     tiles: [
+       { value: '$48,200', label: 'Verified discrepancies identified across all clients' },
+       { value: '312',     label: 'Units reviewed with Auditly AI' },
+       { value: '4',       label: 'Properties audited' },
+       { value: '~90 hrs', label: 'Estimated manual review avoided' },
+     ],
+   };
+
+   Only include a tile once you can stand behind the number -- each tile here
+   should trace back to specific, verified client figures below, not an
+   estimate or a round-up.
+   ========================================================================== */
+const AGGREGATE_STATS = null;
+
+/* ==========================================================================
+   Controlled vocabularies
+   ==========================================================================
+   Keeping "tools used" and "what Auditly AI found" as fixed vocabularies
+   (rather than free text on every client) keeps the page honest -- a new
+   case study can only claim a discrepancy type or tool that this page
+   already knows how to render correctly, and it keeps phrasing consistent
+   client to client.
+   ========================================================================== */
+const TOOL_LABELS = {
+  reconciler: 'Lease & Rent Roll Verification',
+  concession: 'Ledger & Concession Reconciliation',
+};
+
+const ISSUE_LABELS = {
+  incorrectRent: 'Incorrect rent charges',
+  rrLeaseMismatch: 'Rent Roll vs. executed lease discrepancies',
+  incorrectConcessions: 'Incorrect concessions',
+  missingRecurringCharges: 'Missing or incorrect recurring charges',
+  leaseDateMismatch: 'Lease date mismatches',
+  depositDiscrepancy: 'Security deposit discrepancies',
+  missingSignatures: 'Missing signatures',
+  incorrectLedgerCharges: 'Incorrect ledger charges',
+  residentInfoMismatch: 'Resident information mismatches',
+};
+
+// How a client's savings/discrepancy dollar figure is labeled matters --
+// "money saved" is a specific claim that shouldn't be applied to every
+// dollar figure. Pick the type that accurately describes what the number
+// represents for that client.
+const SAVINGS_TYPE_LABELS = {
+  recovered: 'Actual money recovered',
+  preventedOvercharge: 'Overcharges prevented',
+  undercharge: 'Undercharges discovered',
+  potentialExposure: 'Potential financial exposure identified',
+  billingDiscrepancies: 'Billing discrepancies identified',
+  potentialDiscrepancies: 'Potential discrepancies identified',
+  verifiedSavings: 'Verified savings',
+};
+
+/* ==========================================================================
+   CLIENTS
+   ==========================================================================
+   One entry per case study. This is the ONLY place you need to touch to add,
+   edit, hide, or feature a client -- the rendering code below reads entirely
+   from this array.
+
+   PERMISSION MODEL: `permissions` controls what's allowed to be shown,
+   independent of whether the data exists. A field only renders when it is
+   BOTH present (not null/empty) AND permitted. This is deliberate: we may
+   have a client's real numbers on file but only have their consent to show
+   their name, not their property or unit count -- setting the data without
+   the matching permission keeps it private while still letting you track it
+   internally.
+
+   To add a new client: copy the template object below (everything after
+   "TEMPLATE FOR A NEW CLIENT"), fill in only what's verified, set the
+   matching permissions to true, and add it to this array.
+   ========================================================================== */
+const CLIENTS = [
+  {
+    id: 'rajeev-kumar',
+    visible: true,        // set false to unpublish without deleting the entry
+    featured: false,      // flip to true to give this card the featured treatment
+    clientType: null,     // 'owner-operator' | 'management-company' -- for future filtering, not yet used in the UI
+    portfolioSizeBucket: null, // e.g. 'single-property' | '2-10-properties' | '10+' -- for future filtering, not yet used in the UI
+
+    // Only the name is confirmed as of this build. Every other field below is
+    // intentionally left unset until Azden supplies and approves it -- see
+    // the `permissions` block for how each field is gated on top of that.
+    name: 'Rajeev Kumar',
+    title: 'Multifamily Property Owner / Operator',
+    company: null,          // e.g. 'Blanco Oaks Apartments' -- NOT YET VERIFIED
+    location: null,         // e.g. 'San Antonio, TX' -- NOT YET VERIFIED
+    units: null,            // number, e.g. 148 -- NOT YET VERIFIED
+    toolsUsed: [],          // array of TOOL_LABELS keys -- NOT YET VERIFIED
+    savings: null,          // { amount: number, type: one of SAVINGS_TYPE_LABELS keys } -- NOT YET VERIFIED
+    timeSavedHours: null,   // number -- NOT YET VERIFIED
+    issuesFound: [],        // array of ISSUE_LABELS keys -- NOT YET VERIFIED
+    testimonial: null,      // { quote: '...', attribution: '...' } -- NOT YET PROVIDED
+    referenceAvailable: false, // ONLY set true once Rajeev has explicitly agreed to be contacted as a reference
+
+    permissions: {
+      name: true,           // confirmed OK to display his name
+      company: false,
+      location: false,
+      units: false,
+      tools: false,
+      savings: false,
+      timeSaved: false,
+      issuesFound: false,
+      testimonial: false,
+      reference: false,     // must be true here AND referenceAvailable true above for the reference CTA to show
+    },
+  },
+
+  // ------------------------------------------------------------------------
+  // TEMPLATE FOR A NEW CLIENT -- copy this whole object into the array above,
+  // fill in verified fields only, set matching permissions, then set
+  // `visible: true`.
+  // ------------------------------------------------------------------------
+  // {
+  //   id: 'unique-slug-here',
+  //   visible: false,
+  //   featured: false,
+  //   clientType: null,
+  //   portfolioSizeBucket: null,
+  //   name: '',
+  //   title: 'Multifamily Property Owner / Operator',
+  //   company: null,
+  //   location: null,
+  //   units: null,
+  //   toolsUsed: [],                 // e.g. ['reconciler', 'concession']
+  //   savings: null,                 // e.g. { amount: 12750, type: 'verifiedSavings' }
+  //   timeSavedHours: null,
+  //   issuesFound: [],               // e.g. ['depositDiscrepancy', 'missingSignatures']
+  //   testimonial: null,             // e.g. { quote: '...', attribution: 'Name, Title' }
+  //   referenceAvailable: false,
+  //   permissions: {
+  //     name: false, company: false, location: false, units: false,
+  //     tools: false, savings: false, timeSaved: false, issuesFound: false,
+  //     testimonial: false, reference: false,
+  //   },
+  // },
+];
+
+/* ==========================================================================
+   Rendering
+   ========================================================================== */
+function el(tag, className, html){
+  const e = document.createElement(tag);
+  if (className) e.className = className;
+  if (html !== undefined) e.innerHTML = html;
+  return e;
+}
+function fmtMoney(n){
+  return '$' + Number(n).toLocaleString('en-US');
+}
+function checkIcon(){
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+}
+function warnIcon(){
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.2v.2"/></svg>';
+}
+
+function buildCaseCard(c){
+  const card = el('div', 'case-card' + (c.featured ? ' featured' : ''));
+
+  // ---- Header: identity ----
+  const head = el('div', 'case-head');
+  const identity = el('div', 'case-identity');
+  const displayName = c.permissions.name && c.name ? c.name : 'Verified Auditly AI Client';
+  identity.appendChild(el('h3', null, displayName));
+  if (c.title) identity.appendChild(el('div', 'case-title', c.title));
+  head.appendChild(identity);
+  if (c.featured) head.appendChild(el('span', 'featured-badge', 'Featured Result'));
+  card.appendChild(head);
+
+  // ---- Meta line: company / location / units, only pieces that are both present and permitted ----
+  const metaParts = [];
+  if (c.company && c.permissions.company) metaParts.push(c.company);
+  if (c.location && c.permissions.location) metaParts.push(c.location);
+  if (c.units && c.permissions.units) metaParts.push(c.units + ' units');
+  if (metaParts.length){
+    const meta = el('div', 'case-meta');
+    metaParts.forEach(p => meta.appendChild(el('span', null, p)));
+    card.appendChild(meta);
+  }
+
+  // ---- Figure out what content this card actually has ----
+  const hasMetrics = (c.savings && c.permissions.savings) || (c.units && c.permissions.units) || (c.timeSavedHours && c.permissions.timeSaved);
+  const hasTools = c.toolsUsed && c.toolsUsed.length && c.permissions.tools;
+  const hasIssues = c.issuesFound && c.issuesFound.length && c.permissions.issuesFound;
+  const hasTestimonial = c.testimonial && c.permissions.testimonial;
+  const hasReference = c.referenceAvailable && c.permissions.reference;
+  const hasAnyDetail = hasMetrics || hasTools || hasIssues || hasTestimonial;
+
+  if (!hasAnyDetail){
+    card.appendChild(el('div', 'case-divider'));
+    card.appendChild(el('div', 'case-coming-soon', warnIcon() + '<span>Full case study details for this client are being finalized and verified, and will be published here once confirmed.</span>'));
+    if (hasReference) { card.appendChild(el('div', 'case-divider')); card.appendChild(buildReferenceBox(c)); }
+    return card;
+  }
+
+  // ---- Metrics ----
+  if (hasMetrics){
+    card.appendChild(el('div', 'case-divider'));
+    const row = el('div', 'metric-row');
+    if (c.savings && c.permissions.savings){
+      const tile = el('div', 'metric-tile money');
+      tile.appendChild(el('span', 'm-num', fmtMoney(c.savings.amount)));
+      tile.appendChild(el('span', 'm-label', SAVINGS_TYPE_LABELS[c.savings.type] || 'Discrepancies identified'));
+      row.appendChild(tile);
+    }
+    if (c.units && c.permissions.units){
+      const tile = el('div', 'metric-tile');
+      tile.appendChild(el('span', 'm-num', c.units));
+      tile.appendChild(el('span', 'm-label', 'Units reviewed with Auditly AI'));
+      row.appendChild(tile);
+    }
+    if (c.timeSavedHours && c.permissions.timeSaved){
+      const tile = el('div', 'metric-tile');
+      tile.appendChild(el('span', 'm-num', c.timeSavedHours + ' hrs'));
+      tile.appendChild(el('span', 'm-label', 'Estimated manual review avoided'));
+      row.appendChild(tile);
+    }
+    card.appendChild(row);
+  }
+
+  // ---- Tools used / What Auditly AI found ----
+  if (hasTools || hasIssues){
+    card.appendChild(el('div', 'case-divider'));
+    const cols = el('div', 'case-cols');
+    if (hasTools){
+      const col = el('div');
+      col.appendChild(el('div', 'case-col-h', 'Tools Used'));
+      const list = el('ul', 'tools-used-list');
+      c.toolsUsed.forEach(key => {
+        if (TOOL_LABELS[key]) list.appendChild(el('li', null, checkIcon() + '<span>' + TOOL_LABELS[key] + '</span>'));
+      });
+      col.appendChild(list);
+      cols.appendChild(col);
+    }
+    if (hasIssues){
+      const col = el('div');
+      col.appendChild(el('div', 'case-col-h', 'What Auditly AI Found'));
+      const list = el('ul', 'issues-list');
+      c.issuesFound.forEach(key => {
+        if (ISSUE_LABELS[key]) list.appendChild(el('li', null, warnIcon() + '<span>' + ISSUE_LABELS[key] + '</span>'));
+      });
+      col.appendChild(list);
+      cols.appendChild(col);
+    }
+    card.appendChild(cols);
+  }
+
+  // ---- Testimonial ----
+  if (hasTestimonial){
+    card.appendChild(el('div', 'case-divider'));
+    const t = el('div', 'testimonial-block');
+    t.appendChild(el('div', 'quote-mark', '&ldquo;'));
+    t.appendChild(el('p', null, c.testimonial.quote));
+    if (c.testimonial.attribution) t.appendChild(el('div', 'attribution', c.testimonial.attribution));
+    card.appendChild(t);
+  }
+
+  // ---- Reference ----
+  if (hasReference){
+    card.appendChild(el('div', 'case-divider'));
+    card.appendChild(buildReferenceBox(c));
+  }
+
+  return card;
+}
+
+function buildReferenceBox(c){
+  const box = el('div', 'reference-box');
+  const firstName = (c.permissions.name && c.name) ? c.name.split(' ')[0] : 'This client';
+  box.appendChild(el('p', null, '<b>Want to hear directly from this client?</b><br>' + firstName + ' has agreed to speak with prospective Auditly AI customers about their experience.'));
+  const btn = el('button', 'btn-primary', 'Request a Client Reference');
+  btn.type = 'button';
+  btn.addEventListener('click', () => openReferenceModal(c));
+  box.appendChild(btn);
+  return box;
+}
+
+function renderCaseStudies(){
+  const stack = document.getElementById('case-studies-stack');
+  stack.innerHTML = '';
+  const visible = CLIENTS.filter(c => c.visible !== false);
+  // Featured entries surface first, otherwise preserve array order.
+  visible.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+  visible.forEach(c => stack.appendChild(buildCaseCard(c)));
+}
+
+function renderAggregate(){
+  if (!AGGREGATE_STATS || !AGGREGATE_STATS.tiles || !AGGREGATE_STATS.tiles.length) return;
+  const section = document.getElementById('aggregate-results');
+  const grid = document.getElementById('aggregate-grid');
+  const note = document.getElementById('aggregate-note');
+  grid.innerHTML = '';
+  AGGREGATE_STATS.tiles.forEach(t => {
+    const tile = el('div', 'aggregate-tile');
+    tile.appendChild(el('span', 'agg-num', t.value));
+    tile.appendChild(el('span', 'agg-label', t.label));
+    grid.appendChild(tile);
+  });
+  note.textContent = AGGREGATE_STATS.asOf ? ('As of ' + AGGREGATE_STATS.asOf + ', across verified client case studies.') : '';
+  section.classList.remove('hidden');
+}
+
+renderCaseStudies();
+renderAggregate();
+
+/* ==========================================================================
+   Reference request modal + submission
+   ==========================================================================
+   Uses the same Supabase project as the main site's sign-in (public anon
+   key -- safe to embed). Submissions insert into `reference_requests`, a
+   write-only table: the anon key is only granted INSERT, so a visitor can
+   send a request but can never read back other visitors' submissions. The
+   request lands with Auditly AI; the client's own contact info is never
+   shown to or collected from the visitor. If the Supabase script fails to
+   load (e.g. offline), the form falls back to opening a pre-filled email
+   instead of silently failing.
+   ========================================================================== */
+const SUPABASE_URL = 'https://kyfvrkghqohkhwidqwst.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5ZnZya2docW9oa2h3aWRxd3N0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0MTE4ODcsImV4cCI6MjEwMTk4Nzg4N30.PZQsIhFAxM-PiHwSuSfSWeIx2mVeDZ4FgVR3wDJLXu4';
+function isBackendReady(){
+  return typeof window.supabase !== 'undefined'
+    && SUPABASE_URL && !SUPABASE_URL.startsWith('YOUR_')
+    && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.startsWith('YOUR_');
+}
+const sb = isBackendReady() ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+let referenceModalClient = null;
+const referenceOverlay = document.getElementById('reference-modal-overlay');
+const referenceFormState = document.getElementById('reference-modal-form-state');
+const referenceSuccessState = document.getElementById('reference-modal-success-state');
+const referenceForm = document.getElementById('reference-form');
+const referenceFormError = document.getElementById('reference-form-error');
+const referenceSubmitBtn = document.getElementById('reference-form-submit');
+
+function openReferenceModal(client){
+  referenceModalClient = client;
+  const displayName = (client.permissions.name && client.name) ? client.name : 'this client';
+  document.getElementById('reference-modal-sub').textContent = 'Tell us a bit about yourself and what you’d like to ask ' + displayName.split(' ')[0] + ' about. Auditly AI will reach out to coordinate.';
+  referenceFormState.classList.remove('hidden');
+  referenceSuccessState.classList.add('hidden');
+  referenceFormError.classList.add('hidden');
+  referenceForm.reset();
+  referenceOverlay.classList.remove('hidden');
+}
+function closeReferenceModal(){
+  referenceOverlay.classList.add('hidden');
+  referenceModalClient = null;
+}
+document.getElementById('reference-modal-close').addEventListener('click', closeReferenceModal);
+referenceOverlay.addEventListener('click', (e) => { if (e.target === referenceOverlay) closeReferenceModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !referenceOverlay.classList.contains('hidden')) closeReferenceModal(); });
+
+referenceForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  referenceFormError.classList.add('hidden');
+  if (!referenceModalClient) return;
+
+  const payload = {
+    client_id: referenceModalClient.id,
+    client_display_name: (referenceModalClient.permissions.name && referenceModalClient.name) ? referenceModalClient.name : null,
+    requester_name: document.getElementById('ref-name').value.trim(),
+    requester_company: document.getElementById('ref-company').value.trim(),
+    requester_email: document.getElementById('ref-email').value.trim(),
+    requester_phone: document.getElementById('ref-phone').value.trim() || null,
+    portfolio_size: document.getElementById('ref-portfolio').value.trim() || null,
+    message: document.getElementById('ref-message').value.trim() || null,
+  };
+  if (!payload.requester_name || !payload.requester_company || !payload.requester_email) return;
+
+  if (sb){
+    referenceSubmitBtn.disabled = true;
+    referenceSubmitBtn.textContent = 'Sending...';
+    try{
+      const { error } = await sb.from('reference_requests').insert(payload);
+      if (error){
+        referenceFormError.textContent = 'Something went wrong sending this. You can also email azdenkumar@gmail.com directly.';
+        referenceFormError.classList.remove('hidden');
+        return;
+      }
+      referenceFormState.classList.add('hidden');
+      referenceSuccessState.classList.remove('hidden');
+    } finally {
+      referenceSubmitBtn.disabled = false;
+      referenceSubmitBtn.textContent = 'Send Request';
+    }
+    return;
+  }
+
+  // Fallback when the Supabase backend isn't reachable (e.g. offline, or the
+  // script failed to load): open a pre-filled email instead of pretending to
+  // submit somewhere that doesn't exist.
+  const subject = 'Client reference request -- ' + (payload.client_display_name || referenceModalClient.id);
+  const bodyLines = [
+    'Name: ' + payload.requester_name,
+    'Company: ' + payload.requester_company,
+    'Work email: ' + payload.requester_email,
+    payload.requester_phone ? ('Phone: ' + payload.requester_phone) : null,
+    payload.portfolio_size ? ('Portfolio size: ' + payload.portfolio_size) : null,
+    payload.message ? ('Message: ' + payload.message) : null,
+  ].filter(Boolean);
+  const mailto = 'mailto:azdenkumar@gmail.com?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(bodyLines.join('\n'));
+  window.location.href = mailto;
+  referenceFormState.classList.add('hidden');
+  referenceSuccessState.classList.remove('hidden');
+  document.querySelector('#reference-modal-success-state p').textContent = 'Your email client should have opened with this request pre-filled -- just hit send.';
+});
+</script>
+
+</body>
+</html>

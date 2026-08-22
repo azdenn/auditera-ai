@@ -1,0 +1,16 @@
+node_modules/
+.wrangler/
+*.log
+.DS_Store
+Thumbs.db
+
+# Large test fixtures — regenerate with the gen_*.cjs scripts
+**/a105_test/
+**/gca_test/
+**/debug_units/
+**/real/
+*.pdf
+
+# Derived build leftovers
+homepage_assets/*_b64.txt
+homepage_assets/debug_output*.txt

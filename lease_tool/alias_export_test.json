@@ -1,0 +1,99 @@
+{
+  "RENT": [
+    "Base Rent",
+    "Market Rent",
+    "Contract Rent",
+    "Monthly Rent",
+    "Monthly Base Rent",
+    "Rent"
+  ],
+  "PEST": [
+    "Pest",
+    "Pest Control",
+    "Pest Fee",
+    "Pest Control Fees",
+    "Exterminator"
+  ],
+  "TRASH": [
+    "Trash",
+    "Trash Fee",
+    "Valet Trash",
+    "Trash Service",
+    "Trash Service Fee",
+    "Waste Management"
+  ],
+  "PARKING": [
+    "Parking",
+    "Reserved Parking",
+    "Garage",
+    "Carport",
+    "Space Rent",
+    "Carport / Reserved Parking Rental"
+  ],
+  "DEPOSIT_WAIVER": [
+    "LeaseLock",
+    "Lease Lock",
+    "Deposit Waiver",
+    "Deposit Waiver Fee"
+  ],
+  "CREDIT_BUILDER": [
+    "Credit Builder"
+  ],
+  "PET": [
+    "Animal Rent",
+    "Pet Rent",
+    "Pet Fee",
+    "Pet Fees & Charges",
+    "Dog Rent",
+    "Cat Rent",
+    "Animal"
+  ],
+  "CABLE": [
+    "Cable",
+    "Cable/satellite",
+    "Cable TV",
+    "Satellite"
+  ],
+  "INTERNET": [
+    "Internet",
+    "Internet Fee",
+    "WiFi"
+  ],
+  "PACKAGE": [
+    "Package service",
+    "Package Fee",
+    "Package"
+  ],
+  "STORMWATER": [
+    "Stormwater",
+    "Stormwater/drainage",
+    "Drainage",
+    "Storm Water Fee"
+  ],
+  "WASHERDRYER": [
+    "Washer/Dryer",
+    "Washer Dryer",
+    "Laundry",
+    "W/D Rental"
+  ],
+  "MONTH_TO_MONTH_FEE": [
+    "Month to Month Fee",
+    "Month-to-Month Fee",
+    "Month to Month",
+    "M2M Fee",
+    "MTM Fee"
+  ],
+  "CONCESSION": [
+    "Concession",
+    "Concessions",
+    "Month Free",
+    "Months Free",
+    "Free Rent",
+    "Move In Special",
+    "Move-In Special",
+    "Special",
+    "Prorated Concession",
+    "Rent Credit",
+    "Discount"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "auditera",
+  "main": "./_worker.js",
+  "compatibility_date": "2026-08-21",
+  "assets": {
+    "directory": "./",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/tools/*"]
+  },
+  "vars": {
+    "SUPABASE_URL": "https://kyfvrkghqohkhwidqwst.supabase.co",
+    "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5ZnZya2docW9oa2h3aWRxd3N0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0MTE4ODcsImV4cCI6MjEwMTk4Nzg4N30.PZQsIhFAxM-PiHwSuSfSWeIx2mVeDZ4FgVR3wDJLXu4"
+  }
+}

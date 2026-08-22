@@ -1,0 +1,1171 @@
+=== lease_base.pdf ===
+{
+  "ok": true,
+  "unit": "104",
+  "leaseTermStartRaw": "09/30/2025",
+  "leaseTermEndRaw": "11/02/2026",
+  "residentsRaw": "Elysee Maykelson",
+  "rawItems": [
+    {
+      "rawLabel": "Monthly Base Rent",
+      "amount": 1182
+    },
+    {
+      "rawLabel": "Pest control",
+      "amount": 8
+    },
+    {
+      "rawLabel": "Trash service",
+      "amount": 12
+    }
+  ],
+  "signatureFindings": [
+    {
+      "page": 1,
+      "section": "FLOOD DISCLOSURE NOTICE",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident",
+      "detectedVia": "ink"
+    },
+    {
+      "page": 1,
+      "section": "FLOOD DISCLOSURE NOTICE",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 12,
+      "section": "GENERAL PROVISIONS AND SIGNATURES",
+      "signer": "Elysee Maykelson",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 12,
+      "section": "GENERAL PROVISIONS AND SIGNATURES",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 13,
+      "section": "INSURANCE ADDENDUM",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident",
+      "detectedVia": "ink"
+    },
+    {
+      "page": 13,
+      "section": "INSURANCE ADDENDUM",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 15,
+      "section": "9. Your responsibility for conduct of occupants, family members and guests. You are responsible for communicating",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident",
+      "detectedVia": "ink"
+    },
+    {
+      "page": 15,
+      "section": "9. Your responsibility for conduct of occupants, family members and guests. You are responsible for communicating",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 17,
+      "section": "13.7 Off-Limit Areas. You must not let an animal—other than an 20. Multiple Residents. Each resident who signed the Lease must also",
+      "signer": "Elysee Maykelson",
+      "present": true,
+      "kind": "row-resident",
+      "detectedVia": "ink"
+    },
+    {
+      "page": 17,
+      "section": "13.7 Off-Limit Areas. You must not let an animal—other than an 20. Multiple Residents. Each resident who signed the Lease must also",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 18,
+      "section": "LEASE ADDENDUM FOR TRASH REMOVAL AND RECYCLING COSTS—FLAT FEE",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident",
+      "detectedVia": "ink"
+    },
+    {
+      "page": 18,
+      "section": "LEASE ADDENDUM FOR TRASH REMOVAL AND RECYCLING COSTS—FLAT FEE",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 19,
+      "section": "Mold Information and Prevention",
+      "signer": "Elysee Maykelson",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 19,
+      "section": "Mold Information and Prevention",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 20,
+      "section": "AFTER MOVING IN OR SIGNING THIS ADDENDUM AND",
+      "signer": "Elysee Maykelson",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 20,
+      "section": "AFTER MOVING IN OR SIGNING THIS ADDENDUM AND",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 23,
+      "section": "Asbestos Addendum",
+      "signer": "Elysee Maykelson",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 23,
+      "section": "Asbestos Addendum",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 25,
+      "section": "6. HVAC Operation. If the exterior temperature drops below 32° F you must keep the heat on and set to a minimum of 50° F. You must",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident",
+      "detectedVia": "ink"
+    },
+    {
+      "page": 25,
+      "section": "6. HVAC Operation. If the exterior temperature drops below 32° F you must keep the heat on and set to a minimum of 50° F. You must",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 26,
+      "section": "LEASE ADDENDUM FOR SATELLITE DISH OR ANTENNA",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 26,
+      "section": "LEASE ADDENDUM FOR SATELLITE DISH OR ANTENNA",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 27,
+      "section": "LEASE ADDENDUM ADDRESSING CARRYING FIREARMS ONSITE",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident",
+      "detectedVia": "ink"
+    },
+    {
+      "page": 27,
+      "section": "LEASE ADDENDUM ADDRESSING CARRYING FIREARMS ONSITE",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    }
+  ]
+}
+
+=== lease_1_a.pdf ===
+{
+  "ok": true,
+  "unit": "105",
+  "leaseTermStartRaw": "10/06/2026",
+  "leaseTermEndRaw": "10/05/2027",
+  "residentsRaw": "Nancy Flagle",
+  "rawItems": [
+    {
+      "rawLabel": "Monthly Base Rent",
+      "amount": 1085
+    },
+    {
+      "rawLabel": "Animal rent",
+      "amount": 40
+    },
+    {
+      "rawLabel": "Pest control",
+      "amount": 8
+    },
+    {
+      "rawLabel": "monthly fee of $ 12.00 for the removal of trash",
+      "amount": 12
+    }
+  ],
+  "signatureFindings": [
+    {
+      "page": 1,
+      "section": "FLOOD DISCLOSURE NOTICE",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 1,
+      "section": "FLOOD DISCLOSURE NOTICE",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 12,
+      "section": "will give you 1 written reminder not less than 5 days nor 29. Severability and Survivability. If any provision of this Lease is inval -",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 12,
+      "section": "will give you 1 written reminder not less than 5 days nor 29. Severability and Survivability. If any provision of this Lease is inval -",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 13,
+      "section": "INSURANCE ADDENDUM",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 13,
+      "section": "INSURANCE ADDENDUM",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 15,
+      "section": "9. Your responsibility for conduct of occupants, family members and guests. You are responsible for communicating",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 15,
+      "section": "9. Your responsibility for conduct of occupants, family members and guests. You are responsible for communicating",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 17,
+      "section": "13.7 Off-Limit Areas. You must not let an animal—other than an 20. Multiple Residents. Each resident who signed the Lease must also",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 17,
+      "section": "13.7 Off-Limit Areas. You must not let an animal—other than an 20. Multiple Residents. Each resident who signed the Lease must also",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 18,
+      "section": "LEASE ADDENDUM FOR TRASH REMOVAL AND RECYCLING COSTS—FLAT FEE",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 18,
+      "section": "LEASE ADDENDUM FOR TRASH REMOVAL AND RECYCLING COSTS—FLAT FEE",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 19,
+      "section": "Mold Information and Prevention",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 19,
+      "section": "Mold Information and Prevention",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 20,
+      "section": "AFTER MOVING IN OR SIGNING THIS ADDENDUM AND",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 20,
+      "section": "AFTER MOVING IN OR SIGNING THIS ADDENDUM AND",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 23,
+      "section": "Asbestos Addendum",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 23,
+      "section": "Asbestos Addendum",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 25,
+      "section": "6. HVAC Operation. If the exterior temperature drops below 32° F you must keep the heat on and set to a minimum of 50° F. You must",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 25,
+      "section": "6. HVAC Operation. If the exterior temperature drops below 32° F you must keep the heat on and set to a minimum of 50° F. You must",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 26,
+      "section": "LEASE ADDENDUM FOR SATELLITE DISH OR ANTENNA",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 26,
+      "section": "LEASE ADDENDUM FOR SATELLITE DISH OR ANTENNA",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 27,
+      "section": "LEASE ADDENDUM ADDRESSING CARRYING FIREARMS ONSITE",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 27,
+      "section": "LEASE ADDENDUM ADDRESSING CARRYING FIREARMS ONSITE",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    }
+  ]
+}
+
+=== lease_1_b.pdf ===
+{
+  "ok": true,
+  "unit": "105",
+  "leaseTermStartRaw": "10/06/2026",
+  "leaseTermEndRaw": "10/05/2027",
+  "residentsRaw": "Nancy Flagle",
+  "rawItems": [
+    {
+      "rawLabel": "Monthly Base Rent",
+      "amount": 1085
+    },
+    {
+      "rawLabel": "Animal rent",
+      "amount": 40
+    },
+    {
+      "rawLabel": "Pest control",
+      "amount": 8
+    },
+    {
+      "rawLabel": "monthly fee of $ 12.00 for the removal of trash",
+      "amount": 12
+    }
+  ],
+  "signatureFindings": [
+    {
+      "page": 1,
+      "section": "FLOOD DISCLOSURE NOTICE",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 1,
+      "section": "FLOOD DISCLOSURE NOTICE",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 12,
+      "section": "will give you 1 written reminder not less than 5 days nor 29. Severability and Survivability. If any provision of this Lease is inval -",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 12,
+      "section": "will give you 1 written reminder not less than 5 days nor 29. Severability and Survivability. If any provision of this Lease is inval -",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 13,
+      "section": "INSURANCE ADDENDUM",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 13,
+      "section": "INSURANCE ADDENDUM",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 15,
+      "section": "9. Your responsibility for conduct of occupants, family members and guests. You are responsible for communicating",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 15,
+      "section": "9. Your responsibility for conduct of occupants, family members and guests. You are responsible for communicating",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 17,
+      "section": "13.7 Off-Limit Areas. You must not let an animal—other than an 20. Multiple Residents. Each resident who signed the Lease must also",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 17,
+      "section": "13.7 Off-Limit Areas. You must not let an animal—other than an 20. Multiple Residents. Each resident who signed the Lease must also",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 18,
+      "section": "LEASE ADDENDUM FOR TRASH REMOVAL AND RECYCLING COSTS—FLAT FEE",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 18,
+      "section": "LEASE ADDENDUM FOR TRASH REMOVAL AND RECYCLING COSTS—FLAT FEE",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 19,
+      "section": "Mold Information and Prevention",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 19,
+      "section": "Mold Information and Prevention",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 20,
+      "section": "AFTER MOVING IN OR SIGNING THIS ADDENDUM AND",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 20,
+      "section": "AFTER MOVING IN OR SIGNING THIS ADDENDUM AND",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 23,
+      "section": "Asbestos Addendum",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 23,
+      "section": "Asbestos Addendum",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 25,
+      "section": "6. HVAC Operation. If the exterior temperature drops below 32° F you must keep the heat on and set to a minimum of 50° F. You must",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 25,
+      "section": "6. HVAC Operation. If the exterior temperature drops below 32° F you must keep the heat on and set to a minimum of 50° F. You must",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 26,
+      "section": "LEASE ADDENDUM FOR SATELLITE DISH OR ANTENNA",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 26,
+      "section": "LEASE ADDENDUM FOR SATELLITE DISH OR ANTENNA",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 27,
+      "section": "LEASE ADDENDUM ADDRESSING CARRYING FIREARMS ONSITE",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 27,
+      "section": "LEASE ADDENDUM ADDRESSING CARRYING FIREARMS ONSITE",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    }
+  ]
+}
+
+=== lease_12.pdf ===
+{
+  "ok": true,
+  "unit": "105",
+  "leaseTermStartRaw": "10/10/2024",
+  "leaseTermEndRaw": "10/09/2025",
+  "residentsRaw": "Nancy Flagle",
+  "rawItems": [
+    {
+      "rawLabel": "Monthly Base Rent",
+      "amount": 1145
+    },
+    {
+      "rawLabel": "Animal rent",
+      "amount": 40
+    },
+    {
+      "rawLabel": "Pest control",
+      "amount": 8
+    },
+    {
+      "rawLabel": "Trash service",
+      "amount": 12
+    }
+  ],
+  "signatureFindings": [
+    {
+      "page": 1,
+      "section": "FLOOD DISCLOSURE NOTICE",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 1,
+      "section": "FLOOD DISCLOSURE NOTICE",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 7,
+      "section": "AFTER MOVING IN OR SIGNING THIS ADDENDUM AND",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 7,
+      "section": "AFTER MOVING IN OR SIGNING THIS ADDENDUM AND",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 8,
+      "section": "INSURANCE ADDENDUM",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 8,
+      "section": "INSURANCE ADDENDUM",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 14,
+      "section": "GENERAL PROVISIONS AND SIGNATURES",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 14,
+      "section": "GENERAL PROVISIONS AND SIGNATURES",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 18,
+      "section": "13.7 Off-Limit Areas. You must not let an animal—other than an 20. Multiple Residents. Each resident who signed the Lease must also",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 18,
+      "section": "13.7 Off-Limit Areas. You must not let an animal—other than an 20. Multiple Residents. Each resident who signed the Lease must also",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 19,
+      "section": "Mold Information and Prevention",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 19,
+      "section": "Mold Information and Prevention",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 20,
+      "section": "Security Guidelines for Residents",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 20,
+      "section": "Security Guidelines for Residents",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 21,
+      "section": "Asbestos Addendum",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 21,
+      "section": "Asbestos Addendum",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 23,
+      "section": "9. Your responsibility for conduct of occupants, family members and guests. You are responsible for communicating",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 23,
+      "section": "9. Your responsibility for conduct of occupants, family members and guests. You are responsible for communicating",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 24,
+      "section": "LEASE ADDENDUM ADDRESSING CARRYING FIREARMS ONSITE",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 24,
+      "section": "LEASE ADDENDUM ADDRESSING CARRYING FIREARMS ONSITE",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 27,
+      "section": "6. HVAC Operation. If the exterior temperature drops below 32° F you must keep the heat on and set to a minimum of 50° F. You must",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 27,
+      "section": "6. HVAC Operation. If the exterior temperature drops below 32° F you must keep the heat on and set to a minimum of 50° F. You must",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    }
+  ]
+}
+
+=== lease_123.pdf ===
+{
+  "ok": true,
+  "unit": "105",
+  "leaseTermStartRaw": "11/01/2022",
+  "leaseTermEndRaw": "10/09/2023",
+  "residentsRaw": "Nancy Flagle",
+  "rawItems": [
+    {
+      "rawLabel": "Monthly Base Rent",
+      "amount": 1092
+    },
+    {
+      "rawLabel": "Animal rent",
+      "amount": 30
+    },
+    {
+      "rawLabel": "Pest control",
+      "amount": 5
+    },
+    {
+      "rawLabel": "Trash",
+      "amount": 12
+    }
+  ],
+  "signatureFindings": [
+    {
+      "page": 1,
+      "section": "FLOOD DISCLOSURE NOTICE",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident",
+      "detectedVia": "ink"
+    },
+    {
+      "page": 1,
+      "section": "FLOOD DISCLOSURE NOTICE",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner",
+      "detectedVia": "ink"
+    },
+    {
+      "page": 7,
+      "section": "AFTER MOVING IN OR SIGNING THIS ADDENDUM AND",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 7,
+      "section": "AFTER MOVING IN OR SIGNING THIS ADDENDUM AND",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner",
+      "detectedVia": "ink"
+    },
+    {
+      "page": 9,
+      "section": "INSURANCE ADDENDUM",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident",
+      "detectedVia": "ink"
+    },
+    {
+      "page": 9,
+      "section": "INSURANCE ADDENDUM",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner",
+      "detectedVia": "ink"
+    },
+    {
+      "page": 15,
+      "section": "26.2. Move-Out Inspection. We may, but are not obligated to, YOU UNDERSTAND THAT, WITHOUT THIS WAIVER, YOU",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 15,
+      "section": "26.2. Move-Out Inspection. We may, but are not obligated to, YOU UNDERSTAND THAT, WITHOUT THIS WAIVER, YOU",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 19,
+      "section": "13.7 Off-Limit Areas. You must not let an animal—other than an 20. Multiple Residents. Each resident who signed the Lease must also",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident",
+      "detectedVia": "ink"
+    },
+    {
+      "page": 19,
+      "section": "13.7 Off-Limit Areas. You must not let an animal—other than an 20. Multiple Residents. Each resident who signed the Lease must also",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 20,
+      "section": "Mold Information and Prevention Addendum",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident",
+      "detectedVia": "ink"
+    },
+    {
+      "page": 20,
+      "section": "Mold Information and Prevention Addendum",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 21,
+      "section": "Security Guidelines for Residents",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident",
+      "detectedVia": "ink"
+    },
+    {
+      "page": 21,
+      "section": "Security Guidelines for Residents",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner",
+      "detectedVia": "ink"
+    },
+    {
+      "page": 22,
+      "section": "Asbestos Addendum",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident",
+      "detectedVia": "ink"
+    },
+    {
+      "page": 22,
+      "section": "Asbestos Addendum",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner",
+      "detectedVia": "ink"
+    },
+    {
+      "page": 24,
+      "section": "9. Your responsibility for conduct of occupants, family members and guests. You are responsible for communicating",
+      "signer": "All Residents",
+      "present": false,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 24,
+      "section": "9. Your responsibility for conduct of occupants, family members and guests. You are responsible for communicating",
+      "signer": "Owner or Owner's Representative",
+      "present": false,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 25,
+      "section": "LEASE ADDENDUM ADDRESSING CARRYING FIREARMS ONSITE",
+      "signer": "All Residents",
+      "present": false,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 25,
+      "section": "LEASE ADDENDUM ADDRESSING CARRYING FIREARMS ONSITE",
+      "signer": "Owner or Owner's Representative",
+      "present": false,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 28,
+      "section": "6. HVAC Operation. If the exterior temperature drops below 32° F you must keep the heat on and set to a minimum of 50° F. You must",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident",
+      "detectedVia": "ink"
+    },
+    {
+      "page": 28,
+      "section": "6. HVAC Operation. If the exterior temperature drops below 32° F you must keep the heat on and set to a minimum of 50° F. You must",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner",
+      "detectedVia": "ink"
+    }
+  ]
+}
+
+=== lease_1234.pdf ===
+{
+  "ok": true,
+  "unit": "105",
+  "leaseTermStartRaw": "10/10/2025",
+  "leaseTermEndRaw": "10/05/2026",
+  "residentsRaw": "Nancy Flagle",
+  "rawItems": [
+    {
+      "rawLabel": "Monthly Base Rent",
+      "amount": 1085
+    },
+    {
+      "rawLabel": "Animal rent",
+      "amount": 40
+    },
+    {
+      "rawLabel": "Pest control",
+      "amount": 8
+    },
+    {
+      "rawLabel": "Trash service",
+      "amount": 12
+    }
+  ],
+  "signatureFindings": [
+    {
+      "page": 1,
+      "section": "FLOOD DISCLOSURE NOTICE",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 1,
+      "section": "FLOOD DISCLOSURE NOTICE",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 12,
+      "section": "GENERAL PROVISIONS AND SIGNATURES",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 12,
+      "section": "GENERAL PROVISIONS AND SIGNATURES",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 13,
+      "section": "INSURANCE ADDENDUM",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 13,
+      "section": "INSURANCE ADDENDUM",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 15,
+      "section": "9. Your responsibility for conduct of occupants, family members and guests. You are responsible for communicating",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 15,
+      "section": "9. Your responsibility for conduct of occupants, family members and guests. You are responsible for communicating",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 17,
+      "section": "13.7 Off-Limit Areas. You must not let an animal—other than an 20. Multiple Residents. Each resident who signed the Lease must also",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 17,
+      "section": "13.7 Off-Limit Areas. You must not let an animal—other than an 20. Multiple Residents. Each resident who signed the Lease must also",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 18,
+      "section": "LEASE ADDENDUM FOR TRASH REMOVAL AND RECYCLING COSTS—FLAT FEE",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 18,
+      "section": "LEASE ADDENDUM FOR TRASH REMOVAL AND RECYCLING COSTS—FLAT FEE",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 19,
+      "section": "Mold Information and Prevention",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 19,
+      "section": "Mold Information and Prevention",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 20,
+      "section": "AFTER MOVING IN OR SIGNING THIS ADDENDUM AND",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 20,
+      "section": "AFTER MOVING IN OR SIGNING THIS ADDENDUM AND",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 23,
+      "section": "Asbestos Addendum",
+      "signer": "Nancy Flagle",
+      "present": true,
+      "kind": "row-resident"
+    },
+    {
+      "page": 23,
+      "section": "Asbestos Addendum",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 25,
+      "section": "6. HVAC Operation. If the exterior temperature drops below 32° F you must keep the heat on and set to a minimum of 50° F. You must",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 25,
+      "section": "6. HVAC Operation. If the exterior temperature drops below 32° F you must keep the heat on and set to a minimum of 50° F. You must",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 26,
+      "section": "LEASE ADDENDUM FOR SATELLITE DISH OR ANTENNA",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 26,
+      "section": "LEASE ADDENDUM FOR SATELLITE DISH OR ANTENNA",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    },
+    {
+      "page": 27,
+      "section": "LEASE ADDENDUM ADDRESSING CARRYING FIREARMS ONSITE",
+      "signer": "All Residents",
+      "present": true,
+      "kind": "anchor-resident"
+    },
+    {
+      "page": 27,
+      "section": "LEASE ADDENDUM ADDRESSING CARRYING FIREARMS ONSITE",
+      "signer": "Owner or Owner's Representative",
+      "present": true,
+      "kind": "anchor-owner"
+    }
+  ]
+}
+
+=== errors === []
