@@ -64,6 +64,7 @@ __SHARED_NAV__
           <button class="btn-primary" type="submit">Sign In</button>
         </form>
         <div class="auth-switch">Don't have access yet? <a id="show-signup">Set up your property</a></div>
+        <div class="auth-switch"><a id="show-reset">Forgot your password?</a></div>
       </div>
 
       <div class="signin-card hidden" id="signup-card">
@@ -78,6 +79,54 @@ __SHARED_NAV__
           <button class="btn-primary" type="submit">Create Account</button>
         </form>
         <div class="auth-switch">Already have access? <a id="show-login">Sign in</a></div>
+      </div>
+
+      <!-- Reset, step 1: ask where to send the link. -->
+      <div class="signin-card hidden" id="reset-request-card">
+        <p style="margin:0 0 20px;color:var(--ink-soft);font-size:14.5px;line-height:1.55;">
+          Enter the email you signed up with and we'll send you a link to set a new password.
+          The link is good for one hour.
+        </p>
+        <form class="auth-form" id="reset-request-form">
+          <label>Email
+            <input type="email" id="reset-email" autocomplete="email" required>
+          </label>
+          <div class="auth-err hidden" id="reset-request-error"></div>
+          <button class="btn-primary" type="submit">Email me a reset link</button>
+        </form>
+        <div class="auth-switch"><a id="reset-back-to-login">Back to sign in</a></div>
+      </div>
+
+      <!-- Reset, step 2: sent. Deliberately does not say whether an account
+           exists, so this form can't be used to discover who has one. -->
+      <div class="signin-card hidden" id="reset-sent-card">
+        <p style="margin:0 0 14px;color:var(--ink-soft);font-size:14.5px;line-height:1.55;">
+          If there's an account for <b id="reset-sent-email"></b>, a reset link is on its way.
+          It expires in an hour.
+        </p>
+        <p style="margin:0 0 20px;color:var(--ink-faint);font-size:13px;line-height:1.55;">
+          Nothing after a few minutes? Check spam — and check the address for typos. An account
+          under a slightly different spelling is a different account, even on Gmail, where
+          <b>first.last@</b> and <b>firstlast@</b> reach the same inbox but are two separate logins here.
+        </p>
+        <div class="auth-switch"><a id="reset-sent-back">Back to sign in</a></div>
+      </div>
+
+      <!-- Reset, step 3: they followed the link and are here to set a password. -->
+      <div class="signin-card hidden" id="reset-password-card">
+        <p style="margin:0 0 20px;color:var(--ink-soft);font-size:14.5px;line-height:1.55;">
+          Pick something you'll actually remember. This signs you in straight away.
+        </p>
+        <form class="auth-form" id="reset-password-form">
+          <label>New password
+            <input type="password" id="new-password" autocomplete="new-password" required minlength="8">
+          </label>
+          <label>Confirm new password
+            <input type="password" id="new-password-2" autocomplete="new-password" required minlength="8">
+          </label>
+          <div class="auth-err hidden" id="reset-password-error"></div>
+          <button class="btn-primary" type="submit">Save new password</button>
+        </form>
       </div>
     </div>
 
@@ -494,6 +543,30 @@ async function launchTool(key){
    still click through the whole flow -- that mode is NOT real security and
    is only meant for previewing the UI.
    ========================================================================== */
+/* Read the URL BEFORE the Supabase client is created.
+
+   supabase-js has detectSessionInUrl on by default: the moment createClient()
+   runs it consumes the recovery fragment and wipes it from the address bar.
+   Anything that wants to know "did this page load from a reset link?" has to
+   have looked already, so it is captured here rather than further down.
+
+   The reason this matters: following a reset link DOES sign you in, with a
+   short-lived recovery session. Without this flag the page would see a valid
+   session on load and cheerfully show the dashboard -- and the person who came
+   to set a new password would never be offered the chance. */
+const AUTH_URL_STATE = (function(){
+  var raw = (window.location.hash || '') + '&' + (window.location.search || '');
+  function param(name){
+    var m = new RegExp('[#?&]' + name + '=([^&]*)').exec(raw);
+    return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : '';
+  }
+  return {
+    isRecovery: /[#?&]type=recovery/.test(raw) || /[#?&]mode=reset\b/.test(raw),
+    error: param('error_description') || param('error'),
+    errorCode: param('error_code'),
+  };
+})();
+
 const SUPABASE_URL = 'https://kyfvrkghqohkhwidqwst.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5ZnZya2docW9oa2h3aWRxd3N0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0MTE4ODcsImV4cCI6MjEwMTk4Nzg4N30.PZQsIhFAxM-PiHwSuSfSWeIx2mVeDZ4FgVR3wDJLXu4';
 
@@ -538,6 +611,204 @@ document.getElementById('show-login').addEventListener('click', (e) => {
   signupCard.classList.add('hidden');
   loginCard.classList.remove('hidden');
 });
+
+/* ==========================================================================
+   Password reset
+   ==========================================================================
+   Three cards, one at a time: ask for the email, confirm it was sent, and --
+   after following the emailed link -- set the new password.
+
+   Supabase does the actual work: resetPasswordForEmail() sends the mail and
+   updateUser() changes the password against the recovery session the link
+   established. No password ever passes through our own code paths, and there
+   is no "reset token" of our own invention to get wrong. */
+
+const resetRequestCard  = document.getElementById('reset-request-card');
+const resetSentCard     = document.getElementById('reset-sent-card');
+const resetPasswordCard = document.getElementById('reset-password-card');
+
+// Exactly one card visible at a time. Doing this by name beats hiding things
+// ad hoc at each call site, which is how two cards end up on screen together.
+function showAuthCard(which){
+  const cards = {
+    login: loginCard, signup: signupCard,
+    resetRequest: resetRequestCard, resetSent: resetSentCard,
+    resetPassword: resetPasswordCard,
+  };
+  for (const key in cards){
+    if (cards[key]) cards[key].classList.toggle('hidden', key !== which);
+  }
+  if (signedoutView) signedoutView.classList.remove('hidden');
+  if (signedinPanel) signedinPanel.classList.add('hidden');
+  const onboarding = document.getElementById('onboarding-card');
+  if (onboarding) onboarding.classList.add('hidden');
+}
+
+document.getElementById('show-reset').addEventListener('click', (e) => {
+  e.preventDefault();
+  // Carry across whatever they already typed -- retyping an address you just
+  // typed is a small insult when you are already locked out.
+  const typed = (document.getElementById('login-username').value || '').trim();
+  if (typed) document.getElementById('reset-email').value = typed;
+  showAuthCard('resetRequest');
+  document.getElementById('signin-kicker').textContent = 'Password Reset';
+  document.getElementById('signin-heading').textContent = 'Reset your password';
+  document.getElementById('signin-sub').textContent = 'We will email you a link.';
+});
+
+function backToLogin(e){
+  if (e) e.preventDefault();
+  showAuthCard('login');
+  document.getElementById('signin-kicker').textContent = 'Sign In';
+  document.getElementById('signin-heading').textContent = 'Access your tools';
+  document.getElementById('signin-sub').textContent = 'Sign in with your email and password.';
+}
+document.getElementById('reset-back-to-login').addEventListener('click', backToLogin);
+document.getElementById('reset-sent-back').addEventListener('click', backToLogin);
+
+// --- step 1: send the link -------------------------------------------------
+const resetRequestForm = document.getElementById('reset-request-form');
+resetRequestForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('reset-request-error');
+  err.classList.add('hidden');
+  const email = (document.getElementById('reset-email').value || '').trim();
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    err.textContent = 'That does not look like an email address.';
+    err.classList.remove('hidden');
+    return;
+  }
+  if (!sb){
+    err.textContent = 'Password reset is not available in this preview.';
+    err.classList.remove('hidden');
+    return;
+  }
+
+  setFormBusy(resetRequestForm, true);
+  try {
+    // redirectTo has to be on Supabase's allow-list (Auth -> URL
+    // Configuration) or the link lands on the site root instead of here.
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/app.html?mode=reset',
+    });
+    // Deliberately NOT branching on "no such account": the same answer either
+    // way, so this form cannot be used to find out who has an account here.
+    // Supabase behaves the same way and returns no error for an unknown
+    // address. A real error (rate limit, service down) is still worth showing.
+    if (error && !/user|not found/i.test(error.message || '')){
+      err.textContent = error.message || 'That could not be sent. Please try again shortly.';
+      err.classList.remove('hidden');
+      return;
+    }
+    document.getElementById('reset-sent-email').textContent = email;
+    showAuthCard('resetSent');
+    document.getElementById('signin-kicker').textContent = 'Password Reset';
+    document.getElementById('signin-heading').textContent = 'Check your email';
+    document.getElementById('signin-sub').textContent = 'The link expires in an hour.';
+  } catch (ex){
+    err.textContent = 'That could not be sent: ' + (ex && ex.message ? ex.message : 'unknown error');
+    err.classList.remove('hidden');
+  } finally { setFormBusy(resetRequestForm, false); }
+});
+
+// --- step 3: set the new password -----------------------------------------
+const resetPasswordForm = document.getElementById('reset-password-form');
+resetPasswordForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('reset-password-error');
+  err.classList.add('hidden');
+  const pw1 = document.getElementById('new-password').value;
+  const pw2 = document.getElementById('new-password-2').value;
+
+  if (pw1.length < 8){
+    err.textContent = 'Use at least 8 characters.';
+    err.classList.remove('hidden');
+    return;
+  }
+  if (pw1 !== pw2){
+    err.textContent = 'Those two passwords do not match.';
+    err.classList.remove('hidden');
+    return;
+  }
+  if (!sb){
+    err.textContent = 'Password reset is not available in this preview.';
+    err.classList.remove('hidden');
+    return;
+  }
+
+  setFormBusy(resetPasswordForm, true);
+  try {
+    const { data, error } = await sb.auth.updateUser({ password: pw1 });
+    if (error){
+      // The usual cause is an expired or already-used link, and "invalid
+      // claim" means nothing to the person reading it -- so say what to do.
+      const msg = (error.message || '').toLowerCase();
+      err.textContent = /expired|invalid|jwt|session|claim/.test(msg)
+        ? 'That reset link has expired or was already used. Request a new one and try again.'
+        : (error.message || 'That did not save. Please try again.');
+      err.classList.remove('hidden');
+      return;
+    }
+    // updateUser leaves them signed in on the recovery session, so there is no
+    // reason to make them sign in again with the password they just chose.
+    const email = (data && data.user && data.user.email) || '';
+    const sub = await ensureSubscriptionForSession(data.user.id, email ? email.split('@')[0] : '');
+    showAuthCard('login');            // reset the card state behind the panel
+    showSignedIn(sub.username, sub.property);
+  } catch (ex){
+    err.textContent = 'That did not save: ' + (ex && ex.message ? ex.message : 'unknown error');
+    err.classList.remove('hidden');
+  } finally { setFormBusy(resetPasswordForm, false); }
+});
+
+/* Did this page load from a reset link?
+
+   Two ways of knowing, because the answer has to be right: the URL captured
+   before the client was created, and Supabase's own PASSWORD_RECOVERY event.
+   Whichever arrives first wins; the second is then a no-op. */
+let inPasswordRecovery = false;
+function enterPasswordRecovery(){
+  if (inPasswordRecovery) return;
+  inPasswordRecovery = true;
+  showAuthCard('resetPassword');
+  document.getElementById('signin-kicker').textContent = 'Password Reset';
+  document.getElementById('signin-heading').textContent = 'Choose a new password';
+  document.getElementById('signin-sub').textContent = 'Almost done.';
+  const first = document.getElementById('new-password');
+  if (first) first.focus();
+}
+
+// Guarded because a throw here kills the rest of this script -- and the rest
+// of this script includes signing in, onboarding and launching a tool. The
+// recovery flag captured from the URL is the primary signal anyway; this
+// listener is the belt to its braces, and it must not be able to take the page
+// down with it.
+if (sb && sb.auth && typeof sb.auth.onAuthStateChange === 'function'){
+  try {
+    sb.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') enterPasswordRecovery();
+    });
+  } catch (_e){ /* URL flag still covers the recovery case */ }
+}
+
+// A dead link comes back with an error in the URL rather than a session, and
+// silently showing the sign-in form would leave someone clicking the same
+// expired link forever.
+if (AUTH_URL_STATE.error){
+  showAuthCard('resetRequest');
+  document.getElementById('signin-kicker').textContent = 'Password Reset';
+  const err = document.getElementById('reset-request-error');
+  err.textContent = /expired/i.test(AUTH_URL_STATE.error + AUTH_URL_STATE.errorCode)
+    ? 'That reset link has expired. Enter your email to get a fresh one.'
+    : 'That reset link could not be used: ' + AUTH_URL_STATE.error
+      + '. Enter your email to get a fresh one.';
+  err.classList.remove('hidden');
+  document.getElementById('signin-heading').textContent = 'Reset your password';
+  document.getElementById('signin-sub').textContent = 'That link did not work.';
+} else if (AUTH_URL_STATE.isRecovery){
+  enterPasswordRecovery();
+}
 
 function showSignedIn(username, property){
   isSignedIn = true;
@@ -795,6 +1066,12 @@ document.getElementById('logout-link').addEventListener('click', async (e) => {
 
 // Restore session on page load, if any.
 (async function restoreSession(){
+  // A recovery link signs you in before you have chosen a password, so a
+  // session existing here does NOT mean "show them the dashboard". Bailing out
+  // is the whole reason the URL was captured up top: without this, the reset
+  // link drops you straight into the app and never lets you set a password.
+  if (AUTH_URL_STATE.isRecovery || AUTH_URL_STATE.error || inPasswordRecovery) return;
+
   if (sb){
     const { data: { session } } = await sb.auth.getSession();
     if (!session) return;
@@ -1034,7 +1311,7 @@ showSignedOut = function(){
 
 // Arriving from the pricing page's CTA should open the create-account form,
 // not the sign-in form -- they have just told us they are new.
-if (/[?&]start=trial\b/.test(location.search)){
+if (/[?&]start=trial\b/.test(location.search) && !inPasswordRecovery && !AUTH_URL_STATE.error){
   const showSignup = document.getElementById('show-signup');
   if (showSignup) showSignup.click();
 }

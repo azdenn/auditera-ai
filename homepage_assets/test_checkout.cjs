@@ -20,6 +20,7 @@ function stubScript(){
         auth: {
           getSession: async () => ({data:{session:{access_token:'real-user-token', user:{id:'u1', email:'tester@example.com'}}}}),
           signOut: async () => ({}),
+          onAuthStateChange: function(){ return {data:{subscription:{unsubscribe(){}}}}; },
         },
         from: function(table){
           const q = {

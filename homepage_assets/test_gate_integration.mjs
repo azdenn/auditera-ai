@@ -120,6 +120,7 @@ await page.route('**/supabase-js@2/**', route => route.fulfill({
         auth: {
           getSession: async () => ({data:{session:{access_token:'good-token', user:{id:'u1', email:'tester@leaseproof-login.test'}}}}),
           signOut: async () => ({}),
+          onAuthStateChange: function(){ return {data:{subscription:{unsubscribe(){}}}}; },
           signInWithPassword: async () => ({data:{user:{id:'u1'},session:{access_token:'good-token'}}, error:null}),
           signUp: async () => ({data:{user:{id:'u1'},session:{access_token:'good-token'}}, error:null}),
         },

@@ -22,6 +22,7 @@ function stubScript(){
         auth: {
           getSession: async () => ({data:{session:null}}),
           signOut: async () => ({}),
+          onAuthStateChange: function(){ return {data:{subscription:{unsubscribe(){}}}}; },
           signInWithPassword: async () => ({data:{user:{id:'u1'},session:{access_token:'t'}}, error:null}),
           signUp: async () => ({data:{user:{id:'u1'},session:{access_token:'t'}}, error:null}),
         },
