@@ -1,6 +1,6 @@
 // ConcessionVerify PDF report ("add pdf download to all tools please").
 // Same print-styled-document approach as the other two tools, so the output
-// is real vector text with the Auditly AI branding, and light-on-white
+// is real vector text with the Auditera AI branding, and light-on-white
 // because it gets printed and emailed rather than read on screen.
 //
 // CHANGED BY SPEC: this ran on the two-ledger fixture set (A109 + A110), which
@@ -15,13 +15,15 @@
 const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 const HERE = __dirname;
 (async () => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  await page.goto('file://' + path.resolve(HERE, 'concession_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve(HERE, 'concession_reconciler.html') + GATE_HASH);
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.evaluate(() => setUploadMode('zip'));
@@ -99,7 +101,7 @@ const HERE = __dirname;
 
   const checks = [
     ['A PDF export button exists', info.hasBtn && /pdf/i.test(info.btnText)],
-    ['Report is branded Auditly AI', v.brand === 'Auditly AI'],
+    ['Report is branded Auditera AI', v.brand === 'Auditera AI'],
     ['Report names the ConcessionVerify tool', /ConcessionVerify/.test(v.tool||'')],
     ['Report has a clear title', /Concession/.test(v.h1||'')],
     ['Report shows summary stats', v.stats >= 3],

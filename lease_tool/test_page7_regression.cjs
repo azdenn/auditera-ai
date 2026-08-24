@@ -1,6 +1,7 @@
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 
 // Regression test for the real A109 lease: page 7 has two genuinely-signed
 // locations (resident "Angela Sanchez" and the owner signature) whose
@@ -19,7 +20,8 @@ const path = require('path');
   const errors = [];
   page.on('pageerror', err => errors.push('PAGEERROR: ' + err.message));
 
-  await page.goto('file://' + path.resolve(__dirname, 'lease_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve(__dirname, 'lease_reconciler.html') + GATE_HASH);
 
   async function parseFixture(filePath){
     const buf = fs.readFileSync(filePath);

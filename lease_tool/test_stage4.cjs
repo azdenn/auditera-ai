@@ -1,11 +1,13 @@
 const { chromium } = require('playwright');
 const path = require('path');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 
 (async () => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
   const page = await browser.newPage();
   page.on('pageerror', e => console.log('PAGEERROR', e.message));
-  await page.goto('file://' + path.resolve('./lease_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve('./lease_reconciler.html') + GATE_HASH);
 
   for (const f of ['synthetic_T001_addendum.pdf', 'synthetic_T002_checkbox.pdf']) {
     await page.setInputFiles('#lease-files', [path.resolve('./' + f)]);

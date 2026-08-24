@@ -27,5 +27,13 @@ for (const ph of ['<!--XLSX_LIB-->', '<!--PDFJS_LIB-->', '<!--PDF_WORKER_SRC-->'
 }
 
 const outPath = path.join(dir, 'deposit_reconciler.html');
+// The licence gate is shared verbatim with the other two tools. Inlined rather
+// than imported because these files have to keep working as a single
+// self-contained .html served from behind the Worker.
+const auditGate = fs.readFileSync('../shared/audit_gate.js', 'utf8');
+out = out.replace('<!--AUDIT_GATE-->', () => '<script>\n' + auditGate + '\n</script>');
+if (out.includes('<!--AUDIT_GATE-->')) throw new Error('Audit gate placeholder not replaced');
+if (!out.includes('agAuthorizeAudit')) throw new Error('Audit gate missing from build output');
+
 fs.writeFileSync(outPath, out);
 console.log('Built deposit_reconciler.html, size:', (fs.statSync(outPath).size/1024/1024).toFixed(2), 'MB');

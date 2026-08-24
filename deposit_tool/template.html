@@ -416,6 +416,7 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
 <!--PDF_WORKER_SRC-->
 <!--XLSX_LIB-->
 
+<!--AUDIT_GATE-->
 <script>
 /* =========================================================================
    DepositVerify — Auditera AI
@@ -1675,6 +1676,17 @@ document.getElementById('process-btn').addEventListener('click', async () => {
   try{
     const rr = await parseRentRoll(rentRollFile);
     detectedPropertyName = rr.propertyName;
+
+  // ---- Licence gate -----------------------------------------------------
+  // Runs BEFORE any lease/ledger/invoice work, so a property this account is
+  // not licensed for costs nothing and produces nothing. agAuthorizeAudit
+  // takes over the whole page on a refusal; all this has to do is stop.
+  // Only the property name leaves the browser -- never the documents.
+    if (!(await agAuthorizeAudit('depositverify', detectedPropertyName, ''))){
+      status.className = 'status-msg';
+      status.textContent = '';
+      return;
+    }
     allUnitBlocks = getAllUnitBlocks(rr);
     invoiceData = await parseLeaseLockInvoice(invoiceFile);
     expandedUnits = new Set();

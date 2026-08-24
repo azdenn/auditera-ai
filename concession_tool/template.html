@@ -379,6 +379,7 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
 <!--XLSX_LIB-->
 <!--FFLATE_LIB-->
 
+<!--AUDIT_GATE-->
 <script>
 /* =========================================================================
    PDF.js worker note: pdf.worker.min.js is loaded above as a plain executing
@@ -3029,6 +3030,17 @@ processBtn.addEventListener('click', async () => {
   }catch(err){
     statusEl.className = 'status-msg err';
     statusEl.textContent = 'Error reading rent roll: ' + err.message;
+    progressWrap.classList.add('hidden');
+    processBtn.disabled = false;
+    return;
+  }
+
+  // ---- Licence gate -----------------------------------------------------
+  // Runs BEFORE any lease/ledger/invoice work, so a property this account is
+  // not licensed for costs nothing and produces nothing. agAuthorizeAudit
+  // takes over the whole page on a refusal; all this has to do is stop.
+  // Only the property name leaves the browser -- never the documents.
+  if (!(await agAuthorizeAudit('concessionverify', PROPERTY_NAME, ''))){
     progressWrap.classList.add('hidden');
     processBtn.disabled = false;
     return;

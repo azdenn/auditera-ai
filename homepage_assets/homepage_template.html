@@ -267,27 +267,7 @@ footer.page .flinks a:hover{color:var(--ink-soft);}
 </head>
 <body>
 
-<nav class="top">
-  <div class="inner">
-    <div class="brand">
-      <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#0d0f16" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
-      Auditera AI
-    </div>
-    <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
-    </button>
-    <div class="links" id="nav-links">
-      <a href="client_results.html">Client Results</a>
-      <a href="pricing.html">Pricing</a>
-      <a class="nav-contact" href="mailto:azdenkumar@gmail.com">Contact</a>
-      <!-- Two separate doors on purpose. Someone returning to work should never
-           have to read a pricing page to find the way in, and someone new
-           should not have to guess that "Sign in" is where buying happens. -->
-      <a class="nav-signin" href="app.html">Sign in</a>
-      <a class="btn-primary nav-cta" href="pricing.html">Start free trial</a>
-    </div>
-  </div>
-</nav>
+__SHARED_NAV__
 
 <header class="hero">
   <div class="wrap">
@@ -520,21 +500,7 @@ footer.page .flinks a:hover{color:var(--ink-soft);}
   </div>
 </section>
 
-<footer class="page">
-  <div class="wrap inner">
-    <div class="fbrand">
-      <div class="brand-mark" style="width:24px;height:24px;border-radius:7px;"><svg viewBox="0 0 24 24" fill="none" stroke="#0d0f16" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
-      Auditera AI
-    </div>
-    <div class="flinks">
-      <a href="#what-it-does">What It Does</a>
-      <a href="#how">How It Works</a>
-      <a href="client_results.html">Client Results</a>
-      <a href="app.html">Sign in</a>
-      <a href="mailto:azdenkumar@gmail.com">Contact</a>
-    </div>
-  </div>
-</footer>
+__SHARED_FOOTER__
 
 <!--
   Real account backend (Supabase). This is the ONLY network call this page

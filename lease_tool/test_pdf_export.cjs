@@ -3,19 +3,21 @@
 //
 // The report is generated as a print-styled HTML document handed to the
 // browser's print-to-PDF, so the output is real vector text and carries the
-// Auditly AI branding. This test renders that document, asserts its content
+// Auditera AI branding. This test renders that document, asserts its content
 // is correct and complete, and then actually produces a PDF from it via
 // Playwright to prove it lays out as pages rather than only looking right
 // on screen.
 const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 (async () => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  await page.goto('file://' + path.resolve('./lease_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve('./lease_reconciler.html') + GATE_HASH);
   await page.evaluate(() => localStorage.removeItem('leaseproof_hidden_discrepancy_checks'));
   await page.reload();
   await page.setInputFiles('#lease-files', [
@@ -84,7 +86,7 @@ const fs = require('fs');
 
   const checks = [
     ['A PDF export button exists', info.hasButton && /pdf/i.test(info.btnText)],
-    ['Report is branded Auditly AI', visible.brand === 'Auditly AI'],
+    ['Report is branded Auditera AI', visible.brand === 'Auditera AI'],
     ['Report names the LeaseVerify tool', /LeaseVerify/i.test(visible.tool||'')],
     // Title is now "Mismatch Report" -- "Discrepancy" is banned by the
     // project-wide status vocabulary standard.

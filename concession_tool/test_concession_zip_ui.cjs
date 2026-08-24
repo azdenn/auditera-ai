@@ -11,6 +11,7 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fflate = require('fflate');
 const fs = require('fs');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 
 // Build the ledger ZIP the same way a real export would arrive.
 const led = fs.readFileSync(path.resolve('./Ledger_A109_badcharges.xlsx'));
@@ -29,7 +30,8 @@ fs.writeFileSync(zipPath, Buffer.from(fflate.zipSync({
   // ---- Path A: the real UI flow (click the drop zone -> prompt -> ZIP) ----
   const page = await browser.newPage();
   page.on('pageerror', e => errors.push(e.message));
-  await page.goto('file://' + path.resolve('./concession_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve('./concession_reconciler.html') + GATE_HASH);
   await page.evaluate(() => localStorage.clear());
   await page.reload();
 
@@ -64,9 +66,13 @@ fs.writeFileSync(zipPath, Buffer.from(fflate.zipSync({
   // ---- Path B: the ZIP dropped into the INDIVIDUAL files box ----
   const p2 = await browser.newPage();
   p2.on('pageerror', e => errors.push(e.message));
-  await p2.goto('file://' + path.resolve('./concession_reconciler.html'));
+  // Routes are per-page, so this second tab needs its own gate stub and its
+  // own session token -- it is a fresh tool instance, not a continuation.
+  await installGateStub(p2);
+  const P2_URL = 'file://' + path.resolve('./concession_reconciler.html') + GATE_HASH;
+  await p2.goto(P2_URL);
   await p2.evaluate(() => localStorage.clear());
-  await p2.reload();
+  await p2.goto(P2_URL);
   await p2.setInputFiles('#ledger-files', zipPath);   // wrong box, on purpose
   await p2.waitForTimeout(300);
   const rerouted = await p2.evaluate(() => ({

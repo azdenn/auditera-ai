@@ -1,5 +1,6 @@
 const { chromium } = require('playwright');
 const path = require('path');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 
 (async () => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
@@ -7,7 +8,8 @@ const path = require('path');
   const errors = [];
   page.on('pageerror', err => errors.push('PAGEERROR: ' + err.message));
 
-  await page.goto('file://' + path.resolve(__dirname, 'lease_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve(__dirname, 'lease_reconciler.html') + GATE_HASH);
 
   console.log('=== normalizePropertyName / propertyNamesLikelyMatch unit checks ===');
   const cases = await page.evaluate(() => {

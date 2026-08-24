@@ -482,6 +482,7 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
 <!--XLSX_LIB-->
 <!--FFLATE_LIB-->
 
+<!--AUDIT_GATE-->
 <script>
 /* =========================================================================
    PDF.js worker note: pdf.worker.min.js is loaded above as a plain executing
@@ -3168,6 +3169,17 @@ processBtn.addEventListener('click', async () => {
     return;
   }
 
+  // ---- Licence gate -----------------------------------------------------
+  // Runs BEFORE any lease/ledger/invoice work, so a property this account is
+  // not licensed for costs nothing and produces nothing. agAuthorizeAudit
+  // takes over the whole page on a refusal; all this has to do is stop.
+  // Only the property name leaves the browser -- never the documents.
+  if (!(await agAuthorizeAudit('leaseverify', detectedPropertyName, ''))){
+    progressWrap.classList.add('hidden');
+    processBtn.disabled = false;
+    return;
+  }
+
   rawSuccessByUnit = new Map();
   rawFailedFiles = [];
 
@@ -3640,8 +3652,7 @@ function renderDashboard(){
 // was launched from the homepage while signed in to a specific property's
 // account -- flags it clearly when the two don't look like the same
 // property. This is a heads-up, not a hard block: property names are messy
-// free text, so a false alarm is possible, and nothing here should stop
-// someone from seeing their own results.
+// free text. The hard check now happens server-side before any of this runs.
 function renderPropertyMatchBanner(){
   const el = document.getElementById('property-match-banner');
   if (!detectedPropertyName){
@@ -3649,24 +3660,15 @@ function renderPropertyMatchBanner(){
     el.innerHTML = '';
     return;
   }
+  // By the time anything renders, agAuthorizeAudit() has already returned yes
+  // for this property -- a mismatch never reaches this point, it takes over
+  // the page instead. So this is a confirmation of what was checked, not a
+  // check. It used to be the check, and it only warned; that is exactly what
+  // made per-property licensing unenforceable.
   el.classList.remove('hidden');
-  if (!EXPECTED_PROPERTY){
-    el.className = 'property-banner info';
-    el.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>'+
-      '<div>Rent roll detected for <b>'+escapeHtml(detectedPropertyName)+'</b>.</div>';
-    return;
-  }
-  const match = propertyNamesLikelyMatch(detectedPropertyName, EXPECTED_PROPERTY);
-  if (match === false){
-    el.className = 'property-banner warn';
-    el.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4M12 17h.01"/></svg>'+
-      '<div>This rent roll is for <b>'+escapeHtml(detectedPropertyName)+'</b>, but your account is set up for <b>'+escapeHtml(EXPECTED_PROPERTY)+'</b>. '+
-      'If that\'s not expected, double-check you uploaded the right file — otherwise, reach out to get your subscription updated.</div>';
-  } else {
-    el.className = 'property-banner info';
-    el.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'+
-      '<div>Rent roll confirmed for your licensed property, <b>'+escapeHtml(detectedPropertyName)+'</b>.</div>';
-  }
+  el.className = 'property-banner info';
+  el.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'+
+    '<div>Licence confirmed for <b>'+escapeHtml(detectedPropertyName)+'</b>.</div>';
 }
 
 function matchesFilter(e){

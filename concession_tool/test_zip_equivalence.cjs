@@ -18,6 +18,7 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 const { writeZip, read, makeLeasePdfs } = require('./zip_fixtures.cjs');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 
 const HERE = __dirname;
 const LEASE_A = '/tmp/eq_A109_expired.pdf';
@@ -98,7 +99,8 @@ const PROJECT = (opts) => {
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  await page.goto('file://' + path.resolve(HERE, 'concession_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve(HERE, 'concession_reconciler.html') + GATE_HASH);
   await page.evaluate(() => localStorage.clear());
   await page.reload();
 

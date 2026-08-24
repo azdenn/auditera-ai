@@ -9,13 +9,15 @@
 // rrMatch===2 priority added to pickBestLeaseCandidate.
 const { chromium } = require('playwright');
 const path = require('path');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 
 (async () => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  await page.goto('file://' + path.resolve('./lease_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve('./lease_reconciler.html') + GATE_HASH);
 
   const files = ['A105_2022-2023.pdf', 'A105_2023-2024.pdf', 'A105_2024-2025.pdf', 'A105_2025-2026_current.pdf', 'A105_2026-2027_signed_renewal.pdf'];
   const parsed = [];

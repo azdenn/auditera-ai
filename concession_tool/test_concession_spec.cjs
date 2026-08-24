@@ -17,6 +17,7 @@
 */
 const { chromium } = require('playwright');
 const path = require('path');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 const HERE = __dirname;
 
 /* CHANGED BY SPEC
@@ -91,7 +92,8 @@ const near = (a, b, tol) => a != null && b != null && Math.abs(a - b) <= (tol ==
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
-  await page.goto('file://' + path.resolve(HERE, 'concession_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve(HERE, 'concession_reconciler.html') + GATE_HASH);
   await page.evaluate(() => { try { localStorage.clear(); } catch(e){} });
   await page.reload();
   await page.evaluate(() => setUploadMode('zip'));

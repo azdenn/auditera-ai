@@ -36,12 +36,14 @@ const LEASE = [
    Parking $25 = $54; the rent roll bills a single "Amenities $54".
    --------------------------------------------------------------------------- */
 const { chromium: chromium2 } = require('playwright');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 async function endToEnd(){
   const browser = await chromium2.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  await page.goto('file://' + path.resolve(__dirname, 'lease_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve(__dirname, 'lease_reconciler.html') + GATE_HASH);
   await page.evaluate(() => { try{ localStorage.removeItem('leaseproof_bundle_rules'); }catch(e){} });
   await page.reload();
   await page.setInputFiles('#lease-files', path.resolve(__dirname, 'synthetic_A101.pdf'));
@@ -109,7 +111,8 @@ async function endToEnd(){
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', m => { if (m.type()==='error') errors.push('console: '+m.text()); });
-  await page.goto('file://' + path.resolve(__dirname, 'lease_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve(__dirname, 'lease_reconciler.html') + GATE_HASH);
   await page.evaluate(() => { try{ localStorage.removeItem('leaseproof_bundle_rules'); }catch(e){} });
   await page.reload();
 

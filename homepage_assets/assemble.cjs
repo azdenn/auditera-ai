@@ -5,11 +5,21 @@ const dir = __dirname;
 const template = fs.readFileSync(path.join(dir, 'homepage_template.html'), 'utf8');
 const heroB64 = fs.readFileSync(path.join(dir, 'hero_image_b64.txt'), 'utf8').trim();
 
+const sharedStyles = fs.readFileSync(path.join(dir, '_shared_styles.html'), 'utf8');
+const sharedNav    = fs.readFileSync(path.join(dir, '_shared_nav.html'), 'utf8');
+const sharedFooter = fs.readFileSync(path.join(dir, '_shared_footer.html'), 'utf8');
+
 let out = template;
 out = out.replace('__HERO_IMAGE_B64__', () => heroB64);
+// The homepage used to carry its own copy of the nav and footer. Removing a
+// link from the shared partial then changed every page except the front one,
+// which is the single most visible page on the site.
+out = out
+  .split('__SHARED_NAV__').join(sharedNav)
+  .split('__SHARED_FOOTER__').join(sharedFooter);
 
 // Sanity: make sure no placeholders remain
-for (const ph of ['__HERO_IMAGE_B64__']) {
+for (const ph of ['__HERO_IMAGE_B64__', '__SHARED_NAV__', '__SHARED_FOOTER__']) {
   if (out.includes(ph)) throw new Error('Placeholder not replaced: ' + ph);
 }
 // The tools used to be base64'd into this page, which meant loading the
@@ -47,11 +57,8 @@ console.log('Wrote', dist, '- homepage', (Buffer.byteLength(out)/1024).toFixed(0
 // These share the homepage's design tokens, nav and footer by injection rather
 // than by copy-paste, so a palette or nav change lands everywhere at once
 // instead of silently drifting on the pages nobody remembered to update.
-const sharedStyles = fs.readFileSync(path.join(dir, '_shared_styles.html'), 'utf8');
-const sharedNav    = fs.readFileSync(path.join(dir, '_shared_nav.html'), 'utf8');
-const sharedFooter = fs.readFileSync(path.join(dir, '_shared_footer.html'), 'utf8');
 
-for (const page of ['pricing', 'signin', 'app']) {
+for (const page of ['pricing', 'signin', 'app', 'contact', 'client_results']) {
   const tpl = path.join(dir, page + '_template.html');
   if (!fs.existsSync(tpl)) continue;
   let out = fs.readFileSync(tpl, 'utf8')
@@ -65,15 +72,18 @@ for (const page of ['pricing', 'signin', 'app']) {
   console.log('  ' + page + '.html -', (Buffer.byteLength(out)/1024).toFixed(0), 'KB');
 }
 
-// ---- Client Results page ----
-// Single constant for the homepage's filename -- if you rename
-// homepage_final.html when you deploy it (e.g. to index.html), update
-// HOMEPAGE_FILENAME below and rerun this script; every homepage-pointing
-// link on the Client Results page is generated from this one value.
-const HOMEPAGE_FILENAME = 'homepage_final.html';
-const crTemplate = fs.readFileSync(path.join(dir, 'client_results_template.html'), 'utf8');
-let crOut = crTemplate.split('__HOMEPAGE_URL__').join(HOMEPAGE_FILENAME);
-if (crOut.includes('__HOMEPAGE_URL__')) throw new Error('Placeholder not replaced: __HOMEPAGE_URL__');
-const crOutPath = path.join(dir, 'client_results.html');
-fs.writeFileSync(crOutPath, crOut);
-console.log('Wrote', crOutPath, '-', (fs.statSync(crOutPath).size / 1024).toFixed(0), 'KB');
+// Client Results is built by the shared-partial loop above, like every other
+// page. It used to be assembled here into homepage_assets/ and never copied
+// into dist/, so the nav linked to a page the deployed site did not have.
+
+// ---- Guard: every internal nav link must resolve to a real file in dist ----
+// A link to a page that was built into the wrong directory is exactly how
+// Client Results shipped broken, and it is invisible until someone clicks it.
+const navHrefs = [...sharedNav.matchAll(/href="([^"#:]+\.html)/g)].map(m => m[1]);
+const footHrefs = [...sharedFooter.matchAll(/href="([^"#:]+\.html)/g)].map(m => m[1]);
+const missing = [...new Set([...navHrefs, ...footHrefs])]
+  .filter(h => !fs.existsSync(path.join(dist, h)));
+if (missing.length) {
+  throw new Error('Nav/footer link to a page missing from dist: ' + missing.join(', '));
+}
+console.log('Nav links checked -', new Set([...navHrefs, ...footHrefs]).size, 'internal pages all present');

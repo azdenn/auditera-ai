@@ -1,5 +1,6 @@
 const { chromium } = require('playwright');
 const path = require('path');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 
 async function run(hashSuffix, label){
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
@@ -7,7 +8,8 @@ async function run(hashSuffix, label){
   const errors = [];
   page.on('pageerror', err => errors.push('PAGEERROR: ' + err.message));
 
-  await page.goto('file://' + path.resolve(__dirname, 'lease_reconciler.html') + hashSuffix);
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve(__dirname, 'lease_reconciler.html') + hashSuffix + GATE_HASH);
 
   await page.setInputFiles('#lease-files', [path.resolve(__dirname, 'sample_lease.pdf')]);
   await page.setInputFiles('#rentroll-file', path.resolve(__dirname, 'sample_rentroll.xlsx'));

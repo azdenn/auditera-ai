@@ -9,12 +9,14 @@
 // ascending sort never opens with a wall of blanks.
 const { chromium } = require('playwright');
 const path = require('path');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 (async () => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  await page.goto('file://' + path.resolve('./lease_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve('./lease_reconciler.html') + GATE_HASH);
   await page.setInputFiles('#lease-files', [
     path.resolve('./boa_test/303_old_expired_lease.pdf'),
     path.resolve('./boa_test/406_expired_lease.pdf'),

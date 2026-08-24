@@ -1,4 +1,4 @@
 Push log 
 [branch] testing 
-[message] Add Stripe checkout button to the trial dashboard 
+[message] Hard-block unlicensed properties; fix checkout, Client Results, nav; add contact page 
  

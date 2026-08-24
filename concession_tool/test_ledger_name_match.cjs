@@ -15,6 +15,7 @@
 // vs ledger "Tina Kersten"; "Joseph Owen" vs "Joe Owen").
 const { chromium } = require('playwright');
 const path = require('path');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 const ZIP = path.resolve('./real/BOA Resident Ledgers 08-14-2026.zip');
 const RR  = path.resolve('./real/BOA 2026.14- Rent Roll.xlsx');
 
@@ -23,7 +24,8 @@ const RR  = path.resolve('./real/BOA 2026.14- Rent Roll.xlsx');
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  await page.goto('file://' + path.resolve('./concession_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve('./concession_reconciler.html') + GATE_HASH);
 
   const unit = await page.evaluate(() => ({
     nickTina:   residentNamesMatch('Christina Kersten', 'Tina Kersten'),

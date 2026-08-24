@@ -309,8 +309,7 @@ body{background:var(--bg);}
     </button>
     <div class="links" id="nav-links">
       <a href="client_results.html">Client Results</a>
-      <a href="pricing.html">Pricing</a>
-      <a class="nav-contact" href="mailto:azdenkumar@gmail.com">Contact</a>
+      <a class="nav-contact" href="contact.html">Contact</a>
       <!-- Two separate doors on purpose. Someone returning to work should never
            have to read a pricing page to find the way in, and someone new
            should not have to guess that "Sign in" is where buying happens. -->
@@ -517,7 +516,7 @@ body{background:var(--bg);}
       <a href="index.html#how">How It Works</a>
       <a href="client_results.html">Client Results</a>
       <a href="app.html">Sign In</a>
-      <a href="mailto:azdenkumar@gmail.com">Contact</a>
+      <a href="contact.html">Contact</a>
     </div>
   </div>
 </footer>
@@ -750,13 +749,20 @@ async function launchTool(key){
   if (sb && !licensedProperties.length) await loadLicensedProperties();
 
   const hashBits = [];
+  // The property name is a display convenience only -- the tool shows it while
+  // you work. It is NOT what authorises anything.
   if (currentProperty) hashBits.push('property=' + encodeURIComponent(currentProperty));
-  if (licensedProperties.length){
-    // encodeURIComponent on the JSON rather than base64: keeps it readable in
-    // devtools, and there is nothing secret here -- it's the customer's own
-    // property list, which they can already see on the homepage.
-    hashBits.push('lic=' + encodeURIComponent(JSON.stringify(licensedProperties)));
-  }
+  // The licence list used to be passed here too, and the tool decided for
+  // itself whether the uploaded documents matched it. Anyone could edit the
+  // hash and audit any property they liked, so the list is gone: the tool now
+  // asks authorize-audit, which answers from this account's own JWT.
+  //
+  // What IS passed is the session token, so the tool can prove who is asking.
+  // A hash is a same-document fragment on a blob: URL -- it is never sent to
+  // any server -- and audit_gate.js strips it from the address bar on load.
+  // A side effect worth having: a saved copy of a tool page carries no token,
+  // so passing the file around no longer passes working access around.
+  hashBits.push('tk=' + encodeURIComponent(token));
   if (hashBits.length) url += '#' + hashBits.join('&');
   if (tab) tab.location.replace(url); else window.open(url, '_blank');
 }

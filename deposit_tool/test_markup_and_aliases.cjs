@@ -10,16 +10,20 @@
 */
 const { chromium } = require('playwright');
 const path = require('path');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 
 (async () => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  const url = 'file://' + path.resolve(__dirname, 'deposit_reconciler.html');
+  const url = 'file://' + path.resolve(__dirname, 'deposit_reconciler.html') + GATE_HASH;
+  await installGateStub(page);
   await page.goto(url);
   await page.evaluate(() => { localStorage.clear(); });
-  await page.reload();
+  // Not reload(): the gate strips the token from the URL on load, so a
+  // reload would come back without one and refuse to run.
+  await page.goto(url);
 
   // ---- Pure-function checks: the LeaseLock charge aliases ----
   const alias = await page.evaluate(() => ({

@@ -8,12 +8,14 @@
 // instead of clipping when the window really is too narrow.
 const { chromium } = require('playwright');
 const path = require('path');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 const ZIP = path.resolve('./real/BOA Resident Ledgers 08-14-2026.zip');
 const RR  = path.resolve('./real/BOA 2026.14- Rent Roll.xlsx');
 
 async function measure(browser, width){
   const page = await browser.newPage({viewport:{width, height:900}});
-  await page.goto('file://' + path.resolve('./concession_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve('./concession_reconciler.html') + GATE_HASH);
   await page.evaluate(() => { localStorage.clear(); setUploadMode('zip'); });
   await page.setInputFiles('#ledger-zip-file', ZIP);
   await page.setInputFiles('#rentroll-file', RR);

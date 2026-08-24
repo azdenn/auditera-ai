@@ -12,6 +12,7 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 
 (async () => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
@@ -19,7 +20,8 @@ const os = require('os');
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  await page.goto('file://' + path.resolve(__dirname, 'deposit_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve(__dirname, 'deposit_reconciler.html') + GATE_HASH);
   await page.evaluate(() => { localStorage.clear(); });
   await page.reload();
 
@@ -132,8 +134,8 @@ const os = require('os');
   const blanksLast = arr => { let seen=false; for (const x of arr){ if (x==='—') seen=true; else if (seen) return false; } return true; };
 
   const checks = [
-    ['Page title is "DepositVerify — Auditly AI"', title === 'DepositVerify — Auditly AI'],
-    ['Header reads "DepositVerify — Auditly AI"', /DepositVerify\s+—\s+Auditly AI/.test(headerText)],
+    ['Page title is "DepositVerify — Auditera AI"', title === 'DepositVerify — Auditera AI'],
+    ['Header reads "DepositVerify — Auditera AI"', /DepositVerify\s+—\s+Auditera AI/.test(headerText)],
     // Tab label changed from "Discrepancies Only" to "Mismatch" for the project-wide status vocabulary standard.
     ['Three filter tabs: All / Mismatch / Match',
       tabInfo.length === 3 && /^All/.test(tabInfo[0]) && /^Mismatch/.test(tabInfo[1]) && /^Match/.test(tabInfo[2])],
@@ -181,8 +183,8 @@ const os = require('os');
       download.suggestedFilename() === 'depositverify-findings.csv' &&
       /^Unit,Residents,Coverage,Finding,Severity/.test(csvText) && /\n105,/.test(csvText)],
 
-    ['PDF report is branded "Auditly AI" / "DepositVerify"',
-      /<div class="bname">Auditly AI<\/div>/.test(pdfHtml) && /<div class="btag">DepositVerify<\/div>/.test(pdfHtml)],
+    ['PDF report is branded "Auditera AI" / "DepositVerify"',
+      /<div class="bname">Auditera AI<\/div>/.test(pdfHtml) && /<div class="btag">DepositVerify<\/div>/.test(pdfHtml)],
     ['PDF report is light-on-white, not the app\'s dark theme',
       /color:#171a24/.test(pdfHtml) && !/#0d0f16/.test(pdfHtml)],
     ['PDF report names the property from the rent roll', /Blanco Oaks Apartments/.test(pdfHtml)],

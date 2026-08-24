@@ -9,6 +9,7 @@
 const { chromium } = require('playwright');
 const path = require('path');
 const { buildLeaseZip, writeZip, read, ledgerWithUnit, A105 } = require('./zip_fixtures.cjs');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 
 const HERE = __dirname;
 const LEASE_ZIP = '/tmp/fixture_leases.zip';
@@ -26,7 +27,8 @@ const LEASE_ZIP_NOPDF = '/tmp/fixture_leases_nopdf.zip';
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  await page.goto('file://' + path.resolve(HERE, 'concession_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve(HERE, 'concession_reconciler.html') + GATE_HASH);
   await page.evaluate(() => localStorage.removeItem('leaseproof_concession_hidden_issue_types'));
   await page.reload();
 

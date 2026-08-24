@@ -17,13 +17,15 @@
 //   Balance due $738.91
 const { chromium } = require('playwright');
 const path = require('path');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 (async () => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
-  await page.goto('file://' + path.resolve('./deposit_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve('./deposit_reconciler.html') + GATE_HASH);
   await page.evaluate(() => localStorage.clear());
   await page.reload();
 

@@ -13,12 +13,14 @@
 // turned into an occupied unit holding a $900 security deposit.
 const { chromium } = require('playwright');
 const path = require('path');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 
 async function run(browser, rentroll){
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  await page.goto('file://' + path.resolve('./deposit_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve('./deposit_reconciler.html') + GATE_HASH);
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.setInputFiles('#invoice-file', path.resolve('./real/BOA_LeaseLock_Invoice.pdf'));

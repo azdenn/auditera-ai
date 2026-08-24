@@ -22,3 +22,9 @@ diagnose.txt
 # Derived build leftovers
 homepage_assets/*_b64.txt
 homepage_assets/debug_output*.txt
+
+# One-off update packages Claude drops into this folder to apply a batch of
+# changes. The extracted files are what belongs in git; the zip and its
+# extractor are just delivery.
+auditera-update.zip
+apply-update.bat

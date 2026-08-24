@@ -1,5 +1,6 @@
 const { chromium } = require('playwright');
 const path = require('path');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 
 (async () => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
@@ -8,7 +9,8 @@ const path = require('path');
   page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
   page.on('pageerror', err => errors.push('PAGEERROR: ' + err.message));
 
-  await page.goto('file://' + path.resolve(__dirname, 'lease_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve(__dirname, 'lease_reconciler.html') + GATE_HASH);
 
   // Switch to ZIP mode
   await page.evaluate(() => setUploadMode('zip'));  // mode chips are now hidden; the prompt is the user-facing path (see test_upload_choice.cjs)

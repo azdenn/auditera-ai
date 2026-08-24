@@ -5,7 +5,265 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Client Results — Auditera AI</title>
 <meta name="description" content="Real properties, real results. See how multifamily operators are using Auditera AI to uncover discrepancies, reduce manual review, and improve the accuracy of their property records.">
-__SHARED_STYLES__
+<style>
+:root{
+  --ink:#eef0f6; --ink-soft:#a7adc0; --ink-faint:#767d94;
+  --line:#2a3040; --line-soft:#232838; --bg:#0d0f16; --card:#161926;
+  --accent:#7c8cff; --accent-2:#b083f0; --accent-soft:#232849; --accent-line:#3d4570;
+  --ok:#3ddc9a; --ok-bg:#132a24; --ok-line:#1f5a44;
+  --warn:#ffc069; --muted:#767d94; --muted-bg:#1c2030;
+  --shadow-xs:0 1px 2px rgba(0,0,0,.3);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
+  --shadow-md:0 8px 30px -8px rgba(0,0,0,.6);
+  --shadow-lg:0 20px 50px -18px rgba(0,0,0,.7);
+  --radius-lg:16px; --radius-md:12px; --radius-sm:9px;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+.hidden{display:none !important;}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth;}
+body{
+  margin:0;color:var(--ink);line-height:1.5;
+  background:
+    radial-gradient(1000px 520px at 10% -10%, #1d2450 0%, rgba(29,36,80,0) 60%),
+    radial-gradient(800px 460px at 105% 0%, #14312f 0%, rgba(20,49,47,0) 55%),
+    var(--bg);
+  background-attachment:fixed;
+}
+a{color:var(--accent);}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px;}
+
+/* ---------- nav ---------- */
+nav.top{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);background:rgba(13,15,22,.72);border-bottom:1px solid var(--line-soft);}
+nav.top .inner{max-width:1120px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;color:#fff;letter-spacing:-.01em;}
+.brand-mark{flex:none;width:30px;height:30px;border-radius:9px;background:linear-gradient(140deg,var(--accent),var(--accent-2));box-shadow:0 0 18px -4px rgba(124,140,255,.55);display:flex;align-items:center;justify-content:center;}
+.brand-mark svg{width:16px;height:16px;}
+nav.top .links{display:flex;gap:26px;align-items:center;}
+nav.top .links a{color:var(--ink-soft);text-decoration:none;font-size:13.5px;font-weight:600;transition:color .15s;}
+nav.top .links a:hover{color:#fff;}
+/* The two right-hand actions read as a pair: a quiet way back in for people
+   who already pay, and a loud one for people who don't yet. The divider keeps
+   them from blurring into the content links beside them. */
+nav.top .links .nav-signin{margin-left:auto;padding-left:26px;border-left:1px solid var(--line-soft);}
+nav.top .links .nav-cta{padding:9px 18px;font-size:13.5px;border-radius:var(--radius-sm);color:#0d0f16;}
+nav.top .links .nav-cta:hover{color:#0d0f16;}
+.nav-toggle{display:none;background:none;border:1px solid var(--line);border-radius:8px;padding:8px;color:var(--ink);cursor:pointer;}
+@media (max-width:760px){
+  nav.top .links{position:fixed;top:60px;left:0;right:0;background:#11141f;border-bottom:1px solid var(--line-soft);flex-direction:column;align-items:stretch;padding:10px 20px 18px;gap:4px;display:none;box-shadow:var(--shadow-md);}
+  nav.top .links.open{display:flex;}
+  nav.top .links a{padding:11px 4px;border-bottom:1px solid var(--line-soft);}
+  nav.top .links a.btn-ghost{border:1px solid var(--line);margin-top:8px;text-align:center;justify-content:center;}
+  nav.top .links .nav-signin{margin-left:0;padding-left:4px;border-left:none;}
+  nav.top .links .nav-cta{margin-top:10px;text-align:center;justify-content:center;border-bottom:none;}
+  .nav-toggle{display:inline-flex;align-items:center;justify-content:center;}
+}
+
+/* ---------- buttons ---------- */
+.btn-primary{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#0d0f16;border:none;border-radius:9px;padding:12px 22px;font-size:14.5px;font-weight:700;cursor:pointer;text-decoration:none;box-shadow:0 4px 20px rgba(124,140,255,.3);transition:filter .15s,transform .12s,box-shadow .15s;}
+.btn-primary:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 6px 26px rgba(124,140,255,.4);}
+.btn-ghost{display:inline-flex;align-items:center;gap:8px;background:#171a28;border:1px solid var(--line);border-radius:9px;padding:11px 21px;font-size:14px;font-weight:600;cursor:pointer;color:var(--ink);text-decoration:none;transition:background .15s,border-color .15s;}
+.btn-ghost:hover{background:#1f2333;border-color:#3a415a;}
+
+/* ---------- hero ---------- */
+header.hero{padding:96px 0 44px;text-align:center;}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent);font-size:12.5px;font-weight:700;padding:6px 14px;border-radius:999px;margin-bottom:24px;letter-spacing:.01em;}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);}
+header.hero h1{font-size:46px;line-height:1.15;letter-spacing:-.02em;font-weight:800;color:#fff;margin:0 0 20px;max-width:760px;margin-left:auto;margin-right:auto;}
+header.hero h1 span{background:linear-gradient(135deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+header.hero p.sub{font-size:17.5px;color:var(--ink-soft);max-width:620px;margin:0 auto 34px;}
+.hero-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;}
+.hero-note{font-size:12.5px;color:var(--ink-faint);}
+@media (max-width:640px){
+  header.hero{padding:64px 0 32px;}
+  header.hero h1{font-size:32px;}
+  header.hero p.sub{font-size:15.5px;}
+}
+
+/* ---------- hero screenshot ---------- */
+.hero-shot-wrap{max-width:980px;margin:56px auto 0;position:relative;}
+.hero-shot-wrap .glow{position:absolute;inset:-40px;background:radial-gradient(600px 300px at 50% 0%, rgba(124,140,255,.22), transparent 70%);z-index:-1;filter:blur(10px);}
+.hero-shot{width:100%;display:block;border-radius:var(--radius-lg);border:1px solid var(--line);box-shadow:var(--shadow-lg);}
+
+/* ---------- hand-drawn hero animation ----------
+   Every element shares ONE cycle length and carries its own keyframe
+   percentages rather than using animation-delay. With delays, each element's
+   cycle is permanently offset, so on the second loop the late elements are
+   still fading out while the early ones have started redrawing. Encoding the
+   timing in the keyframes keeps the whole scene perfectly in step, forever.
+
+   pathLength="1" on every path lets one dasharray value (1) drive the
+   draw-on for paths of wildly different real lengths. */
+.hero-anim-wrap{max-width:900px;margin:56px auto 0;position:relative;}
+.hero-anim{position:relative;border-radius:var(--radius-lg);border:1px solid var(--line);
+  background:linear-gradient(180deg,#141726,#101320);box-shadow:var(--shadow-lg);
+  padding:14px 18px;overflow:hidden;}
+.hero-anim svg{width:100%;height:auto;display:block;}
+.hero-anim .ink{stroke-dasharray:1;stroke-dashoffset:1;opacity:0;}
+
+@keyframes drawS1{0%{stroke-dashoffset:1;opacity:0}1%{opacity:1}9%{stroke-dashoffset:0;opacity:1}
+  92%{stroke-dashoffset:0;opacity:1}97%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:1;opacity:0}}
+@keyframes drawS2{0%,10%{stroke-dashoffset:1;opacity:0}11%{opacity:1}19%{stroke-dashoffset:0;opacity:1}
+  92%{stroke-dashoffset:0;opacity:1}97%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:1;opacity:0}}
+@keyframes drawS3{0%,21%{stroke-dashoffset:1;opacity:0}22%{opacity:1}28%{stroke-dashoffset:0;opacity:1}
+  92%{stroke-dashoffset:0;opacity:1}97%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:1;opacity:0}}
+@keyframes drawS4{0%,29%{stroke-dashoffset:1;opacity:0}30%{opacity:1}40%{stroke-dashoffset:0;opacity:1}
+  92%{stroke-dashoffset:0;opacity:1}97%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:1;opacity:0}}
+@keyframes drawS5{0%,44%{stroke-dashoffset:1;opacity:0}45%{opacity:1}58%{stroke-dashoffset:0;opacity:1}
+  92%{stroke-dashoffset:0;opacity:1}97%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:1;opacity:0}}
+@keyframes drawS6{0%,64%{stroke-dashoffset:1;opacity:0}65%{opacity:1}76%{stroke-dashoffset:0;opacity:1}
+  92%{stroke-dashoffset:0;opacity:1}97%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:1;opacity:0}}
+
+/* Text has no stroke to draw, so it just fades in on its stage's beat. */
+@keyframes fadeS1{0%,7%{opacity:0}12%{opacity:1}92%{opacity:1}97%,100%{opacity:0}}
+@keyframes fadeS2{0%,17%{opacity:0}22%{opacity:1}92%{opacity:1}97%,100%{opacity:0}}
+@keyframes fadeS5{0%,52%{opacity:0}60%{opacity:1}92%{opacity:1}97%,100%{opacity:0}}
+@keyframes fadeS6{0%,72%{opacity:0}79%{opacity:1}92%{opacity:1}97%,100%{opacity:0}}
+
+.hero-anim .s1 .ink{animation:drawS1 15s ease-in-out infinite;}
+.hero-anim .s2 .ink{animation:drawS2 15s ease-in-out infinite;}
+.hero-anim .s3 .ink{animation:drawS3 15s ease-in-out infinite;}
+.hero-anim .s4 .ink{animation:drawS4 15s ease-in-out infinite;}
+.hero-anim .s5 .ink{animation:drawS5 15s ease-in-out infinite;}
+.hero-anim .s6 .ink{animation:drawS6 15s ease-in-out infinite;}
+.hero-anim text.lbl{opacity:0;}
+.hero-anim text.s1{animation:fadeS1 15s ease-in-out infinite;}
+.hero-anim text.s2{animation:fadeS2 15s ease-in-out infinite;}
+.hero-anim .s5 text.lbl{animation:fadeS5 15s ease-in-out infinite;}
+.hero-anim text.s6{animation:fadeS6 15s ease-in-out infinite;}
+
+/* Respect a stated preference for less motion: show the finished drawing
+   rather than looping it. */
+@media (prefers-reduced-motion: reduce){
+  .hero-anim .ink{animation:none !important;stroke-dashoffset:0;opacity:1;}
+  .hero-anim text.lbl{animation:none !important;opacity:1;}
+}
+@media (max-width:640px){ .hero-anim{padding:8px 10px;} }
+
+/* ---------- signed-in tutorial ---------- */
+.tutorial{max-width:1060px;margin:26px auto 0;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;}
+.tutorial summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:13px;padding:17px 20px;transition:background .15s;}
+.tutorial summary::-webkit-details-marker{display:none;}
+.tutorial summary:hover{background:#1b1f2e;}
+.tut-ic{flex:none;width:38px;height:38px;border-radius:11px;background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent);display:flex;align-items:center;justify-content:center;}
+.tut-ic svg{width:19px;height:19px;}
+.tut-head{display:flex;flex-direction:column;gap:2px;}
+.tut-head b{font-size:15.5px;color:#fff;font-weight:700;}
+.tut-head span{font-size:12.5px;color:var(--ink-faint);}
+.tutorial summary:after{content:'+';margin-left:auto;font-size:20px;color:var(--ink-faint);line-height:1;}
+.tutorial[open] summary:after{content:'\2013';}
+.tut-body{padding:4px 22px 24px;border-top:1px solid var(--line-soft);}
+.tut-lede{font-size:13.5px;color:var(--ink-soft);margin:16px 0 20px;padding:11px 14px;background:#132a24;border:1px solid #1f5a44;border-radius:9px;}
+.tut-step{display:flex;gap:15px;margin-bottom:20px;}
+.tut-num{flex:none;width:27px;height:27px;border-radius:50%;background:linear-gradient(140deg,var(--accent),var(--accent-2));color:#0d0f16;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+.tut-step h4{margin:2px 0 7px;font-size:14.5px;color:#fff;font-weight:700;letter-spacing:-.005em;}
+.tut-step p{margin:0 0 8px;font-size:13.5px;color:var(--ink-soft);line-height:1.62;}
+.tut-step p:last-child{margin-bottom:0;}
+.tut-step b{color:var(--ink);font-weight:600;}
+.tut-note{font-size:13px;color:var(--ink-soft);line-height:1.6;padding:13px 15px;background:#1c2030;border-left:3px solid var(--warn);border-radius:8px;}
+.tut-note b{color:var(--warn);}
+@media (max-width:640px){.tut-body{padding:4px 16px 20px;}}
+
+/* ---------- sections ---------- */
+section{padding:80px 0;}
+section.alt{background:linear-gradient(180deg, rgba(22,25,38,0) 0%, rgba(22,25,38,.55) 12%, rgba(22,25,38,.55) 88%, rgba(22,25,38,0) 100%);}
+.section-head{text-align:center;max-width:640px;margin:0 auto 48px;}
+.section-head .kicker{font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;}
+.section-head h2{font-size:30px;line-height:1.2;letter-spacing:-.015em;color:#fff;margin:0 0 12px;font-weight:800;}
+.section-head p{font-size:15.5px;color:var(--ink-soft);margin:0;}
+@media (max-width:640px){section{padding:56px 0;}.section-head h2{font-size:24px;}}
+
+/* ---------- three pillars ---------- */
+.pillar-row{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1000px;margin:0 auto;}
+@media (max-width:860px){.pillar-row{grid-template-columns:1fr;max-width:520px;}}
+.pillar-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:30px 26px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;}
+.pillar-card:before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--accent),var(--accent-2));}
+.pillar-icon{width:42px;height:42px;border-radius:11px;background:var(--accent-soft);border:1px solid var(--accent-line);display:flex;align-items:center;justify-content:center;color:var(--accent);margin-bottom:18px;}
+.pillar-icon svg{width:21px;height:21px;}
+.pillar-kicker{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
+.pillar-card h3{font-size:19px;color:#fff;margin:0 0 10px;font-weight:800;letter-spacing:-.01em;line-height:1.3;}
+.pillar-card p{font-size:13.5px;color:var(--ink-soft);margin:0;line-height:1.6;}
+
+/* ---------- what it does ---------- */
+.wid-intro{max-width:680px;margin:0 auto 44px;text-align:center;font-size:15.5px;color:var(--ink-soft);}
+.accordion{max-width:820px;margin:0 auto;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;background:var(--card);box-shadow:var(--shadow-sm);}
+.accordion-item{border-bottom:1px solid var(--line-soft);}
+.accordion-item:last-child{border-bottom:none;}
+.accordion-trigger{width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;background:none;border:none;cursor:pointer;padding:24px 26px;text-align:left;color:var(--ink);transition:background .15s;}
+.accordion-trigger:hover{background:rgba(124,140,255,.05);}
+.accordion-trigger .at-left{display:flex;align-items:center;gap:14px;}
+.accordion-trigger .at-icon{flex:none;width:38px;height:38px;border-radius:10px;background:var(--accent-soft);border:1px solid var(--accent-line);display:flex;align-items:center;justify-content:center;color:var(--accent);}
+.accordion-trigger .at-icon svg{width:19px;height:19px;}
+.accordion-trigger .at-text b{display:block;font-size:16px;color:#fff;font-weight:700;letter-spacing:-.005em;}
+.accordion-trigger .at-text span{display:block;font-size:12.5px;color:var(--ink-faint);margin-top:3px;}
+.accordion-plus{flex:none;width:26px;height:26px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--ink-soft);transition:transform .2s,background .15s,color .15s;}
+.accordion-item.open .accordion-plus{transform:rotate(45deg);background:var(--accent-soft);color:var(--accent);border-color:var(--accent-line);}
+.accordion-panel{max-height:0;overflow:hidden;transition:max-height .32s cubic-bezier(.4,0,.2,1);}
+.accordion-item.open .accordion-panel{max-height:640px;}
+.accordion-panel-inner{padding:0 26px 30px 78px;}
+.accordion-panel-inner p{font-size:14px;color:var(--ink-soft);margin:0 0 18px;line-height:1.65;}
+.cap-list{list-style:none;margin:0 0 22px;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;}
+@media (max-width:640px){.cap-list{grid-template-columns:1fr;}.accordion-panel-inner{padding:0 20px 26px 20px;}}
+.cap-list li{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--ink-soft);line-height:1.5;}
+.cap-list li svg{flex:none;width:15px;height:15px;margin-top:2px;color:var(--ok);}
+.cap-list li b{color:var(--ink);font-weight:600;}
+
+/* ---------- how it works ---------- */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;counter-reset:step;}
+@media (max-width:860px){.steps{grid-template-columns:repeat(2,1fr);}}
+@media (max-width:560px){.steps{grid-template-columns:1fr;}}
+.step{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-md);padding:22px 20px 20px;box-shadow:var(--shadow-xs);}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:linear-gradient(140deg,var(--accent),var(--accent-2));color:#0d0f16;font-size:12.5px;font-weight:800;flex:none;box-shadow:0 0 12px -2px rgba(124,140,255,.6);margin-bottom:14px;}
+.step h4{font-size:14px;color:#fff;margin:0 0 6px;font-weight:700;}
+.step p{font-size:12.5px;color:var(--ink-soft);margin:0;line-height:1.55;}
+
+/* ---------- tools grid ---------- */
+.tools-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:1060px;margin:0 auto;}
+@media (max-width:980px){.tools-grid{grid-template-columns:repeat(2,1fr);max-width:860px;}}
+@media (max-width:700px){.tools-grid{grid-template-columns:1fr;}}
+.tool-card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:28px 26px;box-shadow:var(--shadow-sm);}
+.tool-card .feature-icon{width:38px;height:38px;border-radius:10px;background:var(--accent-soft);border:1px solid var(--accent-line);display:flex;align-items:center;justify-content:center;color:var(--accent);margin-bottom:18px;}
+.tool-card .feature-icon svg{width:19px;height:19px;}
+.tool-card h3{font-size:17px;color:#fff;margin:0 0 8px;font-weight:800;letter-spacing:-.005em;}
+.tool-card p.tc-value{font-size:13.5px;color:var(--ink-soft);margin:0 0 16px;line-height:1.55;}
+.tc-pills{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:22px;flex:1;align-content:flex-start;}
+.tc-pill{font-size:11.5px;font-weight:600;padding:5px 11px;border-radius:999px;background:var(--muted-bg);border:1px solid var(--line);color:var(--ink-soft);}
+.tool-launch-btn{align-self:flex-start;font-size:13.5px;padding:10px 18px;}
+
+/* ---------- CTA band ---------- */
+.cta-band{background:var(--card);border:1px solid var(--accent-line);border-radius:var(--radius-lg);padding:52px 40px;text-align:center;box-shadow:var(--shadow-md);position:relative;overflow:hidden;}
+.cta-band:before{content:'';position:absolute;inset:0;background:radial-gradient(500px 260px at 50% 0%, rgba(124,140,255,.14), transparent 70%);}
+.cta-band h2{font-size:26px;color:#fff;margin:0 0 12px;font-weight:800;letter-spacing:-.015em;position:relative;}
+.cta-band p{font-size:14.5px;color:var(--ink-soft);margin:0 0 28px;position:relative;}
+.cta-band .hero-ctas{position:relative;}
+
+/* ---------- footer ---------- */
+footer.page{border-top:1px solid var(--line-soft);padding:36px 0;margin-top:20px;}
+footer.page .inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;}
+footer.page .fbrand{display:flex;align-items:center;gap:10px;color:var(--ink-soft);font-size:13px;}
+footer.page .flinks{display:flex;gap:22px;flex-wrap:wrap;}
+footer.page .flinks a{color:var(--ink-faint);font-size:12.5px;text-decoration:none;}
+footer.page .flinks a:hover{color:var(--ink-soft);}
+
+/* ---------- sign in ---------- */
+.signin-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:32px 30px;box-shadow:var(--shadow-sm);max-width:420px;margin:0 auto;}
+.auth-form{display:flex;flex-direction:column;gap:14px;}
+.auth-form label{display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink-soft);}
+.auth-form input{border:1px solid var(--line);border-radius:9px;padding:11px 13px;font-size:14px;background:#12141f;color:var(--ink);transition:border-color .15s,box-shadow .15s;font-family:inherit;}
+.auth-form input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+.auth-form button{margin-top:6px;width:100%;justify-content:center;}
+.auth-err{font-size:12.5px;color:#ff6b6b;background:#2c1a1e;border:1px solid #5c2b30;border-radius:8px;padding:9px 12px;}
+.auth-switch{text-align:center;font-size:13px;color:var(--ink-faint);margin-top:18px;}
+.auth-switch a{font-weight:600;cursor:pointer;}
+.signedin-panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:26px 28px;box-shadow:var(--shadow-sm);max-width:900px;margin:0 auto;}
+.signedin-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:13.5px;color:var(--ink-soft);padding-bottom:16px;border-bottom:1px solid var(--line-soft);margin-bottom:16px;}
+.signedin-top b{color:#fff;}
+.signedin-top a{font-size:12.5px;color:var(--ink-faint);text-decoration:none;cursor:pointer;}
+.signedin-top a:hover{color:var(--ink-soft);}
+.license-chip{display:inline-flex;align-items:center;gap:8px;background:var(--ok-bg);border:1px solid var(--ok-line);color:var(--ok);font-size:12.5px;font-weight:700;padding:7px 14px;border-radius:999px;margin-bottom:22px;}
+.license-note{font-size:12px;color:var(--ink-faint);margin-top:20px;text-align:center;max-width:640px;margin-left:auto;margin-right:auto;}
+.demo-mode-badge{display:inline-flex;margin:14px auto 0;background:var(--warn-bg);border:1px solid #5c4a22;color:var(--warn);font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:999px;max-width:480px;}
+</style>
 <style>
 :root{
   --ink:#eef0f6; --ink-soft:#a7adc0; --ink-faint:#767d94;
@@ -178,7 +436,26 @@ footer.page .flinks a:hover{color:var(--ink-soft);}
 </head>
 <body>
 
-__SHARED_NAV__
+<nav class="top">
+  <div class="inner">
+    <div class="brand">
+      <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#0d0f16" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+      Auditera AI
+    </div>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <div class="links" id="nav-links">
+      <a href="client_results.html">Client Results</a>
+      <a class="nav-contact" href="contact.html">Contact</a>
+      <!-- Two separate doors on purpose. Someone returning to work should never
+           have to read a pricing page to find the way in, and someone new
+           should not have to guess that "Sign in" is where buying happens. -->
+      <a class="nav-signin" href="app.html">Sign in</a>
+      <a class="btn-primary nav-cta" href="pricing.html">Start free trial</a>
+    </div>
+  </div>
+</nav>
 
 <header class="hero">
   <div class="wrap">
@@ -240,7 +517,21 @@ __SHARED_NAV__
   </div>
 </section>
 
-__SHARED_FOOTER__
+<footer class="page">
+  <div class="wrap inner">
+    <div class="fbrand">
+      <div class="brand-mark" style="width:24px;height:24px;border-radius:7px;"><svg viewBox="0 0 24 24" fill="none" stroke="#0d0f16" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+      Auditera AI
+    </div>
+    <div class="flinks">
+      <a href="index.html#what-it-does">What It Does</a>
+      <a href="index.html#how">How It Works</a>
+      <a href="client_results.html">Client Results</a>
+      <a href="app.html">Sign In</a>
+      <a href="contact.html">Contact</a>
+    </div>
+  </div>
+</footer>
 
 <!-- Reference request modal -- populated/opened by JS, one shared instance for every case study -->
 <div class="modal-overlay hidden" id="reference-modal-overlay">

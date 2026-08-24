@@ -21,6 +21,7 @@
 // unit, and that must be flagged.
 const { chromium } = require('playwright');
 const path = require('path');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 
 const INVOICE = path.resolve('./real/BOA_LeaseLock_Invoice.pdf');
 const RENTROLL = path.resolve('./real/BOA_rentroll.xlsx');
@@ -32,7 +33,8 @@ const CHARGED_AND_INVOICED = ['203','208','301','302','305','306','401','402','4
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
-  await page.goto('file://' + path.resolve('./deposit_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve('./deposit_reconciler.html') + GATE_HASH);
   await page.evaluate(() => localStorage.removeItem('auditly_leaselock_markup'));
   await page.reload();
 

@@ -80,6 +80,7 @@
    ========================================================================== */
 const { chromium } = require('playwright');
 const path = require('path');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 
 const HERE = __dirname;
 const ZIP = path.join(HERE, 'real/BOA Resident Ledgers 08-14-2026.zip');
@@ -92,7 +93,8 @@ const near = (a, b, tol) => a != null && b != null && Math.abs(a - b) <= (tol ==
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  await page.goto('file://' + path.resolve(HERE, 'concession_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve(HERE, 'concession_reconciler.html') + GATE_HASH);
   await page.evaluate(() => localStorage.clear());
   await page.reload();
 

@@ -1,5 +1,6 @@
 const { chromium } = require('playwright');
 const path = require('path');
+const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 
 // Regression test for the versioning fix: A101 has two lease files in its
 // "Signed Lease Documents" folder. "Blanco Oaks - Standard Lease 1 2 3.pdf"
@@ -15,7 +16,8 @@ const path = require('path');
   const errors = [];
   page.on('pageerror', err => errors.push('PAGEERROR: ' + err.message));
 
-  await page.goto('file://' + path.resolve(__dirname, 'lease_reconciler.html'));
+  await installGateStub(page);
+  await page.goto('file://' + path.resolve(__dirname, 'lease_reconciler.html') + GATE_HASH);
 
   // Unit test the pure helper functions directly first.
   const helperChecks = await page.evaluate(() => ({
