@@ -1,4 +1,0 @@
-Push log 
-[branch] testing 
-[message] Add password reset by email 
- 

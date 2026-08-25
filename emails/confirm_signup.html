@@ -1,0 +1,135 @@
+<!-- =========================================================================
+     Auditera AI — confirm your email address
+     Paste into: Supabase -> Authentication -> Emails -> "Confirm signup"
+
+     WHY THIS LOOKS LIKE 2005 HTML
+     Email clients are not browsers. Outlook renders with Word's engine, Gmail
+     strips <style> blocks, and flexbox/grid are unreliable across all of them.
+     So: nested tables, inline styles, no external CSS, no web fonts, no
+     background images. It is ugly to write and it renders everywhere.
+
+     LIGHT, NOT DARK. The site is dark; this deliberately is not. Dark HTML
+     email renders badly in a lot of clients, and heavy dark blocks are a
+     well-known spam signal. A plain light email from an unfamiliar sender is
+     far likelier to reach an inbox and be trusted.
+
+     Supabase variables available here: {{ .ConfirmationURL }}, {{ .Email }},
+     {{ .SiteURL }}, {{ .Token }}, {{ .TokenHash }}.
+     ========================================================================= -->
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+       style="background-color:#f4f5f8;margin:0;padding:32px 12px;">
+  <tr>
+    <td align="center">
+
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600"
+             style="max-width:600px;width:100%;background-color:#ffffff;border:1px solid #e3e6ee;border-radius:12px;">
+
+        <!-- Brand -->
+        <tr>
+          <td style="padding:28px 36px 0 36px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+            <span style="font-size:17px;font-weight:700;color:#171a28;letter-spacing:-0.01em;">Auditera&nbsp;AI</span>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:4px 36px 0 36px;">
+            <div style="height:1px;background-color:#e3e6ee;font-size:0;line-height:0;margin-top:18px;">&nbsp;</div>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:28px 36px 0 36px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+            <h1 style="margin:0 0 16px 0;font-size:21px;line-height:1.3;font-weight:700;color:#171a28;">
+              Confirm your email address
+            </h1>
+            <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#444a5e;">
+              Thank you for creating an Auditera AI account with
+              <strong style="color:#171a28;">{{ .Email }}</strong>.
+            </p>
+            <p style="margin:0 0 26px 0;font-size:15px;line-height:1.6;color:#444a5e;">
+              Please confirm this address to activate your account and begin your free month.
+              This link is valid for one hour.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Action.
+             Belt and braces for Outlook: the VML block gives it a real button,
+             every other client uses the anchor. -->
+        <tr>
+          <td align="left" style="padding:0 36px 26px 36px;">
+            <!--[if mso]>
+            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
+                         href="{{ .ConfirmationURL }}" style="height:46px;v-text-anchor:middle;width:236px;"
+                         arcsize="20%" stroke="f" fillcolor="#5b6ef5">
+              <w:anchorlock/>
+              <center style="color:#ffffff;font-family:Segoe UI,Arial,sans-serif;font-size:15px;font-weight:bold;">
+                Confirm my email address
+              </center>
+            </v:roundrect>
+            <![endif]-->
+            <!--[if !mso]><!-- -->
+            <a href="{{ .ConfirmationURL }}"
+               style="display:inline-block;background-color:#5b6ef5;color:#ffffff;text-decoration:none;
+                      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+                      font-size:15px;font-weight:600;line-height:1;padding:15px 28px;border-radius:9px;">
+              Confirm my email address
+            </a>
+            <!--<![endif]-->
+          </td>
+        </tr>
+
+        <!-- The link in full. Some clients strip buttons, some people prefer
+             to see where a link goes before following it. -->
+        <tr>
+          <td style="padding:0 36px 26px 36px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+            <p style="margin:0 0 6px 0;font-size:13px;line-height:1.5;color:#767d94;">
+              If the button does not work, copy this address into your browser:
+            </p>
+            <p style="margin:0;font-size:12.5px;line-height:1.5;word-break:break-all;">
+              <a href="{{ .ConfirmationURL }}" style="color:#4a5ad4;text-decoration:underline;">{{ .ConfirmationURL }}</a>
+            </p>
+          </td>
+        </tr>
+
+        <!-- The reassurance that stops a support email. -->
+        <tr>
+          <td style="padding:0 36px 30px 36px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                   style="background-color:#f7f8fb;border:1px solid #e6e9f1;border-radius:9px;">
+              <tr>
+                <td style="padding:14px 18px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+                  <p style="margin:0;font-size:13.5px;line-height:1.55;color:#5a6178;">
+                    <strong style="color:#171a28;">Did not sign up?</strong>
+                    You can safely ignore this message. No account will be activated and this
+                    address will not be contacted again.
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding:0 36px;">
+            <div style="height:1px;background-color:#e3e6ee;font-size:0;line-height:0;">&nbsp;</div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:18px 36px 28px 36px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+            <p style="margin:0 0 6px 0;font-size:12.5px;line-height:1.6;color:#8b91a6;">
+              Auditera AI &mdash; lease, concession and deposit auditing for multifamily properties.
+            </p>
+            <p style="margin:0;font-size:12.5px;line-height:1.6;color:#8b91a6;">
+              This is an automated message sent because this address was used to create an account.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+
+    </td>
+  </tr>
+</table>
