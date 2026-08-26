@@ -24,7 +24,7 @@ const path = require('path');
   });
 
   // --- Client Results page ---
-  await page.goto('file://' + path.resolve('./client_results.html'));
+  await page.goto('file://' + path.resolve('../dist/client_results.html'));
   await page.waitForTimeout(200);
 
   const pageState = await page.evaluate(() => {
@@ -94,7 +94,7 @@ const path = require('path');
     ['"Coming soon" neutral note rendered for Rajeev', pageState.rajeevHasComingSoon === true],
     ['No reference box rendered for Rajeev (not yet marked as a reference)', pageState.rajeevHasReferenceBox === false],
     ['No testimonial rendered for Rajeev (none provided)', pageState.rajeevHasTestimonial === false],
-    ['Hero H1 matches required copy', pageState.heroH1 === 'Real properties. Real results.'],
+    ['Hero H1 matches required copy', pageState.heroH1 === 'AI-Powered auditing for multifamily.'],
     ['Hero eyebrow uses the "verified results" phrase', /verified results from real multifamily operators/i.test(pageState.heroEyebrow)],
     ['Reference modal overlay opens on form submit (test client)', submissionResult.overlayVisibleBefore === true],
     // This sandbox has no outbound network access (confirmed via curl: CONNECT tunnel

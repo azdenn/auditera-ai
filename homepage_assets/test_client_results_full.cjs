@@ -12,7 +12,7 @@ const path = require('path');
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  await page.goto('file://' + path.resolve('./client_results.html'));
+  await page.goto('file://' + path.resolve('../dist/client_results.html'));
 
   const full = await page.evaluate(() => {
     const synthetic = {
@@ -70,7 +70,7 @@ const path = require('path');
   mobile.setViewportSize && await mobile.setViewportSize({ width: 390, height: 844 });
   const mobileErrors = [];
   mobile.on('pageerror', e => mobileErrors.push(e.message));
-  await mobile.goto('file://' + path.resolve('./client_results.html'));
+  await mobile.goto('file://' + path.resolve('../dist/client_results.html'));
   await mobile.waitForTimeout(150);
   const mobileState = await mobile.evaluate(() => {
     const navLinks = document.getElementById('nav-links');

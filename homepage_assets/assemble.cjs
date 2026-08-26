@@ -9,13 +9,45 @@ const sharedStyles = fs.readFileSync(path.join(dir, '_shared_styles.html'), 'utf
 const sharedNav    = fs.readFileSync(path.join(dir, '_shared_nav.html'), 'utf8');
 const sharedFooter = fs.readFileSync(path.join(dir, '_shared_footer.html'), 'utf8');
 
+// The "Back" control belongs on every page EXCEPT the one it points at. The
+// homepage gets the same shared nav with that one element removed, so the link
+// still lives in a single file and cannot drift between pages.
+const NAV_BACK_RE = /\s*<a class="nav-back"[\s\S]*?<\/a>/;
+if (!NAV_BACK_RE.test(sharedNav)){
+  throw new Error('Shared nav has no .nav-back element -- the homepage strip below is now a silent no-op');
+}
+const homeNav = sharedNav.replace(NAV_BACK_RE, '');
+
+/* Mark the link to the page being built as the current one.
+
+   This used to be baked into each page's own hand-written nav. Moving every
+   page onto the shared partial dropped it silently -- the shipped pages had
+   no current-page marker at all for weeks, and the test that should have
+   caught it was reading a stale hand-assembled copy in this folder rather
+   than the file that actually ships. Both are fixed; this is the half that
+   puts the marker back, at build time so it works with JS disabled.
+
+   Appends to an existing class rather than adding a second class attribute:
+   two class attributes on one tag is invalid HTML and the browser keeps only
+   the first, which would make this look applied while doing nothing. */
+function navForPage(file){
+  const re = new RegExp('<a\\b[^>]*href="' + file.replace(/\./g, '\\.') + '"[^>]*>');
+  if (!re.test(sharedNav)) return sharedNav;   // page simply isn't in the nav
+  return sharedNav.replace(re, (tag) => {
+    const marked = /\bclass="/.test(tag)
+      ? tag.replace(/\bclass="([^"]*)"/, (_m, c) => 'class="' + c + ' current"')
+      : tag.replace(/^<a\b/, '<a class="current"');
+    return marked.replace(/>$/, ' aria-current="page">');
+  });
+}
+
 let out = template;
 out = out.replace('__HERO_IMAGE_B64__', () => heroB64);
 // The homepage used to carry its own copy of the nav and footer. Removing a
 // link from the shared partial then changed every page except the front one,
 // which is the single most visible page on the site.
 out = out
-  .split('__SHARED_NAV__').join(sharedNav)
+  .split('__SHARED_NAV__').join(homeNav)
   .split('__SHARED_FOOTER__').join(sharedFooter);
 
 // Sanity: make sure no placeholders remain
@@ -63,7 +95,7 @@ for (const page of ['pricing', 'signin', 'app', 'contact', 'client_results']) {
   if (!fs.existsSync(tpl)) continue;
   let out = fs.readFileSync(tpl, 'utf8')
     .split('__SHARED_STYLES__').join(sharedStyles)
-    .split('__SHARED_NAV__').join(sharedNav)
+    .split('__SHARED_NAV__').join(navForPage(page + '.html'))
     .split('__SHARED_FOOTER__').join(sharedFooter);
   for (const ph of ['__SHARED_STYLES__','__SHARED_NAV__','__SHARED_FOOTER__']) {
     if (out.includes(ph)) throw new Error('Placeholder not replaced in ' + page + ': ' + ph);

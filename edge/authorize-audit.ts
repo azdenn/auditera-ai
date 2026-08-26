@@ -46,6 +46,39 @@ function json(body: unknown, status = 200){
 }
 
 /* ---------------------------------------------------------------------------
+   Developer accounts.
+
+   These accounts may audit ANY property's documents, licensed or not, so that
+   the people who build, test and demo this product are not locked out of it by
+   their own gate.
+
+   WHY THIS IS SAFE, AND WHY IT LIVES HERE AND NOWHERE ELSE
+   This is a SERVER-side allow-list, consulted only after the caller's JWT has
+   been verified. Nothing in the browser knows it exists, nothing in the browser
+   can opt into it, and no amount of patching the tool's JavaScript can put an
+   account onto it. That is the whole difference between this and the "skip the
+   check while testing" flag this project has always refused to ship: that would
+   have been a switch handed to anyone who opened devtools, whereas this is a
+   fact about two specific rows in auth.users.
+
+   KEYED ON USER ID, NOT EMAIL, ON PURPOSE
+   A signed-in user can change their own email address. Nobody can change their
+   user id. An email-keyed list would be one account-takeover away from being a
+   licence to audit anything, and it would silently transfer if an address were
+   ever recycled. Ids are immutable and unguessable, so they are what this
+   matches on. The addresses are comments -- they carry no authority.
+
+   Dev runs are still logged, with verdict 'dev', so the audit trail stays
+   honest: they appear as what they are, and never inflate the 'allowed' count
+   that the anti-sharing review depends on.
+   ------------------------------------------------------------------------- */
+
+const DEV_USER_IDS = new Set<string>([
+  'feb96d01-e806-4233-b814-1798ffc259fb', // azden.kumar@gmail.com
+  '4fdbb62b-2773-4288-832f-6461f17ecdb3', // rkjeev69@gmail.com
+]);
+
+/* ---------------------------------------------------------------------------
    Matching. Kept character-for-character in step with shared/property_guard.js
    so the instant in-browser hint and this authoritative answer can never
    disagree with each other. If you change one, change both.
@@ -205,9 +238,14 @@ Deno.serve(async (req) => {
       return false;
     });
 
-    const outcome = entitled === true
-      ? decide(detectedName, detectedAddress, licensed)
-      : { verdict: 'unlicensed' as const, property: null, via: null };
+    // A developer account skips the property match entirely -- deliberately
+    // ahead of the entitlement check too, so a lapsed trial on a dev's own
+    // account cannot lock the people who maintain this out of their own tools.
+    const outcome = DEV_USER_IDS.has(user.id)
+      ? { verdict: 'dev' as const, property: null, via: 'dev' as const }
+      : entitled === true
+        ? decide(detectedName, detectedAddress, licensed)
+        : { verdict: 'unlicensed' as const, property: null, via: null };
 
     // Log it. Uses the service role because customers deliberately cannot write
     // here -- an audit trail the audited party can edit is not an audit trail.
@@ -235,7 +273,9 @@ Deno.serve(async (req) => {
     }
 
     return json({
-      allowed: outcome.verdict === 'allowed',
+      // Two verdicts open the gate: a real licence match, and a developer
+      // override. Everything else -- including anything unforeseen -- is a no.
+      allowed: outcome.verdict === 'allowed' || outcome.verdict === 'dev',
       verdict: outcome.verdict,
       property: outcome.property ? { name: outcome.property.name } : null,
       via: outcome.via,

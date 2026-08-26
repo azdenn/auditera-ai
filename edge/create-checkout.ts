@@ -52,7 +52,8 @@ function siteUrlFor(req: Request): string {
     const u = new URL(origin);
     if (u.protocol !== 'https:') return fallback;
     if (u.hostname.endsWith('.workers.dev') || u.hostname === 'texoplex.com'
-        || u.hostname.endsWith('.texoplex.com')){
+        || u.hostname.endsWith('.texoplex.com') || u.hostname === 'auditera.net'
+        || u.hostname.endsWith('.auditera.net')){
       return u.origin;
     }
   } catch (_e){ /* no or malformed Origin -- use the configured default */ }

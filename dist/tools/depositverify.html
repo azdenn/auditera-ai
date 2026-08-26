@@ -33,6 +33,9 @@ body{
   background-attachment:fixed;
 }
 .wrap{max-width:1100px;margin:0 auto;padding:40px 24px 90px;}
+.tool-back{display:inline-flex;align-items:center;gap:7px;margin-bottom:16px;padding:7px 12px 7px 9px;border:1px solid var(--line);border-radius:8px;color:var(--ink-soft);text-decoration:none;font-size:13px;font-weight:600;transition:color .15s,border-color .15s,background .15s;}
+.tool-back:hover{color:var(--ink);border-color:var(--accent-line);background:var(--muted-bg);}
+.tool-back svg{width:15px;height:15px;flex:none;}
 header.page{margin-bottom:30px;display:flex;align-items:flex-start;gap:14px;}
 .brand-mark{flex:none;width:40px;height:40px;border-radius:11px;margin-top:2px;background:linear-gradient(140deg,var(--accent),var(--accent-2));box-shadow:0 0 24px -4px rgba(124,140,255,.55);display:flex;align-items:center;justify-content:center;}
 .brand-mark svg{width:20px;height:20px;}
@@ -307,6 +310,15 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
 </head>
 <body>
 <div class="wrap">
+  <!-- The way back to the site. A tool opens in its own tab from the
+       dashboard, so this is a real link rather than history.back(): there is
+       usually no history in this tab to go back through. Absolute, because a
+       tool is served from a blob: URL where relative paths resolve to
+       nothing. -->
+  <a class="tool-back" href="https://auditera.net/">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+    <span>Back to Auditera AI</span>
+  </a>
   <header class="page">
     <div class="brand-mark">
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3.2 4.8 6.1V12c0 4.4 3 7.6 7.2 8.9 4.2-1.3 7.2-4.5 7.2-8.9V6.1L12 3.2Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 12.2l2.1 2.1 4-4.3" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>

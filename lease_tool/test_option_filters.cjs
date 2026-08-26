@@ -25,17 +25,17 @@ const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
 
   // ---- Coverage: is literally everything scannable represented? ----
   const coverage = await page.evaluate(() => {
-    const keys = new Set(ALL_OPTION_FILTER_TYPES.map(t => t.key));
+    const keys = new Set(allOptionFilterTypes().map(t => t.key));
     const missingCats = Object.keys(CATEGORY_LABELS).filter(c => !keys.has('charge:' + c));
     const checkKeys = Object.keys(VERIFY_CHECK_TITLES).concat(['signatures','newerLease']);
     const missingChecks = checkKeys.filter(k => !keys.has(k));
     return {
-      total: ALL_OPTION_FILTER_TYPES.length,
+      total: allOptionFilterTypes().length,
       missingCats, missingChecks,
       hasConcession: keys.has('charge:CONCESSION'),
       hasUnmapped: keys.has('charge:UNMAPPED'),
-      concessionLabel: (ALL_OPTION_FILTER_TYPES.find(t => t.key==='charge:CONCESSION')||{}).label,
-      groups: Array.from(new Set(ALL_OPTION_FILTER_TYPES.map(t => t.group))),
+      concessionLabel: (allOptionFilterTypes().find(t => t.key==='charge:CONCESSION')||{}).label,
+      groups: Array.from(new Set(allOptionFilterTypes().map(t => t.group))),
       renderedBoxes: document.querySelectorAll('#discrepancy-filter-checks input[type=checkbox]').length,
       panelTitle: document.querySelector('#discrepancy-filter-panel summary').textContent,
     };
@@ -94,7 +94,7 @@ const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
   await page.click('.filter-group-all[data-group="Charges & fees"]');
   await page.waitForTimeout(300);
   const afterToggleAll = await page.evaluate(() => {
-    const charges = ALL_OPTION_FILTER_TYPES.filter(t => t.group === 'Charges & fees');
+    const charges = allOptionFilterTypes().filter(t => t.group === 'Charges & fees');
     return { allHidden: charges.every(t => isCheckHidden(t.key)), count: charges.length };
   });
 

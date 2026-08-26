@@ -36,12 +36,20 @@ a{color:var(--accent);}
 /* ---------- nav ---------- */
 nav.top{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);background:rgba(13,15,22,.72);border-bottom:1px solid var(--line-soft);}
 nav.top .inner{max-width:1120px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
-.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;color:#fff;letter-spacing:-.01em;}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;color:#fff;letter-spacing:-.01em;text-decoration:none;}
+/* Back to the front page. Sits left of the brand and is deliberately quiet --
+   it is a way out, not a call to action. */
+.nav-back{display:inline-flex;align-items:center;gap:6px;flex:none;margin-right:2px;padding:6px 10px 6px 7px;border:1px solid var(--line-soft);border-radius:var(--radius-sm);color:var(--ink-soft);text-decoration:none;font-size:13px;font-weight:600;transition:color .15s,border-color .15s,background .15s;}
+.nav-back:hover{color:#fff;border-color:var(--line);background:rgba(255,255,255,.04);}
+.nav-back svg{width:15px;height:15px;flex:none;}
+@media (max-width:640px){.nav-back span{display:none;}.nav-back{padding:6px 8px;}}
 .brand-mark{flex:none;width:30px;height:30px;border-radius:9px;background:linear-gradient(140deg,var(--accent),var(--accent-2));box-shadow:0 0 18px -4px rgba(124,140,255,.55);display:flex;align-items:center;justify-content:center;}
 .brand-mark svg{width:16px;height:16px;}
 nav.top .links{display:flex;gap:26px;align-items:center;}
 nav.top .links a{color:var(--ink-soft);text-decoration:none;font-size:13.5px;font-weight:600;transition:color .15s;}
 nav.top .links a:hover{color:#fff;}
+/* The page you are on, marked at build time by navForPage() in assemble.cjs. */
+nav.top .links a.current{color:#fff;}
 /* The two right-hand actions read as a pair: a quiet way back in for people
    who already pay, and a loud one for people who don't yet. The divider keeps
    them from blurring into the content links beside them. */
@@ -300,10 +308,18 @@ body{background:var(--bg);}
 <body>
 <nav class="top">
   <div class="inner">
-    <div class="brand">
+    <!-- The way back to the front page, on every page that isn't it. The
+         homepage build strips this (see assemble.cjs) rather than shipping an
+         arrow that points at the page you are already on. The brand beside it
+         goes home too, which is what most people try first. -->
+    <a class="nav-back" href="index.html" aria-label="Back to home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+      <span>Back</span>
+    </a>
+    <a class="brand" href="index.html">
       <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#0d0f16" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
       Auditera AI
-    </div>
+    </a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
     </button>
@@ -313,7 +329,7 @@ body{background:var(--bg);}
       <!-- Two separate doors on purpose. Someone returning to work should never
            have to read a pricing page to find the way in, and someone new
            should not have to guess that "Sign in" is where buying happens. -->
-      <a class="nav-signin" href="app.html">Sign in</a>
+      <a class="nav-signin current" href="app.html" aria-current="page">Sign in</a>
       <a class="btn-primary nav-cta" href="pricing.html">Start free trial</a>
     </div>
   </div>
