@@ -794,7 +794,14 @@ const DEFAULT_ALIAS_MAP = {
   INTERNET: ['Internet','Internet Fee','WiFi'],
   PACKAGE: ['Package service','Package Fee','Package'],
   STORMWATER: ['Stormwater','Stormwater/drainage','Drainage','Storm Water Fee'],
-  WASHERDRYER: ['Washer/Dryer','Washer Dryer','Laundry','W/D Rental'],
+  // "WD Rent" and "W/D Rent" are spelled out in full rather than adding a bare
+  // "WD" alias. classify() scores by how many alias words the charge contains,
+  // and a one-word "WD" alias would only tie with RENT's one-word "Rent" on
+  // "WD Rent" -- the winner would then depend on which category happened to be
+  // iterated first, which is not a rule, it is a coin toss. Two words beat one
+  // outright. Seen on a real rent roll billing washer/dryer as "WD Rent",
+  // where it was being counted as rent and inflating that unit's rent figure.
+  WASHERDRYER: ['Washer/Dryer','Washer Dryer','Laundry','W/D Rental','WD Rent','W/D Rent'],
   MONTH_TO_MONTH_FEE: ['Month to Month Fee','Month-to-Month Fee','Month to Month','M2M Fee','MTM Fee'],
   // Move-in specials / concessions. These appear on a Rent Roll as negative
   // credit lines with free-text descriptions ("1 month free prorated over 12
@@ -2508,6 +2515,30 @@ function looksLikeLeaseFilename(zipPath){
   return /lease|agreement|contract/i.test(zipPath.split('/').pop() || '');
 }
 
+/* ResMan names each unit's folder after the unit alone ("A301"). Other exports
+   -- and hand-tidied ones -- name it "<unit> - <resident>", e.g.
+   "1 - Jose Arturo Rodriguez" or "F2 - David Ferguson". That whole string
+   matches no unit in any Rent Roll, so the folder name silently contributed
+   nothing and the unit was resolved from whatever was typed into the lease
+   PDF's own "Apartment No." field -- the weaker signal, and the one that is
+   blank or wrong often enough to matter.
+
+   Offers the full name first and the leading token second, so an exact match
+   on a genuine folder name still wins wherever one exists. Guessing costs
+   nothing here: resolveUnitKey only ever returns a key the Rent Roll actually
+   contains, so a wrong candidate is discarded rather than inventing a unit.
+
+   Requires whitespace on BOTH sides of the dash, so a unit legitimately named
+   "1-1" is left alone. */
+function unitSignalsFromFolder(folderName){
+  if (!folderName) return [];
+  const full = String(folderName).trim();
+  const signals = [full];
+  const m = /^(.+?)\s+-\s+\S/.exec(full);
+  if (m && m[1] && m[1] !== full) signals.push(m[1].trim());
+  return signals;
+}
+
 // Strips only LEADING non-digit characters, e.g. "A301" -> "301", "301" -> "301".
 // Used as a fallback join key when a unit identifier (from a ZIP folder name
 // or a lease's own "Apartment No." field) is missing the building-letter
@@ -3725,7 +3756,8 @@ processBtn.addEventListener('click', async () => {
               const folderUnit = unitFolderNameFromZipPath(name)
                 || (scan.fallbackPaths.has(name) ? unitFolderNameAtDepth(name, scan.unitDirDepth) : null);
               if (scan.fallbackPaths.has(name)) fallbackLeaseCount++;
-              const resolved = resolveUnitKey([folderUnit, parsed.unit], allUnitBlocks);
+              const resolved = resolveUnitKey(
+                unitSignalsFromFolder(folderUnit).concat([parsed.unit]), allUnitBlocks);
               const key = resolved.key;
               if (!rawSuccessByUnit.has(key)) rawSuccessByUnit.set(key, []);
               rawSuccessByUnit.get(key).push({
