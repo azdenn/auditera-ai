@@ -391,6 +391,7 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
 <!--XLSX_LIB-->
 <!--FFLATE_LIB-->
 
+<!--RR_PROPERTY_NAME-->
 <!--AUDIT_GATE-->
 <script>
 /* =========================================================================
@@ -890,18 +891,13 @@ async function parseRentRoll(file){
   // ResMan prints the property name in the first few rows above the header
   // ("Blanco Oaks Apartments", then the owning entity, then "Rent Roll", then
   // the run date). Without this the PDF report was masted "Property".
-  let propertyName = null;
-  for (let r = 0; r < headerRowIdx; r++){
-    for (const cell of (rows[r] || [])){
-      if (typeof cell !== 'string') continue;
-      const v = cell.trim();
-      if (v.length < 3) continue;
-      if (/^(rent\s*roll|printed|page\b|current|future|past)/i.test(v)) continue;
-      if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(v)) continue;
-      propertyName = v; break;
-    }
-    if (propertyName) break;
-  }
+  // This tool's own version of this scan was the only one of the three that
+  // already looked past column A -- which is why ConcessionVerify would have
+  // read the centred-masthead rent roll correctly while the other two did
+  // not. It now shares the single implementation with them, which also fixes
+  // its one real weakness: its status-word filter was a prefix match, so a
+  // property genuinely called "Current Place" would have been skipped.
+  const propertyName = extractPropertyNameFromRentRoll(rows, headerRowIdx);
   return { rows, headerRowIdx, colUnit, colDesc, colAmount, colResidents, colStatus, colLeaseStart, colLeaseEnd, colMoveIn, colMoveOut, propertyName };
 }
 

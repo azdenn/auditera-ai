@@ -428,6 +428,7 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
 <!--PDF_WORKER_SRC-->
 <!--XLSX_LIB-->
 
+<!--RR_PROPERTY_NAME-->
 <!--AUDIT_GATE-->
 <script>
 /* =========================================================================
@@ -696,23 +697,16 @@ async function parseRentRoll(file){
            colLeaseStart, colLeaseEnd, colDeposits, colSurety, propertyName };
 }
 
-function extractPropertyNameFromRentRoll(rows, headerRowIdx){
-  const limit = Math.min(headerRowIdx, 10);
-  for (let r = 0; r < limit; r++){
-    const row = rows[r];
-    if (!row) continue;
-    const cell = row[0];
-    if (cell === null || cell === undefined) continue;
-    if (cell instanceof Date) continue;
-    const text = String(cell).trim();
-    if (!text) continue;
-    if (/^printed\b/i.test(text)) continue;
-    if (/^rent roll$/i.test(text)) continue;
-    if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(text)) continue;
-    return text;
-  }
-  return null;
-}
+/* extractPropertyNameFromRentRoll() is no longer defined here.
+
+   It lived in three near-identical copies -- one per tool -- which quietly
+   diverged: two read only column A, the third scanned every column. A rent
+   roll whose masthead is centred over column K then read as "Current" (the
+   status-group heading, the first text in column A on that layout) and the
+   licence gate refused a property the customer actually owned.
+
+   There is now exactly one copy, in shared/rentroll_property_name.js, inlined
+   into all three tools at build time via the RR_PROPERTY_NAME build marker. */
 
 // Real ResMan exports append summary/subtotal tables under the per-unit
 // detail. Their first column is non-empty just like a unit number, so without

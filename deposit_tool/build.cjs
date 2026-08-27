@@ -35,5 +35,14 @@ out = out.replace('<!--AUDIT_GATE-->', () => '<script>\n' + auditGate + '\n</scr
 if (out.includes('<!--AUDIT_GATE-->')) throw new Error('Audit gate placeholder not replaced');
 if (!out.includes('agAuthorizeAudit')) throw new Error('Audit gate missing from build output');
 
+// The rent-roll property-name reader is shared verbatim with the other two
+// tools, for the same reason the licence gate is: three copies of one rule is
+// how a rent roll came to be read as "Current".
+const rrPropertyName = fs.readFileSync('../shared/rentroll_property_name.js', 'utf8');
+out = out.replace('<!--RR_PROPERTY_NAME-->', () => '<script>\n' + rrPropertyName + '\n</script>');
+if (out.includes('<!--RR_PROPERTY_NAME-->')) throw new Error('Property-name placeholder not replaced');
+if (!out.includes('function extractPropertyNameFromRentRoll')) throw new Error('Property-name reader missing from build output');
+
+
 fs.writeFileSync(outPath, out);
 console.log('Built deposit_reconciler.html, size:', (fs.statSync(outPath).size/1024/1024).toFixed(2), 'MB');

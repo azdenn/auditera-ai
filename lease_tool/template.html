@@ -487,6 +487,7 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
 <!--XLSX_LIB-->
 <!--FFLATE_LIB-->
 
+<!--RR_PROPERTY_NAME-->
 <!--AUDIT_GATE-->
 <script>
 /* =========================================================================
@@ -2884,23 +2885,16 @@ async function parseRentRoll(file){
 // automatically (it's machine-generated, unlike anything typed into a
 // lease PDF), so it's the source of truth for the property-match check
 // against a signed-in account's licensed property (see checkPropertyMatch).
-function extractPropertyNameFromRentRoll(rows, headerRowIdx){
-  const limit = Math.min(headerRowIdx, 10);
-  for (let r = 0; r < limit; r++){
-    const row = rows[r];
-    if (!row) continue;
-    const cell = row[0];
-    if (cell === null || cell === undefined) continue;
-    const text = String(cell).trim();
-    if (!text) continue;
-    if (/^printed\b/i.test(text)) continue;
-    if (/^rent roll$/i.test(text)) continue;
-    if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(text)) continue; // bare date, e.g. "7/15/2026"
-    if (text instanceof Date) continue;
-    return text;
-  }
-  return null;
-}
+/* extractPropertyNameFromRentRoll() is no longer defined here.
+
+   It lived in three near-identical copies -- one per tool -- which quietly
+   diverged: two read only column A, the third scanned every column. A rent
+   roll whose masthead is centred over column K then read as "Current" (the
+   status-group heading, the first text in column A on that layout) and the
+   licence gate refused a property the customer actually owned.
+
+   There is now exactly one copy, in shared/rentroll_property_name.js, inlined
+   into all three tools at build time via the RR_PROPERTY_NAME build marker. */
 
 // Loose comparison for "is this the same property" -- lowercases, strips
 // punctuation, and drops filler words ("apartments", "apts", "the", "at")
