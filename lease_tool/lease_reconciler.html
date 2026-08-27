@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LeaseVerify — Auditly AI</title>
+<title>LeaseVerify — Auditera AI</title>
 <style>
 :root{
   --ink:#eef0f6; --ink-soft:#a7adc0; --ink-faint:#767d94;
@@ -45,6 +45,9 @@ body{
   margin-left:calc(min(1720px, calc(100vw - 60px)) / -2);
 }
 @media (max-width:1160px){ .results-wide{width:auto;position:static;left:auto;margin-left:0;} }
+.tool-back{display:inline-flex;align-items:center;gap:7px;margin-bottom:16px;padding:7px 12px 7px 9px;border:1px solid var(--line);border-radius:8px;color:var(--ink-soft);text-decoration:none;font-size:13px;font-weight:600;transition:color .15s,border-color .15s,background .15s;}
+.tool-back:hover{color:var(--ink);border-color:var(--accent-line);background:var(--muted-bg);}
+.tool-back svg{width:15px;height:15px;flex:none;}
 header.page{margin-bottom:30px;display:flex;align-items:flex-start;gap:14px;}
 .brand-mark{flex:none;width:40px;height:40px;border-radius:11px;margin-top:2px;background:linear-gradient(140deg,var(--accent),var(--accent-2));box-shadow:0 0 24px -4px rgba(124,140,255,.55);display:flex;align-items:center;justify-content:center;}
 .brand-mark svg{width:20px;height:20px;}
@@ -285,12 +288,21 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
 </head>
 <body>
 <div class="wrap">
+  <!-- The way back to the site. A tool opens in its own tab from the
+       dashboard, so this is a real link rather than history.back(): there is
+       usually no history in this tab to go back through. Absolute, because a
+       tool is served from a blob: URL where relative paths resolve to
+       nothing. -->
+  <a class="tool-back" href="https://auditera.net/">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+    <span>Back to Auditera AI</span>
+  </a>
   <header class="page">
     <div class="brand-mark">
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 3.5h7l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 19V5A1.5 1.5 0 0 1 7 3.5Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M14 3.5V7a1 1 0 0 0 1 1h3.5" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 12.5l2 2 4-4.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
     <div>
-      <h1>LeaseVerify — Auditly AI</h1>
+      <h1>LeaseVerify — Auditera AI</h1>
       <p>Upload every unit's lease PDF plus your ResMan rent roll export &mdash; this checks recurring charges across the whole property at once, and flags anything missing or mismatched.</p>
     </div>
   </header>
@@ -320,13 +332,6 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
         <button class="ghost" id="alias-import-btn">Import mappings (.json)</button>
         <input type="file" id="alias-import-input" accept="application/json" class="hidden">
       </div>
-    </details>
-
-    <details class="alias-panel" id="bundle-panel">
-      <summary>Bundled Charges &mdash; when your rent roll groups what the lease itemizes</summary>
-      <p class="status-msg" style="margin:10px 0 6px;">Some properties list charges separately on the lease (WiFi, Trash, Pet, Pest) but bill them as one grouped line on the rent roll (&ldquo;Amenities&rdquo;). Nothing is wrong &mdash; the parts add up to the whole &mdash; but compared line by line it looks like a mismatch on every unit. A bundle rule tells the reconciler those lines are the same thing, and it then checks that the parts still <b>add up to</b> the grouped amount. If they stop adding up, that&rsquo;s a real Mismatch and you&rsquo;ll still see it.</p>
-      <p class="status-msg" style="margin:0 0 10px;">You usually won&rsquo;t need to add these by hand: when the tool spots lease charges that sum exactly to one rent roll line, it offers the rule above your results.</p>
-      <div id="bundle-rule-list"></div>
     </details>
 
     <details class="alias-panel" id="discrepancy-filter-panel">
@@ -390,7 +395,7 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
         <label class="filelabel" for="zip-file">ResMan Documents ZIP (one file, whole property)</label>
         <input type="file" id="zip-file" accept=".zip,application/zip,application/x-zip-compressed">
         <div class="filename" id="zip-filename">No file selected</div>
-        <div class="hint">Upload the resident documents plus signed leases export from ResMan. Auditly AI looks inside each unit's "Signed Lease Documents" folder and automatically pulls the most recently signed version &mdash; everything else in the ZIP is skipped, and nothing is uploaded anywhere. Max 15&nbsp;GB.</div>
+        <div class="hint">Upload the resident documents plus signed leases export from ResMan. Auditera AI looks inside each unit's "Signed Lease Documents" folder and automatically pulls the most recently signed version. If a unit's folder has no lease in it, it then searches the rest of that unit's documents &mdash; leases do sometimes get filed in the wrong place. Nothing is uploaded anywhere. Max 15&nbsp;GB.</div>
         <div class="zip-error hidden" id="zip-error"></div>
       </div>
       <div class="drop" id="drop-rentroll">
@@ -416,7 +421,6 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
     <h2><span class="step-num">3</span> Results</h2>
 
     <div class="hidden" id="property-match-banner"></div>
-    <div class="hidden" id="bundle-suggest-banner"></div>
 
     <div class="kpi-row" id="kpi-row"></div>
     <div class="kpi-sub" id="kpi-sub"></div>
@@ -426,6 +430,7 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
       <span class="legend-chip"><span class="badge clean">Match</span> Lease and ResMan agree on everything</span>
       <span class="legend-chip"><span class="badge mismatch">Mismatch</span> Something doesn't match &mdash; the lease and ResMan disagree</span>
       <span class="legend-chip"><span class="badge missing">Missing lease</span> No signed lease was found for this unit</span>
+      <span class="legend-chip"><span class="badge missing">New move-in — no lease yet</span> The Rent Roll's current resident doesn't match the lease on file for this unit &mdash; likely a new move-in whose signed lease hasn't been uploaded yet</span>
       <span class="legend-chip"><span class="badge unmatched">Unmatched PDF</span> A lease was uploaded but not found in the rent roll</span>
       <span class="legend-chip"><span class="badge needs-review">Review</span> More than one possible lease &mdash; pick manually</span>
       <span class="legend-chip"><span class="badge error">Parse error</span> The file couldn't be read</span>
@@ -556,6 +561,201 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
 <script>
 /* =========================================================================
+   Audit gate — inlined into all three tools by their build scripts.
+
+   WHAT CHANGED AND WHY
+   The tools used to be handed their licence list in the URL hash and, at
+   most, warned when the uploaded documents belonged to a property the
+   account was not licensed for. A hash is editable, and a warning is not a
+   lock, so per-property pricing was effectively voluntary.
+
+   Now: the tool sends the property identifiers it read out of the documents
+   to authorize-audit, and refuses to produce results unless that function
+   says yes. The licence list is no longer in the client at all.
+
+   WHAT LEAVES THE BROWSER
+   A property name and a street address. Nothing else. Not the rent roll, not
+   a lease, not a resident name, not a rent figure. That boundary is the whole
+   product promise and this file is the only place in a tool that talks to a
+   server, so it is the only place that could break it. Keep it that way.
+
+   FAIL CLOSED
+   Every path that is not an explicit "allowed: true" refuses: no token, an
+   expired session, a network failure, a malformed answer, a thrown error.
+   A tool that shows results when it could not check is worse than one that
+   refuses too often, because the failure is silent.
+
+   THE HONEST LIMIT
+   Someone who opens devtools can patch this out. Nothing running in the
+   customer's own browser can prevent that, and pretending otherwise would be
+   a lie. What they cannot do is hide: every call is logged server-side with
+   the account it came from, so a shared login shows up as one account
+   auditing properties it does not own.
+   ========================================================================= */
+
+var AG_SUPABASE_URL = 'https://kyfvrkghqohkhwidqwst.supabase.co';
+var AG_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5ZnZya2docW9oa2h3aWRxd3N0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0MTE4ODcsImV4cCI6MjEwMTk4Nzg4N30.PZQsIhFAxM-PiHwSuSfSWeIx2mVeDZ4FgVR3wDJLXu4';
+
+/* The session token the dashboard put in the hash when it opened this tool.
+
+   Read once at load, stashed in sessionStorage, then removed from the URL so
+   it is not left sitting in the address bar for a screenshot or a shoulder to
+   pick up. A hash never reaches any server, so it was never transmitted --
+   this is hygiene, not secrecy.
+
+   The sessionStorage copy is what makes a page refresh survivable. Stripping
+   the hash alone meant reloading the tool produced "this was not opened from
+   your dashboard", which is a baffling thing to tell someone who just pressed
+   F5. sessionStorage is scoped to this one tab and dies with it, which is
+   exactly the lifetime the token should have. */
+var AG_TOKEN = (function(){
+  var KEY = 'ag_session_token';
+
+  function remember(t){
+    try { sessionStorage.setItem(KEY, t); } catch (_e){ /* private mode, file:// -- fine */ }
+  }
+  function recall(){
+    try { return sessionStorage.getItem(KEY) || null; } catch (_e){ return null; }
+  }
+
+  try {
+    var m = /(?:^|[#&])tk=([^&]+)/.exec(window.location.hash || '');
+    if (!m) return recall();
+
+    var t = decodeURIComponent(m[1]) || null;
+    if (!t) return recall();
+    remember(t);
+
+    try {
+      var cleaned = (window.location.hash || '')
+        .replace(/(?:^|[#&])tk=[^&]*/, '')
+        .replace(/^#?&/, '#');
+      history.replaceState(null, '', window.location.pathname + window.location.search
+        + (cleaned && cleaned !== '#' ? cleaned : ''));
+    } catch (_e){ /* cosmetic only */ }
+
+    return t;
+  } catch (_e){ return null; }
+})();
+
+function agEscape(v){
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/* A refusal takes over the whole page rather than showing a banner above the
+   results. A banner next to real output invites "just ignore the red bit",
+   and the entire point of this change is that a mismatch stops the audit
+   instead of annotating it. */
+function agBlockScreen(message, verdict){
+  var existing = document.getElementById('ag-block');
+  if (existing) existing.remove();
+
+  var heading = verdict === 'expired' ? 'Your session has expired'
+              : verdict === 'unlicensed' ? 'No active licence on this account'
+              : verdict === 'unknown' ? 'These documents could not be identified'
+              : 'This property is not licensed on your account';
+
+  var el = document.createElement('div');
+  el.id = 'ag-block';
+  el.setAttribute('role', 'alertdialog');
+  el.setAttribute('aria-modal', 'true');
+  el.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:rgba(9,11,17,.97);'
+    + 'display:flex;align-items:center;justify-content:center;padding:24px;'
+    + 'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;'
+    + '-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);';
+  el.innerHTML =
+    '<div style="max-width:560px;background:#161926;border:1px solid #5c2b30;border-radius:16px;'
+      + 'padding:32px 32px 28px;box-shadow:0 24px 70px -20px rgba(0,0,0,.85);text-align:left;">'
+    + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">'
+      + '<div style="flex:0 0 auto;width:38px;height:38px;border-radius:10px;background:#2c1a1e;'
+        + 'border:1px solid #5c2b30;display:flex;align-items:center;justify-content:center;">'
+        + '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#ff8080" stroke-width="2.2" '
+        + 'stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/>'
+        + '<path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
+      + '</div>'
+      + '<h2 style="margin:0;font-size:19px;color:#eef0f6;font-weight:700;letter-spacing:-.01em;">'
+        + agEscape(heading) + '</h2>'
+    + '</div>'
+    + '<p style="margin:0 0 22px;color:#a7adc0;font-size:14.5px;line-height:1.6;">'
+      + agEscape(message) + '</p>'
+    + '<div style="display:flex;gap:10px;flex-wrap:wrap;">'
+      + '<button type="button" id="ag-block-close" style="background:#171a28;border:1px solid #2a3040;'
+        + 'border-radius:9px;padding:11px 20px;font-size:14px;font-weight:600;color:#eef0f6;cursor:pointer;'
+        + 'font-family:inherit;">Choose different files</button>'
+    + '</div>'
+    + '<p style="margin:18px 0 0;color:#767d94;font-size:12px;line-height:1.5;">'
+      + 'Your documents were read on this computer only and were not uploaded. '
+      + 'Only the property name was checked against your licence.'
+    + '</p>'
+    + '</div>';
+  document.body.appendChild(el);
+
+  var close = document.getElementById('ag-block-close');
+  if (close) close.addEventListener('click', function(){
+    // Reload rather than just hiding the overlay: whatever half-built state
+    // the run left behind must not be reachable by dismissing a dialog.
+    window.location.reload();
+  });
+}
+
+/* Ask the server whether this audit may proceed.
+   Resolves to true only on an explicit yes. */
+async function agAuthorizeAudit(tool, detectedName, detectedAddress){
+  if (!AG_TOKEN){
+    agBlockScreen(
+      'This tool was not opened from your dashboard, or the link it was opened with has already '
+      + 'been used. Sign in and launch it from your dashboard to audit a property.',
+      'expired');
+    return false;
+  }
+
+  var res, payload;
+  try {
+    res = await fetch(AG_SUPABASE_URL + '/functions/v1/authorize-audit', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + AG_TOKEN,
+        'apikey': AG_ANON_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        tool: tool,
+        detected_name: detectedName || '',
+        detected_address: detectedAddress || '',
+      }),
+      cache: 'no-store',
+    });
+  } catch (_e){
+    agBlockScreen(
+      'Your licence could not be checked just now, so this audit was stopped. '
+      + 'Check your internet connection and try again.',
+      'unknown');
+    return false;
+  }
+
+  try { payload = await res.json(); } catch (_e){ payload = null; }
+
+  // Strictly true, not truthy. A string, a 1, an object -- anything other than
+  // the boolean the server promised -- is treated as a refusal.
+  if (payload && payload.allowed === true) return true;
+
+  agBlockScreen(
+    (payload && payload.message)
+      ? payload.message
+      : 'Your licence could not be confirmed, so this audit was stopped.',
+    (payload && payload.verdict) || 'unknown');
+  return false;
+}
+
+if (typeof module !== 'undefined' && module.exports){
+  module.exports = { agAuthorizeAudit, agBlockScreen, agEscape };
+}
+
+</script>
+<script>
+/* =========================================================================
    PDF.js worker note: pdf.worker.min.js is loaded above as a plain executing
    <script>, which defines the global `pdfjsWorker`. pdf.js auto-detects that
    global and runs PDF parsing on the main thread ("fake worker") instead of
@@ -595,7 +795,14 @@ const DEFAULT_ALIAS_MAP = {
   INTERNET: ['Internet','Internet Fee','WiFi'],
   PACKAGE: ['Package service','Package Fee','Package'],
   STORMWATER: ['Stormwater','Stormwater/drainage','Drainage','Storm Water Fee'],
-  WASHERDRYER: ['Washer/Dryer','Washer Dryer','Laundry','W/D Rental'],
+  // "WD Rent" and "W/D Rent" are spelled out in full rather than adding a bare
+  // "WD" alias. classify() scores by how many alias words the charge contains,
+  // and a one-word "WD" alias would only tie with RENT's one-word "Rent" on
+  // "WD Rent" -- the winner would then depend on which category happened to be
+  // iterated first, which is not a rule, it is a coin toss. Two words beat one
+  // outright. Seen on a real rent roll billing washer/dryer as "WD Rent",
+  // where it was being counted as rent and inflating that unit's rent figure.
+  WASHERDRYER: ['Washer/Dryer','Washer Dryer','Laundry','W/D Rental','WD Rent','W/D Rent'],
   MONTH_TO_MONTH_FEE: ['Month to Month Fee','Month-to-Month Fee','Month to Month','M2M Fee','MTM Fee'],
   // Move-in specials / concessions. These appear on a Rent Roll as negative
   // credit lines with free-text descriptions ("1 month free prorated over 12
@@ -673,9 +880,79 @@ const FILTERABLE_CHARGE_TYPES = Object.keys(CATEGORY_LABELS).map(cat => ({
   // switch too -- otherwise "everything that gets scanned" would have a gap.
   {key: CHARGE_FILTER_PREFIX + 'UNMAPPED', cat:'UNMAPPED', label:'Unrecognized / other charges', group:'Charges & fees'},
 ]);
-const ALL_OPTION_FILTER_TYPES = FILTERABLE_CHECK_TYPES.concat(FILTERABLE_CHARGE_TYPES);
+const FIXED_OPTION_FILTER_TYPES = FILTERABLE_CHECK_TYPES.concat(FILTERABLE_CHARGE_TYPES);
+
+/* ---- Property specific charges -----------------------------------------
+   The two groups above are fixed: every TAA lease has the same verification
+   checks and the same named Section L charge rows. This third group is not.
+   Underneath Section L's named rows sit four blank "Other: ______ $____"
+   lines, filled in by hand by each property -- valet trash, amenity fee,
+   whatever that office decided to bill. They are real lease charges, they are
+   different at every property, and they were the single biggest source of
+   false mismatches reported: one property's write-in charges made nearly
+   every unit look wrong.
+
+   So this group is built from the documents rather than declared here. After
+   each run it lists the write-in charges actually found across the uploaded
+   leases, one switch each, so a property can silence the one line it handles
+   on a separate schedule without hiding the rest.
+
+   Shown by default, deliberately. These are charges a resident is being
+   billed; a filter that started ON would hide a genuine overcharge behind a
+   box nobody knew to look in. */
+const PROP_FILTER_PREFIX = 'prop:';
+const PROPERTY_SPECIFIC_GROUP = 'Property specific charges';
+let PROPERTY_SPECIFIC_TYPES = [];
+
+// Loose key so "Valet Trash", "valet trash " and "Valet-Trash" are one switch
+// across leases that spell the same write-in slightly differently.
+function propLabelKey(s){ return String(s == null ? '' : s).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
+function propFilterKey(label){ return PROP_FILTER_PREFIX + propLabelKey(label); }
+function allOptionFilterTypes(){ return FIXED_OPTION_FILTER_TYPES.concat(PROPERTY_SPECIFIC_TYPES); }
+
+/* Rebuilt after every reconcile from the write-ins actually seen. Returns true
+   when the list changed, so the panel is only re-rendered when it has to be
+   (re-rendering it every pass would discard a half-made click). */
+function refreshPropertySpecificTypes(entries){
+  const byKey = new Map();
+  for (const e of (entries || [])){
+    for (const r of (e.rows || [])){
+      for (const lbl of (r.propLabels || [])){
+        const key = propFilterKey(lbl);
+        if (!byKey.has(key)) byKey.set(key, {key, label: lbl, group: PROPERTY_SPECIFIC_GROUP, prop: true});
+      }
+    }
+  }
+  const next = Array.from(byKey.values()).sort((a, b) => a.label.localeCompare(b.label));
+  const changed = next.length !== PROPERTY_SPECIFIC_TYPES.length ||
+    next.some((t, i) => PROPERTY_SPECIFIC_TYPES[i].key !== t.key);
+  PROPERTY_SPECIFIC_TYPES = next;
+  return changed;
+}
+
 function isChargeCategoryHidden(cat){
   return HIDDEN_CHECK_KEYS.has(CHARGE_FILTER_PREFIX + (cat || 'UNMAPPED'));
+}
+
+/* A charge row is filtered out when EITHER its charge category is switched
+   off or one of its property-specific write-ins is. The two overlap on
+   purpose: a write-in the reconciler managed to file under a known category
+   (a property's "Other: Valet Trash" landing in Trash) is reachable from both
+   lists, and ticking either should mean the same thing -- stop this flagging
+   units. Union, never intersection: a ticked box always hides. */
+function isRowFiltered(r){
+  if (isChargeCategoryHidden(r.category)) return true;
+  for (const lbl of (r.propLabels || [])){
+    if (HIDDEN_CHECK_KEYS.has(propFilterKey(lbl))) return true;
+  }
+  return false;
+}
+
+// Attaches the write-in labels behind a row, when any of the lease lines that
+// built it came from a Section L "Other:" line.
+function tagPropertySpecific(row, labels){
+  if (labels && labels.length) row.propLabels = labels;
+  return row;
 }
 // A charge row counts as a real, visible issue only if it's a genuine
 // discrepancy AND its category hasn't been switched off.
@@ -688,7 +965,11 @@ function loadHiddenCheckKeys(){
     const raw = localStorage.getItem(HIDDEN_CHECKS_STORAGE_KEY);
     if (!raw) return new Set();
     const arr = JSON.parse(raw);
-    return new Set(Array.isArray(arr) ? arr.filter(k => ALL_OPTION_FILTER_TYPES.some(t=>t.key===k)) : []);
+    // Property-specific keys are kept even though nothing has been parsed
+    // yet: the list they belong to is only known once documents are read, and
+    // dropping them here would silently forget the choice on every reload.
+    return new Set(Array.isArray(arr) ? arr.filter(k =>
+      String(k).indexOf(PROP_FILTER_PREFIX) === 0 || FIXED_OPTION_FILTER_TYPES.some(t=>t.key===k)) : []);
   }catch(err){ return new Set(); } // localStorage unavailable (private browsing, etc.) -- fall back to session-only defaults
 }
 function saveHiddenCheckKeys(){
@@ -789,7 +1070,7 @@ let rawFailedFiles = [];            // [{filename, error}]
 let allUnitBlocks = new Map();      // unitKey -> resman block {unit, residents, status, charges, total}
 let detectedPropertyName = null;    // property name read off the uploaded rent roll's masthead
 
-// If this tool was launched from the Auditly AI homepage while signed in, the
+// If this tool was launched from the Auditera AI homepage while signed in, the
 // homepage passes along which property that account is licensed for via a
 // URL hash (e.g. "#property=Blanco%20Oaks%20Apartments") -- never a query
 // string sent to any server, just a same-page hash on the blob URL. Read it
@@ -1032,7 +1313,23 @@ function extractNearest(text, label, window){
 }
 function extractOtherLines(text){
   const results = [];
-  const re = /Other:\s*[_\s]*([^$_\n]*?)\s*\$\s*[_\s]*([\d,]*\.?\d*)/gi;
+  /* Section L's write-in lines, in every shape they come out of a real PDF.
+     The blank on the form is a long run of underscores, and where those land
+     relative to the text a property typed in is not consistent -- some
+     exports put them before the label, some after it, some both:
+
+         Other: ____________ Valet Trash $ ________ 25.00
+         Other: Valet Trash ____________ $ 25.00
+         Other: Valet Trash $ 25.00
+
+     An earlier version of this pattern excluded '_' from the label AND
+     required only whitespace between the label and the '$'. That reads the
+     first and third forms and silently skips the second -- no error, no
+     warning, the charge simply never exists. Underscores are therefore
+     treated as filler wherever they appear: eaten around the label and after
+     the '$', never captured into either. The label stays lazy so the filler
+     is trimmed rather than absorbed. */
+  const re = /Other:[\s_]*([^$\n]*?)[\s_]*\$[\s_]*([\d,]*\.?\d*)/gi;
   let m;
   while ((m = re.exec(text)) !== null){
     const label = m[1].trim();
@@ -2057,7 +2354,13 @@ async function parseLeasePdfFromBuffer(buf){
     }
   }
   for (const o of others){
-    if (o.value) rawItems.push({rawLabel: o.label, amount: o.value});
+    // fromOther marks a charge this property invented: Section L's named rows
+    // (Trash, Pest control, Internet...) are the same on every TAA lease, but
+    // the four blank "Other:" lines under them are filled in by hand, one
+    // property at a time. Those are the charges that flood an audit with
+    // mismatches, and the reason they get their own filter group -- see
+    // PROPERTY_SPECIFIC_GROUP.
+    if (o.value) rawItems.push({rawLabel: o.label, amount: o.value, fromOther: true});
   }
 
   // ---- Lease & Rent Roll Verification extraction (additive -- does not
@@ -2171,6 +2474,72 @@ function unitFolderNameFromZipPath(zipPath){
   return name || null;
 }
 
+/* ---- Fallback: a lease that is not where it is supposed to be ------------
+   Observed on a real ResMan export: a unit's lease WAS in the archive, just
+   not inside that unit's "Signed Lease Documents" folder. The unit came back
+   as "no lease uploaded" while the document sat a directory or two away, and
+   the audit reported a missing lease that the customer could see with their
+   own eyes.
+
+   The fallback is deliberately narrow: it only looks at unit folders that
+   produced NO signed lease at all. A unit whose folder is populated has
+   already been answered, and widening the search there would start pulling in
+   superseded copies that somebody moved out of that folder on purpose --
+   which is precisely how you end up auditing against a lease the resident
+   already replaced.
+
+   It is capped, too. "Just search the whole archive" on a 15GB export means
+   decompressing every scanned ID, inspection photo and notice in the
+   property. Within a unit, filenames containing "lease" are opened first:
+   filenames are still not trusted to decide RECENCY -- pickBestLeaseCandidate
+   does that from the documents themselves -- but they are a perfectly good
+   hint about which handful of files are worth opening at all. */
+const ZIP_FALLBACK_MAX_PER_UNIT = 6;
+const ZIP_FALLBACK_MAX_TOTAL = 600;
+
+// The directory representing one unit, given how deep unit folders sit in this
+// particular archive (learned from where the "Signed Lease Documents" folders
+// actually are). Null when the path is too shallow to have one -- a PDF loose
+// at the archive root belongs to no unit and is never guessed at.
+function unitDirPathAtDepth(zipPath, depth){
+  const parts = zipPath.split('/');
+  if (parts.length < depth + 2) return null;
+  return parts.slice(0, depth + 1).join('/');
+}
+function unitFolderNameAtDepth(zipPath, depth){
+  const parts = zipPath.split('/');
+  if (parts.length < depth + 2) return null;
+  const name = String(parts[depth] || '').trim();
+  return name || null;
+}
+function looksLikeLeaseFilename(zipPath){
+  return /lease|agreement|contract/i.test(zipPath.split('/').pop() || '');
+}
+
+/* ResMan names each unit's folder after the unit alone ("A301"). Other exports
+   -- and hand-tidied ones -- name it "<unit> - <resident>", e.g.
+   "1 - Jose Arturo Rodriguez" or "F2 - David Ferguson". That whole string
+   matches no unit in any Rent Roll, so the folder name silently contributed
+   nothing and the unit was resolved from whatever was typed into the lease
+   PDF's own "Apartment No." field -- the weaker signal, and the one that is
+   blank or wrong often enough to matter.
+
+   Offers the full name first and the leading token second, so an exact match
+   on a genuine folder name still wins wherever one exists. Guessing costs
+   nothing here: resolveUnitKey only ever returns a key the Rent Roll actually
+   contains, so a wrong candidate is discarded rather than inventing a unit.
+
+   Requires whitespace on BOTH sides of the dash, so a unit legitimately named
+   "1-1" is left alone. */
+function unitSignalsFromFolder(folderName){
+  if (!folderName) return [];
+  const full = String(folderName).trim();
+  const signals = [full];
+  const m = /^(.+?)\s+-\s+\S/.exec(full);
+  if (m && m[1] && m[1] !== full) signals.push(m[1].trim());
+  return signals;
+}
+
 // Strips only LEADING non-digit characters, e.g. "A301" -> "301", "301" -> "301".
 // Used as a fallback join key when a unit identifier (from a ZIP folder name
 // or a lease's own "Apartment No." field) is missing the building-letter
@@ -2219,15 +2588,31 @@ async function scanZipForSignedLeases(file, cbs){
   const folderKeysSeen = new Set();
   let filesConsidered = 0;
 
+  // For the fallback pass (see ZIP_FALLBACK_MAX_PER_UNIT above): every PDF
+  // that was NOT in a "Signed Lease Documents" folder, plus which unit folders
+  // did produce one, so we only go looking where nothing was found.
+  const unitDirsWithLease = new Set();
+  const otherPdfs = [];
+  const depthTally = new Map(); // how deep this archive's unit folders sit
+
   const unzipper = new fflate.Unzip((stream) => {
     const name = stream.name || '';
     if (!name || name.charAt(name.length-1) === '/') return; // directory entry
     if (!/\.pdf$/i.test(name)) return;
     const folderKey = signedLeaseFolderKey(name);
-    if (!folderKey) return; // not inside a "Signed Lease Documents" folder -- ignore entirely
+    if (!folderKey){
+      otherPdfs.push(name); // held back -- promoted below only if its unit found nothing
+      return;
+    }
     filesConsidered++;
     folderKeysSeen.add(folderKey);
     selected.add(name);
+    const parts = name.split('/');
+    const idx = parts.findIndex(pp => pp.trim().toLowerCase() === SIGNED_LEASE_FOLDER_NAME);
+    if (idx > 0){
+      unitDirsWithLease.add(parts.slice(0, idx).join('/').toLowerCase());
+      depthTally.set(idx - 1, (depthTally.get(idx - 1) || 0) + 1);
+    }
     if (cbs.onProgress) cbs.onProgress(folderKeysSeen.size, filesConsidered);
     // Deliberately never call stream.start() -- pass 1 only needs names.
   });
@@ -2245,7 +2630,49 @@ async function scanZipForSignedLeases(file, cbs){
   // parsed, and this is just how many of them there were, for the status
   // line (pickBestLeaseCandidate resolves each folder's winner in pass 2).
   const extraVersionsFound = Math.max(0, filesConsidered - folderKeysSeen.size);
-  return { selectedPaths: selected, foldersFound: folderKeysSeen.size, filesConsidered, extraVersionsFound };
+
+  /* ---- Fallback pass -----------------------------------------------------
+     Unit folders that yielded no signed lease get a second look. Everything
+     else in the archive stays untouched and undecompressed. */
+  // How deep unit folders sit here, learned from where the signed-lease
+  // folders actually were. With none at all (the whole export is misplaced),
+  // assume the usual one-folder-per-unit-at-the-root shape.
+  let unitDirDepth = 0, bestSeen = -1;
+  for (const [d, n] of depthTally.entries()){ if (n > bestSeen){ bestSeen = n; unitDirDepth = d; } }
+
+  const byUnitDir = new Map();
+  for (const name of otherPdfs){
+    const dir = unitDirPathAtDepth(name, unitDirDepth);
+    if (!dir) continue;                                   // loose at the root -- belongs to no unit
+    if (unitDirsWithLease.has(dir.toLowerCase())) continue; // this unit is already answered
+    if (!byUnitDir.has(dir)) byUnitDir.set(dir, []);
+    byUnitDir.get(dir).push(name);
+  }
+
+  const fallbackPaths = new Set();
+  let fallbackTotal = 0;
+  for (const [, names] of byUnitDir.entries()){
+    if (fallbackTotal >= ZIP_FALLBACK_MAX_TOTAL) break;
+    // Lease-sounding filenames first, then shallowest, then alphabetical, so
+    // the per-unit cap spends its budget on the likeliest documents.
+    names.sort((a, b) => {
+      const la = looksLikeLeaseFilename(a) ? 0 : 1, lb = looksLikeLeaseFilename(b) ? 0 : 1;
+      if (la !== lb) return la - lb;
+      const da = a.split('/').length, db = b.split('/').length;
+      if (da !== db) return da - db;
+      return a.localeCompare(b);
+    });
+    for (const n of names.slice(0, ZIP_FALLBACK_MAX_PER_UNIT)){
+      if (fallbackTotal >= ZIP_FALLBACK_MAX_TOTAL) break;
+      selected.add(n);
+      fallbackPaths.add(n);
+      fallbackTotal++;
+    }
+  }
+
+  return { selectedPaths: selected, foldersFound: folderKeysSeen.size, filesConsidered,
+           extraVersionsFound, fallbackPaths, unitDirDepth,
+           fallbackUnitsSearched: byUnitDir.size };
 }
 
 async function runZipIngestion(file, selectedPaths, cbs){
@@ -2875,6 +3302,13 @@ function reconcileUnit(leaseRawItems, block, verification){
     row.category = cat;
     row.leaseRaw = leaseMatches.map(i=>leaseClassified[i].rawLabel);
     row.resmanRaw = resmanMatches.map(i=>resmanClassified[i].description);
+    // A write-in that the aliases managed to file under a known category is
+    // still a write-in, and still belongs in the property-specific list --
+    // otherwise a property could only switch it off by switching off the whole
+    // category, taking the standard charge with it.
+    tagPropertySpecific(row, leaseMatches
+      .filter(i => leaseClassified[i].fromOther)
+      .map(i => leaseClassified[i].rawLabel));
     if (SOFT_ONE_SIDED_CATEGORIES.has(cat) && (row.status === 'leaseonly' || row.status === 'resmanonly')){
       row.soft = true;
       row.note = (row.status === 'resmanonly'
@@ -2973,19 +3407,23 @@ function reconcileUnit(leaseRawItems, block, verification){
       pairedResman.add(match.i);
       usedLeaseIdx.add(lItem.i);
       usedResmanIdx.add(match.i);
-      rows.push({
+      rows.push(tagPropertySpecific({
         label: lItem.rawLabel + ' / ' + match.description,
         leaseVal: lItem.amount, resmanVal: match.amount, status: 'probable', category: 'UNMAPPED',
         leaseRaw: [lItem.rawLabel], resmanRaw: [match.description],
         note: 'Matched only by an identical dollar amount (' + money(lItem.amount) + ') — lease says "' + lItem.rawLabel + '", ResMan says "' + match.description + '". Neither matched a known alias; add one below if this keeps happening.',
-      });
+      }, lItem.fromOther ? [lItem.rawLabel] : null));
     }
   }
 
-  // Whatever's left is a genuine, unresolved one-sided item.
+  // Whatever's left is a genuine, unresolved one-sided item. This is where a
+  // property's write-in charges land when the rent roll has no counterpart --
+  // the flood of mismatches this whole group exists to make manageable.
   leaseClassified.forEach((it,i) => {
     if (usedLeaseIdx.has(i)) return;
-    rows.push({ label: it.rawLabel, leaseVal: it.amount, resmanVal: null, status:'leaseonly', category:'UNMAPPED', leaseRaw:[it.rawLabel], resmanRaw:[] });
+    rows.push(tagPropertySpecific(
+      { label: it.rawLabel, leaseVal: it.amount, resmanVal: null, status:'leaseonly', category:'UNMAPPED', leaseRaw:[it.rawLabel], resmanRaw:[] },
+      it.fromOther ? [it.rawLabel] : null));
   });
   resmanClassified.forEach((it,i) => {
     if (usedResmanIdx.has(i)) return;
@@ -3038,19 +3476,25 @@ function reconcileUnit(leaseRawItems, block, verification){
    The rules are matched BEFORE category matching, otherwise Pass 1 consumes
    the individual lease items first and there is nothing left to bundle.
    ========================================================================== */
-const BUNDLE_RULES_STORAGE_KEY = 'leaseproof_bundle_rules';
-function loadBundleRules(){
-  try{
-    const raw = localStorage.getItem(BUNDLE_RULES_STORAGE_KEY);
-    if (!raw) return [];
-    const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? arr.filter(r => r && r.rentRollLabel && Array.isArray(r.leaseLabels) && r.leaseLabels.length) : [];
-  }catch(err){ return []; }   // localStorage unavailable -- run without saved rules
-}
-function saveBundleRules(){
-  try{ localStorage.setItem(BUNDLE_RULES_STORAGE_KEY, JSON.stringify(BUNDLE_RULES)); }catch(err){ /* best-effort */ }
-}
-let BUNDLE_RULES = loadBundleRules();
+/* Bundle rules are DERIVED, never stored, and never asked about.
+   They used to be offered in a banner ("these four charges add up to this one
+   -- shall I bundle them?") and kept in localStorage once accepted. Both are
+   gone. Grouping a set of lease lines that sum exactly to one rent roll line
+   is not a preference, it is just reading the document correctly, and asking
+   about it on every property was busywork.
+
+   Storing them was the worse half. A saved rule outlives the documents that
+   justified it: next month's export changes, the rule still matches by name,
+   and it quietly suppresses a real mismatch with no panel left to inspect it
+   in. Deriving them fresh on every run means a bundle exists only while the
+   arithmetic that proves it does. Any rule left in localStorage by an older
+   build is simply no longer read.
+
+   This is NOT silent: each bundled row still carries the note explaining
+   which lease lines were combined and what they summed to, so opening the
+   unit shows the whole working. What was removed is the interruption, not
+   the explanation. */
+let BUNDLE_RULES = [];
 
 // Loose text key so "Wi-Fi", "WiFi " and "wifi" are the same line.
 function bundleKey(s){ return String(s == null ? '' : s).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
@@ -3189,11 +3633,20 @@ function addBundleRule(candidate){
     leaseLabels: candidate.leaseLabels.slice(),
     enabled: true,
   });
-  saveBundleRules();
 }
-function removeBundleRule(id){
-  BUNDLE_RULES = BUNDLE_RULES.filter(r => r.id !== id);
-  saveBundleRules();
+
+/* Applied automatically at the end of the first reconcile pass. Returns true
+   if anything was added, which tells reconcileAll to run once more so the
+   bundled rows replace the mismatches they explain.
+
+   Terminates by construction: detectBundleCandidates() excludes anything
+   already in BUNDLE_RULES, so the second pass finds nothing to add. The
+   caller also hard-limits this to one retry rather than relying on that. */
+function autoApplyDetectedBundles(){
+  const cands = detectBundleCandidates(unitEntries);
+  if (!cands.length) return false;
+  for (const c of cands) addBundleRule(c);
+  return true;
 }
 
 function rowFor(label, leaseVal, resmanVal, onLease, onResman){
@@ -3240,6 +3693,17 @@ processBtn.addEventListener('click', async () => {
     return;
   }
 
+  // ---- Licence gate -----------------------------------------------------
+  // Runs BEFORE any lease/ledger/invoice work, so a property this account is
+  // not licensed for costs nothing and produces nothing. agAuthorizeAudit
+  // takes over the whole page on a refusal; all this has to do is stop.
+  // Only the property name leaves the browser -- never the documents.
+  if (!(await agAuthorizeAudit('leaseverify', detectedPropertyName, ''))){
+    progressWrap.classList.add('hidden');
+    processBtn.disabled = false;
+    return;
+  }
+
   rawSuccessByUnit = new Map();
   rawFailedFiles = [];
 
@@ -3251,7 +3715,7 @@ processBtn.addEventListener('click', async () => {
     progressText.textContent = 'Reading archive…';
     progressPct.textContent = '';
 
-    let leaseCount = 0, skippedNonLease = 0, cancelled = false;
+    let leaseCount = 0, skippedNonLease = 0, fallbackLeaseCount = 0, cancelled = false;
     try{
       // Pass 1: cheap scan (no decompression) that finds every "Signed Lease
       // Documents" folder and, within each, the single most-recently-versioned
@@ -3284,8 +3748,17 @@ processBtn.addEventListener('click', async () => {
               // "Apartment No." field -- the Rent Roll is the sole source of
               // truth for which units are real, so resolve against it here
               // rather than trusting free-text PDF parsing to invent units.
-              const folderUnit = unitFolderNameFromZipPath(name);
-              const resolved = resolveUnitKey([folderUnit, parsed.unit], allUnitBlocks);
+              // Fallback files have no "Signed Lease Documents" segment to sit
+              // above, so their unit folder is read at the depth the rest of
+              // this archive uses. Still preferred over the PDF's own typed
+              // "Apartment No.", for the same reason as always: the folder name
+              // comes from ResMan, the typed field comes from whoever filled the
+              // form in.
+              const folderUnit = unitFolderNameFromZipPath(name)
+                || (scan.fallbackPaths.has(name) ? unitFolderNameAtDepth(name, scan.unitDirDepth) : null);
+              if (scan.fallbackPaths.has(name)) fallbackLeaseCount++;
+              const resolved = resolveUnitKey(
+                unitSignalsFromFolder(folderUnit).concat([parsed.unit]), allUnitBlocks);
               const key = resolved.key;
               if (!rawSuccessByUnit.has(key)) rawSuccessByUnit.set(key, []);
               rawSuccessByUnit.get(key).push({
@@ -3293,11 +3766,17 @@ processBtn.addEventListener('click', async () => {
                 matchedVia: resolved.matchedVia, matchedFrom: resolved.via,
                 rawItems: parsed.rawItems, verification: parsed.verification,
               });
-            } else if (looksLikeNotOurLeaseFormat(errMsg)){
+            } else if (looksLikeNotOurLeaseFormat(errMsg) || scan.fallbackPaths.has(name)){
               // A file inside "Signed Lease Documents" that didn't match our
               // lease template -- should be rare (that folder is supposed to
               // contain only leases), but handled the same quiet-skip way
               // rather than surfaced as a scary error.
+              //
+              // Fallback files are quiet on ANY failure, not just an
+              // unrecognised format. We went looking through documents nobody
+              // said were leases; an inspection report that fails to parse is
+              // the expected outcome there, and reporting it would bury the
+              // real findings under noise the customer cannot act on.
               skippedNonLease++;
             } else {
               rawFailedFiles.push({filename: name, error: errMsg});
@@ -3309,7 +3788,12 @@ processBtn.addEventListener('click', async () => {
           scan.foldersFound.toLocaleString() + ' "Signed Lease Documents" folder' + (scan.foldersFound===1?'':'s') + ' found' +
           (scan.extraVersionsFound ? ' (' + scan.extraVersionsFound.toLocaleString() + ' extra lease version' + (scan.extraVersionsFound===1?'':'s') + ' found across those folders -- most-recent version chosen per unit by comparing lease dates, not filenames)' : '') + ', ' +
           skippedNonLease.toLocaleString() + ' skipped (not a recognized lease format), ' +
-          leaseCount.toLocaleString() + ' lease' + (leaseCount===1?'':'s') + ' matched to a unit.';
+          leaseCount.toLocaleString() + ' lease' + (leaseCount===1?'':'s') + ' matched to a unit' +
+          // Worth saying out loud: these came from outside the folder they were
+          // supposed to be in, which is usually worth fixing at the source.
+          (fallbackLeaseCount ? ', including ' + fallbackLeaseCount.toLocaleString() +
+            ' found elsewhere in the archive for unit' + (fallbackLeaseCount===1?'':'s') +
+            ' whose "Signed Lease Documents" folder had none' : '') + '.';
       } else {
         statusEl.textContent = 'Cancelled while reading the archive.';
       }
@@ -3375,8 +3859,14 @@ function blockSortFields(block){
   };
 }
 
-function reconcileAll(){
+function reconcileAll(isAutoBundlePass){
   if (!rawSuccessByUnit.size && !rawFailedFiles.length && !allUnitBlocks.size) return;
+
+  // Every top-level run re-derives bundles from scratch. Without this, rules
+  // found while auditing one property would still be in memory when the next
+  // set of documents is processed, and would match by name against data that
+  // never justified them.
+  if (!isAutoBundlePass) BUNDLE_RULES = [];
 
   const entries = [];
   const claimedResman = new Set();
@@ -3398,7 +3888,7 @@ function reconcileAll(){
         unit: block ? block.unit : (group[0].folderUnit || group[0].unit), unitKey, filenames, isDuplicate,
         category: 'needs-review', residents: block ? block.residents : null, resmanTotal: block ? block.total : null,
         rows: [], excluded: [], issueCount: 1,
-        note: 'Multiple possible leases were found for this unit and Auditly AI could not confidently determine which is current. ' + pick.reason,
+        note: 'Multiple possible leases were found for this unit and Auditera AI could not confidently determine which is current. ' + pick.reason,
         candidates: pick.candidates.map(s => ({
           filename: s.item.filename,
           signed: s.signaturesComplete,
@@ -3457,6 +3947,56 @@ function reconcileAll(){
     if (matchedBlock){
       const matchedKey = matchedBlock.unit.toUpperCase();
       claimedResman.add(matchedKey);
+
+      // Before reconciling charges against this lease, confirm it actually
+      // belongs to whoever the Rent Roll currently shows living in this
+      // unit. A lease file sitting in a unit's folder does not mean it's
+      // the CURRENT resident's lease -- ResMan exports keep a prior
+      // tenant's signed lease in the same per-unit folder indefinitely, and
+      // a brand-new move-in whose own lease hasn't been uploaded yet will
+      // still resolve to that old file by unit number alone. Reconciling
+      // charges against a lease belonging to someone who has already moved
+      // out produces a wall of meaningless mismatches (rent, dates, deposit
+      // -- all "wrong" purely because it's the wrong person's document)
+      // that bury whatever's actually true, and can even coincidentally
+      // clear a real problem. Caught on a real property: unit A109 had a
+      // brand-new resident with no lease uploaded yet, and the tool was
+      // silently comparing her Rent Roll charges against the PREVIOUS
+      // tenant's lease.
+      //
+      // Signal used: do ANY of the Rent Roll's current resident name(s)
+      // appear anywhere on this lease? Only fires when both sides were
+      // confidently extracted and NONE of the Rent Roll's residents were
+      // found -- a partial match (e.g. one co-resident added later) is left
+      // to the existing Resident Name check below, since that's a real
+      // lease that just needs a correction, not a missing one.
+      const rrResidentsForStaleCheck = splitResidentNames(matchedBlock.residents);
+      const leaseResidentsForStaleCheck = item.verification ? splitResidentNames(item.verification.residentsRaw) : [];
+      let staleLeaseNote = null;
+      if (rrResidentsForStaleCheck.length && leaseResidentsForStaleCheck.length){
+        const staleCmp = compareResidentNameLists(leaseResidentsForStaleCheck, rrResidentsForStaleCheck);
+        if (staleCmp.status === 'mismatch' && staleCmp.unmatchedRentRoll.length === rrResidentsForStaleCheck.length){
+          staleLeaseNote = 'The Rent Roll lists ' + rrResidentsForStaleCheck.join(', ') + ' for this unit, but the only ' +
+            'lease on file here is for ' + leaseResidentsForStaleCheck.join(', ') + ' -- a different person. This looks ' +
+            'like a new move-in whose signed lease hasn’t been uploaded yet, not a charge problem with the current ' +
+            'resident, so charges were not compared against that old lease.';
+        }
+      }
+
+      if (staleLeaseNote){
+        entries.push({
+          ...blockSortFields(matchedBlock),
+          unit: matchedBlock.unit, unitKey, filenames, isDuplicate,
+          category: 'new-tenant', residents: matchedBlock.residents, resmanTotal: matchedBlock.total,
+          rows: [], excluded: [], issueCount: 1,
+          note: staleLeaseNote,
+          staleLeaseResidents: leaseResidentsForStaleCheck.join(', '),
+          rawLease: item.rawItems.map(it => ({...it, ...classify(it.rawLabel, ALIAS_MAP)})),
+          rawResman: matchedBlock.charges.map(c => ({rawLabel:c.description, amount:c.amount, ...classify(c.description, ALIAS_MAP)})),
+        });
+        continue;
+      }
+
       const cmp = reconcileUnit(item.rawItems, matchedBlock, item.verification);
       // Charge categories switched off in Option Filters are handled exactly
       // like hidden verification checks: still present and still visible in
@@ -3464,9 +4004,9 @@ function reconcileAll(){
       // category and aren't counted as issues -- only rolled into the
       // property-wide "hidden by your filters" total so nothing disappears.
       const realIssueRows = cmp.rows.filter(isRealIssueRow);
-      const visibleIssueRows = realIssueRows.filter(r => !isChargeCategoryHidden(r.category));
+      const visibleIssueRows = realIssueRows.filter(r => !isRowFiltered(r));
       const hiddenChargeCount = realIssueRows.length - visibleIssueRows.length;
-      for (const r of cmp.rows) r.hiddenByFilter = isRealIssueRow(r) && isChargeCategoryHidden(r.category);
+      for (const r of cmp.rows) r.hiddenByFilter = isRealIssueRow(r) && isRowFiltered(r);
       const issueCount = visibleIssueRows.length;
       const verify = buildVerificationCheck(item.verification, matchedBlock);
       appendNewerLeaseCheck(verify, pick, item.verification, matchedBlock);
@@ -3563,80 +4103,43 @@ function reconcileAll(){
   }
 
   entries.sort((a,b) => {
-    const order = {'needs-review':0, mismatch:1, unmatched:2, missing:3, error:4, duplicate:5, clean:6};
+    const order = {'needs-review':0, mismatch:1, unmatched:2, 'new-tenant':3, missing:3, error:4, duplicate:5, clean:6};
     if (order[a.category] !== order[b.category]) return order[a.category]-order[b.category];
     return String(a.unit).localeCompare(String(b.unit), undefined, {numeric:true});
   });
 
   unitEntries = entries;
+
+  // The property-specific list is whatever these documents actually contain,
+  // so it is rebuilt here rather than declared anywhere. Only re-render the
+  // panel when the list really changed -- doing it on every reconcile would
+  // rebuild the checkboxes underneath the click that triggered it.
+  if (refreshPropertySpecificTypes(entries)) renderDiscrepancyFilterPanel();
+
+  // Lease lines that sum exactly to one rent roll line are the same charge,
+  // itemised on one document and grouped on the other. Recognising that is
+  // reading the documents correctly, so it happens on its own -- no banner,
+  // no question. One retry only: the second pass has the rules in hand and
+  // finds nothing further to add.
+  if (!isAutoBundlePass && autoApplyDetectedBundles()){
+    reconcileAll(true);
+    return;
+  }
+
   syncMtmFeeFromLeases();
   renderDashboard();
 }
 
 /* ---------- Dashboard rendering ---------- */
-/* Saved bundle rules, listed so they are never invisible: an audit somebody
-   shows an owner has to be explainable, and a rule that silently makes a
-   mismatch disappear is worth less than no rule at all. */
-function renderBundleRuleList(){
-  const el = document.getElementById('bundle-rule-list');
-  if (!el) return;
-  if (!BUNDLE_RULES.length){
-    el.innerHTML = '<p class="status-msg">No bundle rules yet.</p>';
-    return;
-  }
-  el.innerHTML = BUNDLE_RULES.map(r =>
-    '<div class="setting-row" style="align-items:flex-start;">' +
-      '<div><b>' + escapeHtml(r.rentRollLabel) + '</b>' +
-      '<div class="status-msg" style="margin-top:4px;">' + escapeHtml(bundleRuleSummary(r)) + '</div></div>' +
-      '<button class="ghost" data-remove-bundle="' + escapeHtml(r.id) + '">Remove</button>' +
-    '</div>').join('');
-  el.querySelectorAll('[data-remove-bundle]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      removeBundleRule(btn.getAttribute('data-remove-bundle'));
-      renderBundleRuleList();
-      reconcileAll();
-    });
-  });
-}
-
-/* "These four lease charges add up to exactly this one rent roll line, on 12
-   units" -- the arithmetic the property manager did in their head, run
-   backwards. Offered, never applied silently. */
-function renderBundleSuggestions(){
-  const el = document.getElementById('bundle-suggest-banner');
-  if (!el) return;
-  const cands = detectBundleCandidates(unitEntries);
-  if (!cands.length){ el.classList.add('hidden'); el.innerHTML = ''; return; }
-  el.classList.remove('hidden');
-  el.innerHTML = cands.slice(0, 4).map((c, i) =>
-    '<div class="summary-banner" style="margin-bottom:10px;"><div class="sb-icon">\u2139\uFE0F</div><div>' +
-      '<div class="sb-text">These lease charges add up to exactly one rent roll line.</div>' +
-      '<div class="sb-sub">' +
-        escapeHtml(c.leaseLabels.join(' + ')) + ' = ' + money(c.total) +
-        ', which is the single &ldquo;' + escapeHtml(c.rentRollLabel) + '&rdquo; line of ' + money(c.rentRollAmount) +
-        ' on the rent roll. Same pattern on <b>' + c.units.length + ' unit' + (c.units.length===1?'':'s') + '</b>' +
-        ' (' + escapeHtml(c.units.slice(0,6).join(', ')) + (c.units.length>6 ? ', +' + (c.units.length-6) + ' more' : '') + '). ' +
-        'Treating them as one bundled charge stops this being reported as a mismatch, and still checks the parts add up.' +
-        '<div style="margin-top:8px;"><button class="ghost" data-apply-bundle="' + i + '">Bundle these charges</button></div>' +
-      '</div></div></div>').join('');
-  el.querySelectorAll('[data-apply-bundle]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      addBundleRule(cands[Number(btn.getAttribute('data-apply-bundle'))]);
-      renderBundleRuleList();
-      reconcileAll();
-    });
-  });
-}
-
 function renderDashboard(){
   document.getElementById('results-card').classList.remove('hidden');
-  renderBundleSuggestions();
 
   const activeEntries = unitEntries;
   const total = activeEntries.length;
   const clean = activeEntries.filter(e=>e.category==='clean').length;
   const mismatch = activeEntries.filter(e=>e.category==='mismatch').length;
   const missing = activeEntries.filter(e=>e.category==='missing').length;
+  const newTenant = activeEntries.filter(e=>e.category==='new-tenant').length;
   const unmatched = activeEntries.filter(e=>e.category==='unmatched').length;
   const errors = activeEntries.filter(e=>e.category==='error').length;
   const needsReview = activeEntries.filter(e=>e.category==='needs-review').length;
@@ -3644,8 +4147,9 @@ function renderDashboard(){
   // "Total units processed" includes uploaded PDFs that didn't match any ResMan
   // row (unmatched) or couldn't be read at all (errors) -- neither of those is an
   // actual occupied unit in the rent roll. Surface the true occupied-unit count
-  // (clean + mismatch + missing) so the headline number isn't mistaken for it.
-  const occupied = clean + mismatch + missing;
+  // (clean + mismatch + missing + new-tenant) so the headline number isn't
+  // mistaken for it.
+  const occupied = clean + mismatch + missing + newTenant;
   // Discrepancies suppressed by the Discrepancy Filters panel (see
   // isCheckHidden) -- never zero this out or fold it into `mismatch` above;
   // the whole point is these are real findings that just aren't allowed to
@@ -3662,6 +4166,8 @@ function renderDashboard(){
     '<div class="kpi-tile clean"><b>'+clean+'</b><span>Match</span></div>'+
     '<div class="kpi-tile mismatch"><b>'+mismatch+'</b><span>Mismatch</span></div>'+
     '<div class="kpi-tile missing"><b>'+missing+'</b><span>Missing leases</span></div>'+
+    (newTenant ? '<div class="kpi-tile missing"><b>'+newTenant+'</b><span>New move-in'+(newTenant===1?'':'s')+' &mdash; no lease yet</span>'+
+      '<div class="kpi-note">Rent Roll resident doesn\'t match the file on hand &mdash; likely not uploaded yet</div></div>' : '')+
     (needsReview ? '<div class="kpi-tile review"><b>'+needsReview+'</b><span>Review</span>'+
       '<div class="kpi-note">More than one possible lease &mdash; pick manually</div></div>' : '')+
     // Vacant units are never shown in the results table below (nothing to
@@ -3694,9 +4200,9 @@ function renderDashboard(){
 
   const tabs = [
     {key:'all', label:'All', count: total},
-    {key:'discrepancies', label:'Mismatch', count: mismatch+missing+unmatched+errors+needsReview},
+    {key:'discrepancies', label:'Mismatch', count: mismatch+missing+newTenant+unmatched+errors+needsReview},
     {key:'clean', label:'Match', count: clean},
-    {key:'issues', label:'Missing / Unmatched', count: missing+unmatched+errors+needsReview},
+    {key:'issues', label:'Missing / Unmatched', count: missing+newTenant+unmatched+errors+needsReview},
   ];
   document.getElementById('filter-tabs').innerHTML = tabs.map(t =>
     '<button class="tab'+(currentFilter===t.key?' active':'')+'" data-filter="'+t.key+'">'+t.label+' <span class="count">'+t.count+'</span></button>'
@@ -3712,8 +4218,7 @@ function renderDashboard(){
 // was launched from the homepage while signed in to a specific property's
 // account -- flags it clearly when the two don't look like the same
 // property. This is a heads-up, not a hard block: property names are messy
-// free text, so a false alarm is possible, and nothing here should stop
-// someone from seeing their own results.
+// free text. The hard check now happens server-side before any of this runs.
 function renderPropertyMatchBanner(){
   const el = document.getElementById('property-match-banner');
   if (!detectedPropertyName){
@@ -3721,33 +4226,24 @@ function renderPropertyMatchBanner(){
     el.innerHTML = '';
     return;
   }
+  // By the time anything renders, agAuthorizeAudit() has already returned yes
+  // for this property -- a mismatch never reaches this point, it takes over
+  // the page instead. So this is a confirmation of what was checked, not a
+  // check. It used to be the check, and it only warned; that is exactly what
+  // made per-property licensing unenforceable.
   el.classList.remove('hidden');
-  if (!EXPECTED_PROPERTY){
-    el.className = 'property-banner info';
-    el.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>'+
-      '<div>Rent roll detected for <b>'+escapeHtml(detectedPropertyName)+'</b>.</div>';
-    return;
-  }
-  const match = propertyNamesLikelyMatch(detectedPropertyName, EXPECTED_PROPERTY);
-  if (match === false){
-    el.className = 'property-banner warn';
-    el.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4M12 17h.01"/></svg>'+
-      '<div>This rent roll is for <b>'+escapeHtml(detectedPropertyName)+'</b>, but your account is set up for <b>'+escapeHtml(EXPECTED_PROPERTY)+'</b>. '+
-      'If that\'s not expected, double-check you uploaded the right file — otherwise, reach out to get your subscription updated.</div>';
-  } else {
-    el.className = 'property-banner info';
-    el.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'+
-      '<div>Rent roll confirmed for your licensed property, <b>'+escapeHtml(detectedPropertyName)+'</b>.</div>';
-  }
+  el.className = 'property-banner info';
+  el.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'+
+    '<div>Licence confirmed for <b>'+escapeHtml(detectedPropertyName)+'</b>.</div>';
 }
 
 function matchesFilter(e){
   if (e.category === 'vacant') return false;
   switch(currentFilter){
     case 'all': return true;
-    case 'discrepancies': return ['mismatch','missing','unmatched','error','needs-review'].includes(e.category);
+    case 'discrepancies': return ['mismatch','missing','new-tenant','unmatched','error','needs-review'].includes(e.category);
     case 'clean': return e.category === 'clean';
-    case 'issues': return ['missing','unmatched','error','needs-review'].includes(e.category);
+    case 'issues': return ['missing','new-tenant','unmatched','error','needs-review'].includes(e.category);
     default: return true;
   }
 }
@@ -3891,6 +4387,7 @@ function renderTable(){
     missing: ['missing','Missing lease'], unmatched: ['unmatched','Unmatched PDF'],
     error: ['error','Parse error'], vacant: ['vacant','Vacant'],
     'needs-review': ['needs-review','Review'],
+    'new-tenant': ['missing','New move-in — no lease yet'],
   };
 
   for (const e of rows){
@@ -3902,6 +4399,7 @@ function renderTable(){
     if (e.category === 'clean') summary = 'All charges match';
     else if (e.category === 'mismatch') summary = e.issueCount + ' mismatch' + (e.issueCount===1?'':'es');
     else if (e.category === 'missing') summary = 'No lease uploaded';
+    else if (e.category === 'new-tenant') summary = 'New resident — lease not on file yet';
     else if (e.category === 'unmatched') summary = 'Unit not found in rent roll';
     else if (e.category === 'error') summary = 'Failed to parse';
     else if (e.category === 'needs-review') summary = (e.candidates?e.candidates.length:2) + ' possible leases -- manual review needed';
@@ -4096,7 +4594,7 @@ function verifyRowValues(c){
 }
 
 // Charge status -> badge label, shared by the unified table below.
-// Per the Auditly AI status vocabulary, a badge is only ever one of the
+// Per the Auditera AI status vocabulary, a badge is only ever one of the
 // canonical words (Match / Mismatch / Review / Unable to verify / Info /
 // Hidden by Filter / —). The descriptive state a charge is in ("on the
 // lease only", "in ResMan only", "month-to-month") is NOT a badge -- it
@@ -4422,14 +4920,28 @@ function renderDiscrepancyFilterPanel(){
   // Grouped so a list this long stays scannable: verification checks first,
   // then every charge category the reconciler can produce.
   const groups = [];
-  for (const t of ALL_OPTION_FILTER_TYPES){
+  for (const t of allOptionFilterTypes()){
     let g = groups.find(x => x.name === t.group);
     if (!g){ g = {name: t.group, items: []}; groups.push(g); }
     g.items.push(t);
   }
+  // The property-specific group is listed even before anything is uploaded,
+  // with an explanation of what will appear in it. An empty heading that says
+  // why it is empty is far less confusing than a group that materialises out
+  // of nowhere after processing.
+  if (!groups.some(g => g.name === PROPERTY_SPECIFIC_GROUP)){
+    groups.push({name: PROPERTY_SPECIFIC_GROUP, items: []});
+  }
   wrap.innerHTML = groups.map(g =>
     '<div class="filter-group"><div class="filter-group-title">' + escapeHtml(g.name) +
-    '<button type="button" class="filter-group-all" data-group="'+escapeHtml(g.name)+'">toggle all</button></div>' +
+    (g.items.length ? '<button type="button" class="filter-group-all" data-group="'+escapeHtml(g.name)+'">toggle all</button>' : '') +
+    '</div>' +
+    (g.name === PROPERTY_SPECIFIC_GROUP
+      ? '<p class="status-msg" style="margin:0 0 9px;">Charges written onto the blank &ldquo;Other:&rdquo; lines of this property&rsquo;s leases &mdash; the ones each office adds itself, rather than the standard rows above. ' +
+        (g.items.length
+          ? 'Found in the leases you uploaded:'
+          : 'Nothing here yet &mdash; these appear once leases have been processed.') + '</p>'
+      : '') +
     '<div class="discrepancy-filter-checks">' + g.items.map(t =>
       '<label class="filter-check-item"><input type="checkbox" data-check-key="'+escapeHtml(t.key)+'"'+(isCheckHidden(t.key)?' checked':'')+'> '+escapeHtml(t.label)+'</label>'
     ).join('') + '</div></div>'
@@ -4438,7 +4950,7 @@ function renderDiscrepancyFilterPanel(){
   wrap.querySelectorAll('.filter-group-all').forEach(btn => {
     btn.addEventListener('click', () => {
       const name = btn.getAttribute('data-group');
-      const items = ALL_OPTION_FILTER_TYPES.filter(t => t.group === name);
+      const items = allOptionFilterTypes().filter(t => t.group === name);
       const allOn = items.every(t => isCheckHidden(t.key));
       for (const t of items){ if (allOn) HIDDEN_CHECK_KEYS.delete(t.key); else HIDDEN_CHECK_KEYS.add(t.key); }
       saveHiddenCheckKeys();
@@ -4460,7 +4972,6 @@ function renderDiscrepancyFilterPanel(){
     });
   });
 }
-renderBundleRuleList();
 renderDiscrepancyFilterPanel();
 
 /* Fill the month-to-month fee box in from the leases themselves, so the user
@@ -4532,7 +5043,7 @@ document.getElementById('flat-view-toggle').addEventListener('change', (e) => {
    Deliberately light-on-white rather than mirroring the app's dark theme --
    this is a document that gets printed, emailed to owners, and attached to
    audit files, where a dark background is unreadable and wastes toner. The
-   accent colour and typography still tie it back to Auditly AI.
+   accent colour and typography still tie it back to Auditera AI.
 
    Only genuine, currently-visible mismatches are included: rows the user
    switched off in Option Filters are excluded here exactly as they are
@@ -4578,7 +5089,7 @@ function buildPdfReportHtml(){
   const dateStr = now.toLocaleDateString(undefined, {year:'numeric', month:'long', day:'numeric'});
   const property = detectedPropertyName || 'Property';
   const CAT_LABEL = {mismatch:'Mismatch', missing:'Missing lease', unmatched:'Unmatched PDF',
-                     error:'Parse error', 'needs-review':'Review'};
+                     error:'Parse error', 'needs-review':'Review', 'new-tenant':'New move-in — no lease yet'};
 
   // Units with actual line-level findings get a full card. Units that are
   // only on the list because nothing could be compared (no lease uploaded, a
@@ -4612,7 +5123,7 @@ function buildPdfReportHtml(){
     </section>`).join('');
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8">
-<title>Auditly AI — Mismatch Report — ${escapeHtml(property)}</title>
+<title>Auditera AI — Mismatch Report — ${escapeHtml(property)}</title>
 <style>
   @page { size: letter portrait; margin: 14mm 13mm 16mm; }
   *{box-sizing:border-box;}
@@ -4666,7 +5177,7 @@ function buildPdfReportHtml(){
   <div class="mast">
     <div class="brand">
       <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
-      <div><div class="bname">Auditly AI</div><div class="btag">LeaseVerify</div></div>
+      <div><div class="bname">Auditera AI</div><div class="btag">LeaseVerify</div></div>
     </div>
     <div class="mast-right"><div class="prop">${escapeHtml(property)}</div><div>Generated ${escapeHtml(dateStr)}</div></div>
   </div>
@@ -4701,7 +5212,7 @@ function buildPdfReportHtml(){
   </section>` : ''}
 
   <div class="foot">
-    <span>Auditly AI &middot; LeaseVerify &middot; ${escapeHtml(property)}</span>
+    <span>Auditera AI &middot; LeaseVerify &middot; ${escapeHtml(property)}</span>
     <span>Generated ${escapeHtml(dateStr)}${hidden ? ' · ' + hidden + ' finding' + (hidden===1?'':'s') + ' hidden by your Option Filters' : ''}</span>
   </div>
 </body></html>`;
@@ -4727,9 +5238,10 @@ function exportPdfReport(){
 /* ---------- Export ---------- */
 // Status/Category words in the exported file follow the same canonical
 // vocabulary as the screen -- a downloaded row must not use a word the UI
-// doesn't (see the Auditly AI status vocabulary standard).
+// doesn't (see the Auditera AI status vocabulary standard).
 const EXPORT_CATEGORY_LABEL = {mismatch:'Mismatch', missing:'Missing lease', unmatched:'Unmatched PDF',
-                               error:'Parse error', 'needs-review':'Review', clean:'Match', vacant:'Vacant'};
+                               error:'Parse error', 'needs-review':'Review', clean:'Match', vacant:'Vacant',
+                               'new-tenant':'New move-in — no lease yet'};
 function exportCategoryLabel(cat){ return EXPORT_CATEGORY_LABEL[cat] || cat; }
 function buildExportRows(){
   const out = [];

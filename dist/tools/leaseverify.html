@@ -430,6 +430,7 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
       <span class="legend-chip"><span class="badge clean">Match</span> Lease and ResMan agree on everything</span>
       <span class="legend-chip"><span class="badge mismatch">Mismatch</span> Something doesn't match &mdash; the lease and ResMan disagree</span>
       <span class="legend-chip"><span class="badge missing">Missing lease</span> No signed lease was found for this unit</span>
+      <span class="legend-chip"><span class="badge missing">New move-in — no lease yet</span> The Rent Roll's current resident doesn't match the lease on file for this unit &mdash; likely a new move-in whose signed lease hasn't been uploaded yet</span>
       <span class="legend-chip"><span class="badge unmatched">Unmatched PDF</span> A lease was uploaded but not found in the rent roll</span>
       <span class="legend-chip"><span class="badge needs-review">Review</span> More than one possible lease &mdash; pick manually</span>
       <span class="legend-chip"><span class="badge error">Parse error</span> The file couldn't be read</span>
@@ -3946,6 +3947,56 @@ function reconcileAll(isAutoBundlePass){
     if (matchedBlock){
       const matchedKey = matchedBlock.unit.toUpperCase();
       claimedResman.add(matchedKey);
+
+      // Before reconciling charges against this lease, confirm it actually
+      // belongs to whoever the Rent Roll currently shows living in this
+      // unit. A lease file sitting in a unit's folder does not mean it's
+      // the CURRENT resident's lease -- ResMan exports keep a prior
+      // tenant's signed lease in the same per-unit folder indefinitely, and
+      // a brand-new move-in whose own lease hasn't been uploaded yet will
+      // still resolve to that old file by unit number alone. Reconciling
+      // charges against a lease belonging to someone who has already moved
+      // out produces a wall of meaningless mismatches (rent, dates, deposit
+      // -- all "wrong" purely because it's the wrong person's document)
+      // that bury whatever's actually true, and can even coincidentally
+      // clear a real problem. Caught on a real property: unit A109 had a
+      // brand-new resident with no lease uploaded yet, and the tool was
+      // silently comparing her Rent Roll charges against the PREVIOUS
+      // tenant's lease.
+      //
+      // Signal used: do ANY of the Rent Roll's current resident name(s)
+      // appear anywhere on this lease? Only fires when both sides were
+      // confidently extracted and NONE of the Rent Roll's residents were
+      // found -- a partial match (e.g. one co-resident added later) is left
+      // to the existing Resident Name check below, since that's a real
+      // lease that just needs a correction, not a missing one.
+      const rrResidentsForStaleCheck = splitResidentNames(matchedBlock.residents);
+      const leaseResidentsForStaleCheck = item.verification ? splitResidentNames(item.verification.residentsRaw) : [];
+      let staleLeaseNote = null;
+      if (rrResidentsForStaleCheck.length && leaseResidentsForStaleCheck.length){
+        const staleCmp = compareResidentNameLists(leaseResidentsForStaleCheck, rrResidentsForStaleCheck);
+        if (staleCmp.status === 'mismatch' && staleCmp.unmatchedRentRoll.length === rrResidentsForStaleCheck.length){
+          staleLeaseNote = 'The Rent Roll lists ' + rrResidentsForStaleCheck.join(', ') + ' for this unit, but the only ' +
+            'lease on file here is for ' + leaseResidentsForStaleCheck.join(', ') + ' -- a different person. This looks ' +
+            'like a new move-in whose signed lease hasn’t been uploaded yet, not a charge problem with the current ' +
+            'resident, so charges were not compared against that old lease.';
+        }
+      }
+
+      if (staleLeaseNote){
+        entries.push({
+          ...blockSortFields(matchedBlock),
+          unit: matchedBlock.unit, unitKey, filenames, isDuplicate,
+          category: 'new-tenant', residents: matchedBlock.residents, resmanTotal: matchedBlock.total,
+          rows: [], excluded: [], issueCount: 1,
+          note: staleLeaseNote,
+          staleLeaseResidents: leaseResidentsForStaleCheck.join(', '),
+          rawLease: item.rawItems.map(it => ({...it, ...classify(it.rawLabel, ALIAS_MAP)})),
+          rawResman: matchedBlock.charges.map(c => ({rawLabel:c.description, amount:c.amount, ...classify(c.description, ALIAS_MAP)})),
+        });
+        continue;
+      }
+
       const cmp = reconcileUnit(item.rawItems, matchedBlock, item.verification);
       // Charge categories switched off in Option Filters are handled exactly
       // like hidden verification checks: still present and still visible in
@@ -4052,7 +4103,7 @@ function reconcileAll(isAutoBundlePass){
   }
 
   entries.sort((a,b) => {
-    const order = {'needs-review':0, mismatch:1, unmatched:2, missing:3, error:4, duplicate:5, clean:6};
+    const order = {'needs-review':0, mismatch:1, unmatched:2, 'new-tenant':3, missing:3, error:4, duplicate:5, clean:6};
     if (order[a.category] !== order[b.category]) return order[a.category]-order[b.category];
     return String(a.unit).localeCompare(String(b.unit), undefined, {numeric:true});
   });
@@ -4088,6 +4139,7 @@ function renderDashboard(){
   const clean = activeEntries.filter(e=>e.category==='clean').length;
   const mismatch = activeEntries.filter(e=>e.category==='mismatch').length;
   const missing = activeEntries.filter(e=>e.category==='missing').length;
+  const newTenant = activeEntries.filter(e=>e.category==='new-tenant').length;
   const unmatched = activeEntries.filter(e=>e.category==='unmatched').length;
   const errors = activeEntries.filter(e=>e.category==='error').length;
   const needsReview = activeEntries.filter(e=>e.category==='needs-review').length;
@@ -4095,8 +4147,9 @@ function renderDashboard(){
   // "Total units processed" includes uploaded PDFs that didn't match any ResMan
   // row (unmatched) or couldn't be read at all (errors) -- neither of those is an
   // actual occupied unit in the rent roll. Surface the true occupied-unit count
-  // (clean + mismatch + missing) so the headline number isn't mistaken for it.
-  const occupied = clean + mismatch + missing;
+  // (clean + mismatch + missing + new-tenant) so the headline number isn't
+  // mistaken for it.
+  const occupied = clean + mismatch + missing + newTenant;
   // Discrepancies suppressed by the Discrepancy Filters panel (see
   // isCheckHidden) -- never zero this out or fold it into `mismatch` above;
   // the whole point is these are real findings that just aren't allowed to
@@ -4113,6 +4166,8 @@ function renderDashboard(){
     '<div class="kpi-tile clean"><b>'+clean+'</b><span>Match</span></div>'+
     '<div class="kpi-tile mismatch"><b>'+mismatch+'</b><span>Mismatch</span></div>'+
     '<div class="kpi-tile missing"><b>'+missing+'</b><span>Missing leases</span></div>'+
+    (newTenant ? '<div class="kpi-tile missing"><b>'+newTenant+'</b><span>New move-in'+(newTenant===1?'':'s')+' &mdash; no lease yet</span>'+
+      '<div class="kpi-note">Rent Roll resident doesn\'t match the file on hand &mdash; likely not uploaded yet</div></div>' : '')+
     (needsReview ? '<div class="kpi-tile review"><b>'+needsReview+'</b><span>Review</span>'+
       '<div class="kpi-note">More than one possible lease &mdash; pick manually</div></div>' : '')+
     // Vacant units are never shown in the results table below (nothing to
@@ -4145,9 +4200,9 @@ function renderDashboard(){
 
   const tabs = [
     {key:'all', label:'All', count: total},
-    {key:'discrepancies', label:'Mismatch', count: mismatch+missing+unmatched+errors+needsReview},
+    {key:'discrepancies', label:'Mismatch', count: mismatch+missing+newTenant+unmatched+errors+needsReview},
     {key:'clean', label:'Match', count: clean},
-    {key:'issues', label:'Missing / Unmatched', count: missing+unmatched+errors+needsReview},
+    {key:'issues', label:'Missing / Unmatched', count: missing+newTenant+unmatched+errors+needsReview},
   ];
   document.getElementById('filter-tabs').innerHTML = tabs.map(t =>
     '<button class="tab'+(currentFilter===t.key?' active':'')+'" data-filter="'+t.key+'">'+t.label+' <span class="count">'+t.count+'</span></button>'
@@ -4186,9 +4241,9 @@ function matchesFilter(e){
   if (e.category === 'vacant') return false;
   switch(currentFilter){
     case 'all': return true;
-    case 'discrepancies': return ['mismatch','missing','unmatched','error','needs-review'].includes(e.category);
+    case 'discrepancies': return ['mismatch','missing','new-tenant','unmatched','error','needs-review'].includes(e.category);
     case 'clean': return e.category === 'clean';
-    case 'issues': return ['missing','unmatched','error','needs-review'].includes(e.category);
+    case 'issues': return ['missing','new-tenant','unmatched','error','needs-review'].includes(e.category);
     default: return true;
   }
 }
@@ -4332,6 +4387,7 @@ function renderTable(){
     missing: ['missing','Missing lease'], unmatched: ['unmatched','Unmatched PDF'],
     error: ['error','Parse error'], vacant: ['vacant','Vacant'],
     'needs-review': ['needs-review','Review'],
+    'new-tenant': ['missing','New move-in — no lease yet'],
   };
 
   for (const e of rows){
@@ -4343,6 +4399,7 @@ function renderTable(){
     if (e.category === 'clean') summary = 'All charges match';
     else if (e.category === 'mismatch') summary = e.issueCount + ' mismatch' + (e.issueCount===1?'':'es');
     else if (e.category === 'missing') summary = 'No lease uploaded';
+    else if (e.category === 'new-tenant') summary = 'New resident — lease not on file yet';
     else if (e.category === 'unmatched') summary = 'Unit not found in rent roll';
     else if (e.category === 'error') summary = 'Failed to parse';
     else if (e.category === 'needs-review') summary = (e.candidates?e.candidates.length:2) + ' possible leases -- manual review needed';
@@ -5032,7 +5089,7 @@ function buildPdfReportHtml(){
   const dateStr = now.toLocaleDateString(undefined, {year:'numeric', month:'long', day:'numeric'});
   const property = detectedPropertyName || 'Property';
   const CAT_LABEL = {mismatch:'Mismatch', missing:'Missing lease', unmatched:'Unmatched PDF',
-                     error:'Parse error', 'needs-review':'Review'};
+                     error:'Parse error', 'needs-review':'Review', 'new-tenant':'New move-in — no lease yet'};
 
   // Units with actual line-level findings get a full card. Units that are
   // only on the list because nothing could be compared (no lease uploaded, a
@@ -5183,7 +5240,8 @@ function exportPdfReport(){
 // vocabulary as the screen -- a downloaded row must not use a word the UI
 // doesn't (see the Auditera AI status vocabulary standard).
 const EXPORT_CATEGORY_LABEL = {mismatch:'Mismatch', missing:'Missing lease', unmatched:'Unmatched PDF',
-                               error:'Parse error', 'needs-review':'Review', clean:'Match', vacant:'Vacant'};
+                               error:'Parse error', 'needs-review':'Review', clean:'Match', vacant:'Vacant',
+                               'new-tenant':'New move-in — no lease yet'};
 function exportCategoryLabel(cat){ return EXPORT_CATEGORY_LABEL[cat] || cat; }
 function buildExportRows(){
   const out = [];
