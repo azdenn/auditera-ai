@@ -207,6 +207,79 @@ for (const tool of ['leaseverify', 'concessionverify', 'depositverify']){
   check(tool + ': takes over the page', (await page.$('#ag-block')) !== null);
 }
 
+// ---------------------------------------------------------------------------
+// 8. Naming the account.
+//
+//    A correct refusal delivered to someone signed in as the wrong one of
+//    their logins is indistinguishable from a broken product unless the screen
+//    says who they are. That happened in production, so it is tested here.
+//
+//    Everything below is DISPLAY. The email is read out of the session token
+//    the browser already holds -- no network call, no secret -- and it grants
+//    nothing: the last check in this section proves a token claiming to be
+//    somebody else is refused exactly the same.
+// ---------------------------------------------------------------------------
+function fakeJwt(claims){
+  const seg = (o) => Buffer.from(JSON.stringify(o)).toString('base64')
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return seg({alg:'HS256', typ:'JWT'}) + '.' + seg(claims) + '.' + 'not-a-real-signature';
+}
+const JANINE = 'janine.luz@texcelproperties.com';
+const JANINE_JWT = fakeJwt({ sub: '5ccb0fa5', email: JANINE, role: 'authenticated' });
+
+await loadTool('leaseverify', JANINE_JWT);
+const chip = await page.$('#ag-account-chip');
+check('The tool says which account it is running as, before anything is uploaded',
+  chip !== null);
+const chipText = chip ? await page.textContent('#ag-account-chip') : '';
+check('...naming the actual signed-in address', chipText.includes(JANINE));
+check('...with a way to change account', /switch account/i.test(chipText));
+check('...and it costs no network call to do it -- the token already says so',
+  CALLS.length === 0);
+
+// The server's answer is authoritative; the token's claim is only a fallback.
+ANSWER = { status: 200, body: { allowed: false, verdict: 'blocked',
+  account_email: JANINE,
+  message: 'These documents are for “Garden Creek Apartments”.\n\nThe account you are '
+    + 'signed in to (' + JANINE + ') is licensed for “Garden Trails” — not this property.' } };
+await runGate('leaseverify', 'Garden Creek Apartments');
+const blockedText = await page.textContent('#ag-block');
+check('A refusal states the signed-in account on screen', /signed in as/i.test(blockedText));
+check('...showing the address the SERVER reported', blockedText.includes(JANINE));
+check('...alongside the property it refused', /Garden Creek/.test(blockedText));
+check('...and offers a way back to switch account',
+  /back to dashboard/i.test(blockedText));
+
+// An expired session has no meaningful account to name -- the only next step
+// is signing in again, and "signed in as" would contradict the heading.
+await loadTool('leaseverify', JANINE_JWT);
+ANSWER = { status: 401, body: { allowed: false, verdict: 'expired',
+  message: 'Your session has expired. Reopen this tool from your dashboard to carry on.' } };
+await runGate('leaseverify', 'Blanco Oaks Apartments');
+const expiredText = await page.textContent('#ag-block');
+check('An expired session does not claim you are signed in as anyone',
+  !/signed in as/i.test(expiredText));
+
+// An opaque (non-JWT) token must degrade quietly, not throw or show junk.
+await loadTool('leaseverify', 'opaque-not-a-jwt');
+check('A token that is not a JWT simply shows no account line',
+  (await page.$('#ag-account-chip')) === null);
+
+// The identity shown is cosmetic. Claiming to be a licensed account in the
+// token's own claims changes nothing, because the server decides.
+ANSWER = { status: 200, body: { allowed: false, verdict: 'blocked', message: 'Not licensed.' } };
+await loadTool('leaseverify', fakeJwt({ sub: 'x', email: 'owner-of-everything@example.com' }));
+const spoofed = await runGate('leaseverify', 'Garden Creek Apartments');
+check('A token claiming a different identity is still refused -- display is not authority',
+  spoofed === false);
+
+// The other two tools carry the same chrome.
+for (const tool of ['concessionverify', 'depositverify']){
+  await loadTool(tool, JANINE_JWT);
+  check(tool + ': names the signed-in account too',
+    (await page.$('#ag-account-chip')) !== null);
+}
+
 check('No page errors anywhere', pageErrors.length === 0);
 if (pageErrors.length) console.log('ERRORS:', pageErrors);
 

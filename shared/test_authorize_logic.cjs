@@ -124,6 +124,93 @@ for (const junk of [null, undefined, 0, false, {}, [], 'null', '{}']) {
   check('Junk input (' + JSON.stringify(junk) + ') is never allowed', v !== 'allowed');
 }
 
+/* ---------------------------------------------------------------------------
+   The refusal wording, tested on the same principle: lifted out of the real
+   source rather than restated here.
+
+   These are not cosmetics. The first production report of "the licence gate is
+   broken" was a correct block delivered to someone signed in as the wrong one
+   of their two logins, and the message gave them nothing to work that out
+   with. What a refusal SAYS is part of whether the gate works.
+   ------------------------------------------------------------------------- */
+const mStart = src.indexOf('function messageFor');
+const mEnd = src.indexOf('Deno.serve');
+if (mStart === -1 || mEnd === -1 || mEnd <= mStart) {
+  console.error('FATAL: could not locate the message block in authorize-audit.ts.');
+  process.exit(1);
+}
+let mBlock = src.slice(mStart, mEnd)
+  .replace(/: string\[\]/g, '')      // must precede the bare ": string" strip
+  .replace(/: string \| null/g, '')
+  .replace(/: Prop\[\]/g, '')
+  .replace(/: string/g, '');
+for (const must of ['function messageFor', 'function listNames']) {
+  if (!mBlock.includes(must)) {
+    console.error('FATAL: extracted message block is missing ' + must + '.');
+    process.exit(1);
+  }
+}
+let messageFor;
+try {
+  messageFor = new Function(mBlock + '; return messageFor;')();
+} catch (e) {
+  console.error('FATAL: extracted message logic did not evaluate: ' + e.message);
+  process.exit(1);
+}
+
+const JANINE = 'janine.luz@texcelproperties.com';
+const FOUR = [
+  {name:'Garden Trails'}, {name:'Lamar Place Apartments'},
+  {name:'The Berkley'}, {name:'The Rail at Georgetown'},
+];
+
+// The exact real-world case: right gate, right verdict, wrong login.
+const blocked = messageFor('blocked', FOUR, 'Garden Creek Apartments', '', JANINE);
+check('A refusal names the property that was refused',
+  blocked.includes('“Garden Creek Apartments”'));
+check('A refusal names the ACCOUNT that refused it -- the whole point',
+  blocked.includes(JANINE));
+check('...and tells you a different login may be the answer',
+  /sign(ed)? out and sign back in/i.test(blocked));
+check('...and lists what this account IS licensed for',
+  blocked.includes('Garden Trails') && blocked.includes('The Rail at Georgetown'));
+check('...as readable English, not "A and B and C and D"',
+  blocked.includes('“The Berkley” and “The Rail at Georgetown”')
+  && !/”\s+and\s+“Lamar/.test(blocked));
+check('...and still explains per-property licensing for the genuine new-property case',
+  /licensed separately/i.test(blocked));
+
+check('One licensed property reads as a bare name, with no list punctuation',
+  messageFor('blocked', [{name:'Blanco Oaks Apartments'}], 'Other Place', '', JANINE)
+    .includes('licensed for “Blanco Oaks Apartments” — not this property'));
+check('Two licensed properties are joined with "and", not a comma',
+  messageFor('blocked', [{name:'A'},{name:'B'}], 'X', '', JANINE).includes('“A” and “B”'));
+
+// An address-only refusal (no readable property name) must still be specific.
+check('A refusal with no name falls back to the address it read',
+  messageFor('blocked', FOUR, '', '110 Bluebonnet Cir', JANINE).includes('110 Bluebonnet Cir'));
+
+// The unlicensed case has the same wrong-login trap.
+const unlic = messageFor('unlicensed', [], 'Anything', '', JANINE);
+check('An unlicensed account is named too', unlic.includes(JANINE));
+check('...and is told to check which login it is on',
+  /more than one login/i.test(unlic));
+
+// Degrading gracefully matters: the email is not guaranteed to be present.
+const noEmail = messageFor('blocked', FOUR, 'Garden Creek Apartments', '', null);
+check('With no email known, the wording still reads correctly',
+  noEmail.includes('This account is licensed for') && !noEmail.includes('undefined')
+  && !noEmail.includes('null'));
+
+// An unidentifiable document is a document problem, not an account problem --
+// naming the account there would send someone chasing the wrong fix.
+const unknown = messageFor('unknown', FOUR, '', '', JANINE);
+check('An unreadable document does NOT blame the account', !unknown.includes(JANINE));
+check('...and points at re-exporting the rent roll instead', /re-export/i.test(unknown));
+
+check('No refusal ever leaks another account\'s properties',
+  !messageFor('blocked', [], 'Garden Creek Apartments', '', JANINE).includes('Garden Trails'));
+
 console.log('=== PASS/FAIL ===');
 for (const [l, ok] of results) console.log((ok ? 'PASS -- ' : 'FAIL -- ') + l);
 const passed = results.filter(r => r[1]).length;

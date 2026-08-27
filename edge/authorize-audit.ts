@@ -156,28 +156,59 @@ function decide(detectedName: unknown, detectedAddress: unknown, licensed: Prop[
   return { verdict: 'unknown' as const, property: null, via: null };
 }
 
-function messageFor(verdict: string, licensed: Prop[], detectedName: string, detectedAddress: string){
-  const names = licensed.map((p) => p.name).filter(Boolean);
-  const list = names.length ? names.map((n) => '“' + n + '”').join(' and ') : 'no properties';
+/* WHY THE ACCOUNT IS NAMED IN EVERY REFUSAL
+   These messages used to say "this account is not licensed for that property"
+   without ever saying which account "this" was. Anyone who manages properties
+   for more than one owner holds more than one login, and the first real
+   report of "the licence check is broken" was exactly that: the right gate,
+   the right verdict, the wrong login — and nothing on screen to reveal it.
+   A refusal that does not identify the account is a refusal that cannot be
+   acted on, so the email goes in the message and the "wrong login" case is
+   named explicitly as the first thing to check. */
+function messageFor(
+  verdict: string, licensed: Prop[], detectedName: string, detectedAddress: string,
+  email: string | null,
+){
+  const list = listNames(licensed.map((p) => p.name).filter(Boolean));
+  const who = email ? 'The account you are signed in to (' + email + ')' : 'This account';
 
   if (verdict === 'unlicensed'){
-    return 'This account has no active property licence, so documents cannot be audited. '
+    return who + ' has no active property licence, so documents cannot be audited.\n\n'
+      + 'If you have more than one login, check you are signed in to the right one. '
       + 'If your free month has ended, add a payment method from your dashboard to carry on.';
   }
   if (verdict === 'blocked'){
     const what = detectedName
       ? '“' + detectedName + '”'
       : (detectedAddress ? detectedAddress : 'a different property');
-    return 'These documents are for ' + what + ', which this account is not licensed for. '
-      + 'This account is licensed for ' + list + '. '
-      + 'Each property is licensed separately — add this one to your subscription to audit it.';
+    return 'These documents are for ' + what + '.\n\n'
+      + who + ' is licensed for ' + list + ' — not this property.\n\n'
+      + 'If this property sits on another one of your logins, sign out and sign back in as that one. '
+      + 'Otherwise each property is licensed separately, so add this one to your subscription to audit it.';
   }
   if (verdict === 'unknown'){
     return 'These documents do not identify which property they belong to, so they cannot be '
-      + 'checked against your licence. A full ResMan rent roll names the property in its header — '
-      + 'if you exported a summary, or the file is a scan with no readable text, re-export it and try again.';
+      + 'checked against your licence.\n\n'
+      + 'A full ResMan rent roll names the property in its header — if you exported a summary, '
+      + 'or the file is a scan with no readable text, re-export it and try again.';
   }
   return '';
+}
+
+/* "A", "A and B", "A, B and C". Joining four property names with "and" three
+   times over reads like a ransom note, and four is an ordinary number for one
+   manager to hold.
+
+   Deliberately declared BELOW messageFor. test_authorize_logic.cjs lifts the
+   matching rules out of this file by slicing from pgNormalizeName to
+   messageFor and running them in plain Node; anything that lands inside that
+   slice has to survive its TypeScript stripper. Keeping message formatting
+   outside the slice keeps that extraction honest about what it is testing. */
+function listNames(names: string[]): string {
+  const q = names.map((n) => '“' + n + '”');
+  if (!q.length) return 'no properties';
+  if (q.length === 1) return q[0];
+  return q.slice(0, -1).join(', ') + ' and ' + q[q.length - 1];
 }
 
 Deno.serve(async (req) => {
@@ -279,7 +310,11 @@ Deno.serve(async (req) => {
       verdict: outcome.verdict,
       property: outcome.property ? { name: outcome.property.name } : null,
       via: outcome.via,
-      message: messageFor(outcome.verdict, licensed, detectedName, detectedAddress),
+      // Told back to the caller so a refusal can name the account on screen.
+      // This is the address on the token the caller already holds -- it
+      // discloses nothing they did not send us, and it authorises nothing.
+      account_email: user.email ?? null,
+      message: messageFor(outcome.verdict, licensed, detectedName, detectedAddress, user.email ?? null),
     });
   } catch (_err){
     return json({ allowed: false, verdict: 'unknown',
