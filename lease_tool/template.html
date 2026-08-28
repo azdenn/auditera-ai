@@ -421,6 +421,53 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
     <h2><span class="step-num">3</span> Results</h2>
 
     <div class="hidden" id="property-match-banner"></div>
+    <!-- House rules: what this property does differently, offered and remembered. -->
+    <style>
+      #house-rules{ margin:14px 0 0; display:flex; flex-direction:column; gap:10px; }
+      #house-rules.hidden{ display:none; }
+      .hr-block{ border:1px solid #2a3040; border-radius:11px; background:#12151f; overflow:hidden; }
+      .hr-head{ display:flex; align-items:flex-start; gap:10px; padding:13px 15px; }
+      .hr-head h3{ margin:0; font-size:14.5px; color:#eef0f6; font-weight:650; line-height:1.35; }
+      .hr-head p{ margin:3px 0 0; font-size:13px; color:#a7adc0; }
+      .hr-body{ padding:0 15px 13px; display:flex; flex-direction:column; gap:9px; }
+      .hr-card{ border:1px solid #2a3040; border-radius:9px; background:#171a28; }
+      .hr-card-top{ padding:12px 13px; display:flex; gap:11px; align-items:flex-start; }
+      .hr-kind{ font-size:10px; letter-spacing:.09em; text-transform:uppercase; padding:3px 7px;
+                border-radius:4px; flex:0 0 auto; margin-top:2px; white-space:nowrap;
+                background:#232043; color:#b3a6ff; border:1px solid #3a3168; }
+      .hr-kind.call{ background:#332714; color:#f0b35f; border-color:#584119; }
+      .hr-main{ flex:1 1 auto; min-width:0; }
+      .hr-title{ font-size:14px; font-weight:600; color:#eef0f6; margin:0 0 4px; line-height:1.4; }
+      .hr-why{ font-size:12.5px; color:#a7adc0; margin:0; }
+      .hr-actions{ display:flex; gap:7px; flex-wrap:wrap; padding:0 13px 12px; align-items:center; }
+      .hr-actions button{ font:inherit; font-size:13px; font-weight:500; cursor:pointer; border-radius:7px;
+                          padding:7px 13px; border:1px solid #2a3040; background:#1d2131; color:#eef0f6; }
+      .hr-actions button:hover{ background:#262c40; }
+      .hr-actions button.go{ background:#6c5ce7; border-color:#6c5ce7; color:#fff; font-weight:600; }
+      .hr-actions button.go:hover{ background:#7d6ff0; }
+      .hr-actions button.plain{ background:none; border:none; color:#767d94; text-decoration:underline;
+                                text-underline-offset:3px; padding:7px 3px; }
+      .hr-evidence{ display:none; border-top:1px solid #232838; padding:11px 13px; }
+      .hr-card.open .hr-evidence{ display:block; }
+      .hr-evidence table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+      .hr-evidence th{ text-align:left; font-size:10px; letter-spacing:.08em; text-transform:uppercase;
+                       color:#767d94; font-weight:500; padding:0 0 6px; }
+      .hr-evidence td{ padding:4px 0; border-top:1px solid #232838; color:#a7adc0;
+                       font-variant-numeric:tabular-nums; }
+      .hr-evidence td.n{ text-align:right; color:#eef0f6; }
+      .hr-saved{ display:flex; gap:10px; align-items:flex-start; padding:10px 12px;
+                 border:1px solid #232838; border-radius:8px; background:#171a28; }
+      .hr-saved .dot{ width:7px; height:7px; border-radius:50%; margin-top:6px; flex:0 0 auto; background:#3ddc97; }
+      .hr-saved.suspended{ border-color:#584119; }
+      .hr-saved.suspended .dot{ background:#f0b35f; }
+      .hr-saved.dormant .dot{ background:#4a5165; }
+      .hr-saved .txt{ flex:1 1 auto; min-width:0; font-size:13px; color:#eef0f6; }
+      .hr-saved .txt em{ display:block; font-style:normal; color:#8d95ab; font-size:12px; margin-top:3px; }
+      .hr-saved button{ font:inherit; font-size:12px; background:none; border:none; color:#767d94;
+                        cursor:pointer; text-decoration:underline; text-underline-offset:3px; flex:0 0 auto; }
+      .hr-saved button:hover{ color:#ff8f8f; }
+    </style>
+    <div class="hidden" id="house-rules"></div>
 
     <div class="kpi-row" id="kpi-row"></div>
     <div class="kpi-sub" id="kpi-sub"></div>
@@ -472,7 +519,14 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
 
     <div class="results-shell hidden" id="flat-view-shell">
       <table class="results">
-        <thead><tr><th>Unit</th><th>Resident</th><th>Item</th><th>On Lease</th><th>In ResMan</th><th>Note</th></tr></thead>
+        <thead><tr>
+          <th class="sortable flat-sortable" data-flat-sort="unit">Unit</th>
+          <th class="sortable flat-sortable" data-flat-sort="residents">Resident</th>
+          <th class="sortable flat-sortable" data-flat-sort="item">Item</th>
+          <th class="sortable flat-sortable amt" data-flat-sort="onLease">On Lease</th>
+          <th class="sortable flat-sortable amt" data-flat-sort="inResman">In ResMan</th>
+          <th>Note</th>
+        </tr></thead>
         <tbody id="flat-issues-body"></tbody>
       </table>
       <div class="empty-state hidden" id="flat-empty-state">No mismatching lines &mdash; everything currently visible matches.</div>
@@ -487,6 +541,7 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
 <!--XLSX_LIB-->
 <!--FFLATE_LIB-->
 
+<!--PROPERTY_RULES-->
 <!--RR_PROPERTY_NAME-->
 <!--AUDIT_GATE-->
 <script>
@@ -3247,6 +3302,46 @@ function reconcileUnit(leaseRawItems, block, verification){
   }
 
   // Pass 2: fallback amount-match for anything still UNMAPPED on both sides.
+  /* Pass 1.5: charges this property has told us are the same thing.
+     ---------------------------------------------------------------
+     An accepted alias rule means "these two labels are one charge" even when
+     neither belongs to a category the tool ships with — which is most of what
+     a property writes on its own Other: lines. Matching on the canonical label
+     turns what Pass 2 could only call a "probable" amount coincidence into a
+     real, named comparison, and it still compares the money: an alias makes
+     two labels one charge, it never makes two amounts equal. */
+  if (PROPERTY_LABEL_ALIASES.size){
+    const byCanon = new Map();
+    const push = (side, it, i) => {
+      const canon = prNormalizeLabel(propertyCanonicalLabel(side === 'lease' ? it.rawLabel : it.description));
+      if (!canon) return;
+      if (!byCanon.has(canon)) byCanon.set(canon, {lease: [], resman: []});
+      byCanon.get(canon)[side].push(i);
+    };
+    leaseClassified.forEach((it,i)=>{ if (!usedLeaseIdx.has(i)) push('lease', it, i); });
+    resmanClassified.forEach((it,i)=>{ if (!usedResmanIdx.has(i)) push('resman', it, i); });
+
+    for (const [, g] of byCanon){
+      if (!g.lease.length || !g.resman.length) continue;
+      g.lease.forEach(i => usedLeaseIdx.add(i));
+      g.resman.forEach(i => usedResmanIdx.add(i));
+      const lv = g.lease.reduce((s,i)=>s+(leaseClassified[i].amount||0), 0);
+      const rv = g.resman.reduce((s,i)=>s+(resmanClassified[i].amount||0), 0);
+      const canonLabel = propertyCanonicalLabel(resmanClassified[g.resman[0]].description);
+      const row = rowFor(canonLabel, lv, rv, true, true);
+      row.category = 'UNMAPPED';
+      row.leaseRaw = g.lease.map(i => leaseClassified[i].rawLabel);
+      row.resmanRaw = g.resman.map(i => resmanClassified[i].description);
+      row.byHouseRule = true;
+      row.note = 'Treated as one charge because this property told us these are the same: ' +
+        row.leaseRaw.concat(row.resmanRaw).filter((v,ix,a)=>a.indexOf(v)===ix)
+          .map(x => '“' + x + '”').join(', ') + '. The amounts are still compared.';
+      tagPropertySpecific(row, g.lease.filter(i => leaseClassified[i].fromOther)
+        .map(i => leaseClassified[i].rawLabel));
+      rows.push(row);
+    }
+  }
+
   const leftoverLease = leaseClassified.map((it,i)=>({...it, i})).filter(it => !usedLeaseIdx.has(it.i));
   const leftoverResman = resmanClassified.map((it,i)=>({...it, i})).filter(it => !usedResmanIdx.has(it.i));
   const pairedResman = new Set();
@@ -3302,6 +3397,48 @@ function reconcileUnit(leaseRawItems, block, verification){
        tool is for. What it gets instead is a note that names the sibling, so
        whoever reads it can see in one line that it is a duplicated lease row
        rather than a missing charge. */
+    /* A TIER THAT DOES NOT APPLY TO THIS UNIT.
+       -------------------------------------------------------------------
+       Real leases are printed as a package listing every tier of a charge,
+       and only the line matching the unit applies:
+
+           Community Fee - 1 Bedroom    $70      <- this unit
+           Community Fee - 2 Bedroom    $100     <- printed, not owed
+
+       The rent roll bills one "Community Fee $70". The 1-Bedroom line pairs
+       with it and the 2-Bedroom line was left over, so it read as "on the
+       lease, never billed" -- a finding on a line nobody was ever going to
+       charge, on every unit of that floorplan.
+
+       This is not the same thing as a duplicated row, and it is not
+       property-specific: any lease printed as a menu of tiers (by bedroom,
+       by floor, by pet size) does it.
+
+       The test is deliberately strict. A leftover line counts as a tier
+       option ONLY when it carries a qualifier, AND the rent roll's own line
+       for the base charge was already reconciled, AND it was reconciled
+       against a SIBLING tier of the same base charge. If nothing matched the
+       billed amount -- the resident is billed $115 against a lease that only
+       ever mentions $70 -- none of that holds, and it stays the real
+       mismatch it is. That case is worth money and is not swallowed here. */
+    const base = stripTrailingSuffix(it.rawLabel);
+    const baseKey = prNormalizeLabel(base);
+    const hasQualifier = baseKey && baseKey !== prNormalizeLabel(it.rawLabel);
+    const resolvedSibling = hasQualifier && rows.find(r =>
+      (r.resmanRaw || []).some(x => prNormalizeLabel(stripTrailingSuffix(x)) === baseKey) &&
+      (r.leaseRaw || []).some(x => prNormalizeLabel(stripTrailingSuffix(x)) === baseKey &&
+                                   prNormalizeLabel(x) !== prNormalizeLabel(it.rawLabel)));
+    if (resolvedSibling){
+      row.tierOption = true;
+      row.soft = true;
+      row.note = 'This lease lists more than one tier of “' + base + '”, and the Rent Roll bills ' +
+        money(resolvedSibling.resmanVal) + ' — which matches “' + (resolvedSibling.leaseRaw || []).join(', ') +
+        '”. This line is the other tier printed on the same form, so it is not owed on this unit ' +
+        'and is not counted as a discrepancy.';
+      rows.push(tagPropertySpecific(row, it.fromOther ? [it.rawLabel] : null));
+      return;
+    }
+
     const twin = resmanClassified.find((rr, ri) => usedResmanIdx.has(ri) &&
       bundleNameAffinity(rr.description, [it.rawLabel]) > 0);
     if (twin){
@@ -3337,6 +3474,28 @@ function reconcileUnit(leaseRawItems, block, verification){
              ? 'This lease\'s Special Provisions state a ' + money(m2m.expected) + '/mo month-to-month premium, so it looks like the fee was never added when their lease rolled over.'
              : 'This property charges ' + money(m2m.expected) + '/mo, so it looks like the fee was never added when their lease rolled over.'),
       });
+    }
+  }
+
+  /* Rolled-up findings. The property has said this one is a known standing
+     issue, so it stops repeating on every unit and is reported once for the
+     whole property instead.
+
+     It is NOT hidden and it is NOT resolved: the row stays, carries its
+     amount, and the property-level note counts the units and totals the
+     money. That distinction is the reason this verb exists rather than just
+     reusing "hide" — a lease template that discloses a charge nobody collects
+     is worth exactly one clear sentence, not eighty-eight red rows and not
+     silence. */
+  if (ROLLUP_SUBJECTS.size){
+    for (const r of rows){
+      const canon = prNormalizeLabel(propertyCanonicalLabel(r.label));
+      if (!ROLLUP_SUBJECTS.has(canon)) continue;
+      if (r.status !== 'leaseonly' && r.status !== 'resmanonly') continue;
+      r.rolledUp = true;
+      r.soft = true;
+      r.note = (r.note ? r.note + ' ' : '') +
+        'Reported once for the whole property rather than on every unit — see the summary above the results.';
     }
   }
 
@@ -3568,6 +3727,328 @@ function addBundleRule(candidate){
    Terminates by construction: detectBundleCandidates() excludes anything
    already in BUNDLE_RULES, so the second pass finds nothing to add. The
    caller also hard-limits this to one retry rather than relying on that. */
+/* ==========================================================================
+   HOUSE RULES
+   --------------------------------------------------------------------------
+   A property's own conventions, learned once and remembered against that
+   property rather than against this browser tab.
+
+   WHY THIS EXISTS AGAIN AFTER BEING REMOVED
+   Persisting rules was deliberately taken out on 2026-08-25, for a reason that
+   was right: a saved rule outlives the documents that justified it. Next
+   month's export changes, the rule still matches by name, and it quietly
+   suppresses a real mismatch — and with no panel there was nowhere to notice.
+
+   That objection is answered here rather than overruled, by two things that
+   did not exist then:
+
+     1. EVERY SAVED RULE IS RE-CHECKED against the documents in front of it, on
+        every run. One the numbers no longer support is SUSPENDED — not
+        applied, and said out loud, naming the rule and the units. A rule that
+        stops being true stops working the same month.
+     2. THERE IS A PANEL. Every saved rule is listed with what it is currently
+        doing, and removing one restores the original behaviour exactly.
+
+   WHAT IS AND IS NOT AUTOMATIC
+   Bundles still apply on their own within a run, exactly as before — the
+   arithmetic proves them, and interrupting someone to confirm arithmetic was
+   the thing that got removed. What is offered is only whether to REMEMBER one,
+   so next month starts clean. Alias and roll-up rules change what counts as a
+   finding, so those never apply until someone says yes.
+   ========================================================================== */
+
+const RULE_MIN_UNITS = 3;   // one unit is a coincidence; three is a convention
+
+let PROPERTY_ID = null;
+let PROPERTY_RULES = [];             // saved rules, each with its status this run
+let RULE_PROPOSALS = [];             // what this run would like to remember
+let DECLINED_RULE_KEYS = new Set();  // "not this time" — this session only
+let PROPERTY_LABEL_ALIASES = new Map();
+let ROLLUP_SUBJECTS = new Map();
+let rulesSettled = false;
+let RULES_LOADED_FOR = null;
+
+function propertyCanonicalLabel(label){
+  const k = prNormalizeLabel(label);
+  return PROPERTY_LABEL_ALIASES.has(k) ? PROPERTY_LABEL_ALIASES.get(k) : label;
+}
+
+/* Load the engine from the saved rules currently considered active. Called at
+   the top of every top-level reconcile, so a removed or suspended rule leaves
+   no trace behind it. */
+function rebuildRuleEngine(){
+  PROPERTY_LABEL_ALIASES = new Map();
+  ROLLUP_SUBJECTS = new Map();
+  for (const saved of PROPERTY_RULES){
+    if (saved.status === 'suspended') continue;
+    const rule = saved.rule;
+    if (rule.type === 'alias'){
+      (rule.spellings || []).forEach(s => PROPERTY_LABEL_ALIASES.set(prNormalizeLabel(s), rule.target));
+      PROPERTY_LABEL_ALIASES.set(prNormalizeLabel(rule.target), rule.target);
+    } else if (rule.type === 'bundle'){
+      BUNDLE_RULES.push({ id: 'saved-' + saved.id, rentRollLabel: rule.rentRollLabel,
+                          leaseLabels: (rule.leaseLabels || []).slice(), enabled: true });
+    } else if (rule.type === 'rollup'){
+      ROLLUP_SUBJECTS.set(prNormalizeLabel(rule.subject), rule.subject);
+    } else if (rule.type === 'hide'){
+      HIDDEN_CHECK_KEYS.add(propFilterKey(rule.subject));
+    }
+  }
+}
+
+/* Re-examine every saved rule against the documents just processed. Returns
+   true when a rule changed state in a way that means the reconcile has to be
+   done again without it. */
+function evaluateSavedRules(entries){
+  let changed = false;
+  for (const saved of PROPERTY_RULES){
+    const evidence = prCheckRuleAgainstData(saved.rule, entries);
+    const status = prRuleStatus(saved.rule, evidence);
+    if (saved.status !== status && status === 'suspended') changed = true;
+    saved.evidence = evidence;
+    saved.status = status;
+    saved.explain = prExplainStatus(saved.rule, evidence, status);
+  }
+  return changed;
+}
+
+/* What this run would like to remember. Three shapes, each read off findings
+   the reconcile already produced rather than guessed at, and each requiring
+   the same pattern on at least RULE_MIN_UNITS units before it is worth
+   anyone's attention. */
+function detectRuleProposals(entries){
+  const known = new Set(PROPERTY_RULES.map(s => prRuleKey(s.rule)));
+  const out = [];
+  const add = (rule, units, kind, headline) => {
+    const key = prRuleKey(rule);
+    if (known.has(key) || DECLINED_RULE_KEYS.has(key)) return;
+    if (units.length < RULE_MIN_UNITS) return;
+    const evidence = prCheckRuleAgainstData(rule, entries);
+    if (evidence.contradictedOn > 0) return;   // never offer what the data argues with
+    if (evidence.blocked) return;              // ...or what would hide an undisclosed charge
+    out.push({ key, rule, kind, headline, units, evidence,
+               describe: prDescribeRule(rule) });
+  };
+
+  // 1. Bundles that were applied this run — offer to remember them.
+  for (const c of detectBundleCandidates(entries)){
+    add({type:'bundle', rentRollLabel: c.rentRollLabel, leaseLabels: c.leaseLabels.slice()},
+        c.units, 'Bundle',
+        'The lease itemises what your rent roll bills as one line');
+  }
+  for (const r of BUNDLE_RULES){
+    if (String(r.id).indexOf('saved-') === 0) continue;
+    const units = entries.filter(e => (e.rows || []).some(x => x.bundle &&
+      prNormalizeLabel(x.label).indexOf(prNormalizeLabel(r.rentRollLabel)) !== -1)).map(e => e.unit);
+    add({type:'bundle', rentRollLabel: r.rentRollLabel, leaseLabels: r.leaseLabels.slice()},
+        units, 'Bundle', 'The lease itemises what your rent roll bills as one line');
+  }
+
+  // 2. Pairs the tool could only match on the money — a name it does not know.
+  const probable = new Map();
+  for (const e of entries){
+    for (const r of (e.rows || [])){
+      if (r.status !== 'probable' || !r.leaseRaw || !r.resmanRaw) continue;
+      const l = r.leaseRaw[0], m = r.resmanRaw[0];
+      if (!l || !m) continue;
+      const k = prNormalizeLabel(l) + '::' + prNormalizeLabel(m);
+      if (!probable.has(k)) probable.set(k, {lease: l, resman: m, units: []});
+      probable.get(k).units.push(e.unit);
+    }
+  }
+  for (const [, p] of probable){
+    add({type:'alias', target: p.resman, spellings: [p.lease]}, p.units, 'Naming',
+        'Two names for one charge, matched only by the amount so far');
+  }
+
+  // 3. A lease line duplicated on the template and billed once.
+  const dupes = new Map();
+  for (const e of entries){
+    for (const r of (e.rows || [])){
+      if (!r.duplicateLeaseLine) continue;
+      const k = prNormalizeLabel(r.label);
+      if (!dupes.has(k)) dupes.set(k, {label: r.label, units: [], total: 0});
+      dupes.get(k).units.push(e.unit);
+      dupes.get(k).total += (r.leaseVal || 0);
+    }
+  }
+  for (const [, d] of dupes){
+    add({type:'rollup', subject: d.label}, d.units, 'Your call',
+        'Disclosed on the lease, billed on none of them');
+  }
+
+  return out;
+}
+
+async function acceptProposal(key){
+  const p = RULE_PROPOSALS.find(x => x.key === key);
+  if (!p) return;
+  const vocab = observedChargeVocabulary();
+  const v = prValidateRule(p.rule, vocab);
+  /* Re-checked at the moment of saving, not just when it was offered. The
+     charge could only have become undisclosed between the two if something
+     changed underneath, but this is the one refusal worth paying for twice. */
+  const ev = prCheckRuleAgainstData(p.rule, unitEntries);
+  if (ev.blocked){
+    alert('That cannot be saved.\n\n"' + p.rule.subject + '" is billed on the rent roll with no ' +
+          'matching line on the lease for ' + ev.wouldHideUndisclosed.length + ' unit(s). A charge ' +
+          'a resident is paying without having signed for it is never suppressed.');
+    return;
+  }
+  if (!v.ok){
+    // Should be unreachable — proposals are built from labels that were read
+    // out of these documents. If it ever fires, say so rather than saving
+    // something that cannot be right.
+    alert('That rule could not be saved:\n\n' + v.errors.join('\n'));
+    return;
+  }
+  const saved = await agSaveRule(PROPERTY_ID, p.rule, 'proposed');
+  if (!saved){
+    alert('Could not save that rule just now — your audit is unaffected. Check your connection and try again.');
+    return;
+  }
+  PROPERTY_RULES.push({ id: saved.id, rule: p.rule, source: 'proposed', status: 'active' });
+  RULE_PROPOSALS = RULE_PROPOSALS.filter(x => x.key !== key);
+  reconcileAll();
+}
+
+function declineProposal(key){
+  DECLINED_RULE_KEYS.add(key);
+  RULE_PROPOSALS = RULE_PROPOSALS.filter(x => x.key !== key);
+  renderHouseRules();
+}
+
+async function removeSavedRule(id){
+  const ok = await agDeleteRule(id);
+  if (!ok){ alert('Could not remove that rule just now. Nothing was changed.'); return; }
+  PROPERTY_RULES = PROPERTY_RULES.filter(r => r.id !== id);
+  reconcileAll();
+}
+
+/* Every charge label these documents actually contain, both sides. A rule may
+   only ever refer to one of these — see prValidateRule. */
+function observedChargeVocabulary(){
+  const v = new Set();
+  for (const e of unitEntries){
+    for (const it of (e.rawLease || [])) if (it.rawLabel) v.add(it.rawLabel);
+    for (const it of (e.rawResman || [])) if (it.rawLabel || it.description) v.add(it.rawLabel || it.description);
+    for (const r of (e.rows || [])){
+      (r.leaseRaw || []).forEach(x => v.add(x));
+      (r.resmanRaw || []).forEach(x => v.add(x));
+      if (r.label) v.add(r.label);
+    }
+  }
+  return Array.from(v);
+}
+
+/* The panel. Two halves: what this run would like to remember, and what is
+   already remembered — including anything currently switched off, because a
+   rule you cannot see is a rule you cannot check. */
+function renderHouseRules(){
+  const wrap = document.getElementById('house-rules');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+
+  // With no property resolved (a tool opened outside the dashboard) there is
+  // nowhere to save anything, so the whole feature stays out of the way.
+  if (!PROPERTY_ID || (!RULE_PROPOSALS.length && !PROPERTY_RULES.length)){
+    wrap.classList.add('hidden');
+    return;
+  }
+  wrap.classList.remove('hidden');
+
+  if (RULE_PROPOSALS.length){
+    const block = document.createElement('div');
+    block.className = 'hr-block';
+    const n = RULE_PROPOSALS.length;
+    block.innerHTML =
+      '<div class="hr-head"><div>' +
+        '<h3>' + n + ' thing' + (n===1?'':'s') + ' here look' + (n===1?'s':'') +
+          ' like how this property works, not a mistake</h3>' +
+        '<p>Nothing is applied until you say so, and everything below shows its working.</p>' +
+      '</div></div>';
+    const body = document.createElement('div');
+    body.className = 'hr-body';
+
+    for (const p of RULE_PROPOSALS){
+      const card = document.createElement('div');
+      card.className = 'hr-card';
+      const unitList = p.units.slice(0, 8).join(', ') + (p.units.length > 8 ? ' and ' + (p.units.length - 8) + ' more' : '');
+      const rows = (p.evidence.examples || []).map(x =>
+        '<tr><td>' + escapeHtml(String(x.unit)) + '</td>' +
+        (x.sum != null
+          ? '<td class="n">' + money(x.sum) + '</td><td class="n">' + money(x.billed) + '</td>'
+          : '<td class="n">' + money(x.amount) + '</td><td class="n">' + (x.usual != null ? money(x.usual) : '—') + '</td>') +
+        '</tr>').join('');
+      const head = p.rule.type === 'bundle'
+        ? '<tr><th>Unit</th><th style="text-align:right">Lease lines</th><th style="text-align:right">Billed</th></tr>'
+        : '<tr><th>Unit</th><th style="text-align:right">Amount</th><th style="text-align:right">Compared with</th></tr>';
+
+      card.innerHTML =
+        '<div class="hr-card-top">' +
+          '<span class="hr-kind' + (p.kind === 'Your call' ? ' call' : '') + '">' + escapeHtml(p.kind) + '</span>' +
+          '<div class="hr-main">' +
+            '<p class="hr-title">' + escapeHtml(p.describe) + '</p>' +
+            '<p class="hr-why">' + escapeHtml(p.headline) + ' — holds on <b>' + p.units.length +
+              ' unit' + (p.units.length===1?'':'s') + '</b>, contradicted on none.</p>' +
+          '</div>' +
+        '</div>' +
+        '<div class="hr-evidence">' +
+          '<table><thead>' + head + '</thead><tbody>' + rows + '</tbody></table>' +
+          '<p class="hr-why" style="margin-top:9px;">Units: ' + escapeHtml(unitList) + '</p>' +
+        '</div>' +
+        '<div class="hr-actions">' +
+          '<button class="go" data-accept="' + escapeHtml(p.key) + '">Remember this for this property</button>' +
+          '<button data-show="' + escapeHtml(p.key) + '">Show the units</button>' +
+          '<button class="plain" data-decline="' + escapeHtml(p.key) + '">Not this time</button>' +
+        '</div>';
+      body.appendChild(card);
+    }
+    block.appendChild(body);
+    wrap.appendChild(block);
+  }
+
+  if (PROPERTY_RULES.length){
+    const block = document.createElement('div');
+    block.className = 'hr-block';
+    const suspended = PROPERTY_RULES.filter(r => r.status === 'suspended').length;
+    block.innerHTML =
+      '<div class="hr-head"><div>' +
+        '<h3>House rules for this property</h3>' +
+        '<p>' + PROPERTY_RULES.length + ' saved' +
+          (suspended ? ' &middot; <b style="color:#f0b35f">' + suspended + ' switched off this run because the documents no longer agree</b>' : '') +
+          '. Removing one restores the original behaviour exactly.</p>' +
+      '</div></div>';
+    const body = document.createElement('div');
+    body.className = 'hr-body';
+    for (const s of PROPERTY_RULES){
+      const row = document.createElement('div');
+      row.className = 'hr-saved ' + (s.status || 'active');
+      row.innerHTML =
+        '<span class="dot"></span>' +
+        '<span class="txt">' + escapeHtml(prDescribeRule(s.rule)) +
+          '<em>' + escapeHtml(s.explain || '') + '</em></span>' +
+        '<button data-remove="' + escapeHtml(s.id) + '">Remove</button>';
+      body.appendChild(row);
+    }
+    block.appendChild(body);
+    wrap.appendChild(block);
+  }
+
+  wrap.onclick = (ev) => {
+    const btn = ev.target.closest('button');
+    if (!btn) return;
+    if (btn.dataset.accept) { acceptProposal(btn.dataset.accept); return; }
+    if (btn.dataset.decline){ declineProposal(btn.dataset.decline); return; }
+    if (btn.dataset.remove) { removeSavedRule(btn.dataset.remove); return; }
+    if (btn.dataset.show){
+      const card = btn.closest('.hr-card');
+      card.classList.toggle('open');
+      btn.textContent = card.classList.contains('open') ? 'Hide the units' : 'Show the units';
+    }
+  };
+}
+
 function autoApplyDetectedBundles(){
   const cands = detectBundleCandidates(unitEntries);
   if (!cands.length) return false;
@@ -3628,6 +4109,40 @@ processBtn.addEventListener('click', async () => {
     progressWrap.classList.add('hidden');
     processBtn.disabled = false;
     return;
+  }
+
+  /* Which property this is was decided by the server from the documents' own
+     identifiers, so this is also where its saved house rules come from. Loaded
+     once per property per session; a failure here is silent by design, because
+     a rule is a convenience and an audit that cannot reach them should still
+     run — just without them. */
+  /* Option Filters start clean on every run.
+     ----------------------------------------
+     They used to persist in localStorage across reloads, which was right when
+     they were the only memory the tool had. They are not any more: a property's
+     standing conventions now live in its house rules, saved against THAT
+     PROPERTY in the database.
+
+     What was left was the dangerous half. localStorage is per-browser, not
+     per-property, so a filter ticked while auditing one building silently
+     carried into the next set of documents and suppressed findings at a
+     property nobody had ever tuned it for. A hidden finding you did not choose
+     to hide, on a property you were not looking at when you chose it, is the
+     exact failure the house-rules design exists to prevent.
+
+     So: cleared here, at the start of every run, before rules are loaded.
+     rebuildRuleEngine() then re-applies this property's own saved 'hide'
+     rules, which ARE scoped correctly and ARE visible in the panel. */
+  HIDDEN_CHECK_KEYS.clear();
+  try { localStorage.removeItem(HIDDEN_CHECKS_STORAGE_KEY); } catch (_e){ /* private mode */ }
+  renderDiscrepancyFilterPanel();
+
+  PROPERTY_ID = (typeof AG_PROPERTY !== 'undefined' && AG_PROPERTY) ? AG_PROPERTY.id : null;
+  if (PROPERTY_ID && RULES_LOADED_FOR !== PROPERTY_ID){
+    progressText.textContent = 'Loading this property’s house rules…';
+    const savedRows = await agLoadRules(PROPERTY_ID);
+    PROPERTY_RULES = savedRows.map(r => ({ id: r.id, rule: r.rule, source: r.source, status: 'active' }));
+    RULES_LOADED_FOR = PROPERTY_ID;
   }
 
   rawSuccessByUnit = new Map();
@@ -3802,7 +4317,11 @@ function reconcileAll(isAutoBundlePass){
   // found while auditing one property would still be in memory when the next
   // set of documents is processed, and would match by name against data that
   // never justified them.
-  if (!isAutoBundlePass) BUNDLE_RULES = [];
+  if (!isAutoBundlePass){
+    BUNDLE_RULES = [];
+    rulesSettled = false;
+    rebuildRuleEngine();
+  }
 
   const entries = [];
   const claimedResman = new Set();
@@ -4062,6 +4581,26 @@ function reconcileAll(isAutoBundlePass){
     return;
   }
 
+  /* Saved rules are judged only once the bundles have settled, because a rule
+     is judged on the finished reconcile rather than a half-built one.
+
+     A rule the documents now contradict is dropped and the whole run is
+     redone without it. That costs a second pass and buys the thing that makes
+     persistence safe at all: a rule that has stopped being true cannot
+     suppress anything, not even for one report. */
+  if (!rulesSettled){
+    rulesSettled = true;
+    if (evaluateSavedRules(entries)){
+      BUNDLE_RULES = BUNDLE_RULES.filter(r => String(r.id).indexOf('saved-') !== 0);
+      rebuildRuleEngine();
+      reconcileAll(true);
+      return;
+    }
+  }
+
+  RULE_PROPOSALS = detectRuleProposals(entries);
+  renderHouseRules();
+
   syncMtmFeeFromLeases();
   renderDashboard();
 }
@@ -4246,6 +4785,24 @@ function syncSortHeaderIndicators(){
   });
 }
 
+function initFlatSortableHeaders(){
+  document.querySelectorAll('#flat-view-shell th.flat-sortable').forEach(th => {
+    th.setAttribute('tabindex', '0');
+    th.setAttribute('role', 'button');
+    const activate = () => {
+      const key = th.getAttribute('data-flat-sort');
+      if (flatSortKey !== key){ flatSortKey = key; flatSortDir = 1; }
+      else if (flatSortDir === 1){ flatSortDir = -1; }
+      else { flatSortKey = null; flatSortDir = 1; }   // third click -> back to default
+      renderFlatIssuesTable();
+    };
+    th.addEventListener('click', activate);
+    th.addEventListener('keydown', ev => {
+      if (ev.key === 'Enter' || ev.key === ' '){ ev.preventDefault(); activate(); }
+    });
+  });
+}
+
 function initSortableHeaders(){
   document.querySelectorAll('#unit-view-shell th.sortable').forEach(th => {
     th.setAttribute('tabindex', '0');
@@ -4264,6 +4821,7 @@ function initSortableHeaders(){
   });
 }
 initSortableHeaders();
+initFlatSortableHeaders();
 
 function buildFlatIssuesRows(){
   const out = [];
@@ -4272,22 +4830,71 @@ function buildFlatIssuesRows(){
     const chargeRows = (e.rows||[]).filter(r => r.status!=='match' && r.status!=='probable' && !r.soft && !r.hiddenByFilter);
     const checkRows = e.verify ? e.verify.checks.filter(c => c.status==='fail' && !isCheckHidden(c.key)) : [];
     for (const r of chargeRows){
-      out.push({ unit: e.unit, residents: e.residents||'—', item: r.label, onLease: money(r.leaseVal), inResman: money(r.resmanVal), note: chargeNote(r) });
+      out.push({ unit: e.unit, residents: e.residents||'—', item: r.label, onLease: money(r.leaseVal), inResman: money(r.resmanVal), note: chargeNote(r),
+        // kept alongside the formatted strings so the amount columns sort as money, not text
+        leaseVal: r.leaseVal, resmanVal: r.resmanVal });
     }
     for (const c of checkRows){
       const rv = verifyRowValues(c);
       const noteBits = [];
       if (c.key === 'signatures' && c.missing) noteBits.push(c.missing.map(f=>f.signer+' — Page '+f.page+(f.section?' ('+f.section+')':'')).join('; '));
       if (rv.note) noteBits.push(rv.note);
-      out.push({ unit: e.unit, residents: e.residents||'—', item: VERIFY_CHECK_TITLES[c.key] || c.label, onLease: rv.onLease, inResman: rv.inResman, note: noteBits.join(' — ') });
+      out.push({ unit: e.unit, residents: e.residents||'—', item: VERIFY_CHECK_TITLES[c.key] || c.label, onLease: rv.onLease, inResman: rv.inResman, note: noteBits.join(' — '),
+        leaseVal: typeof rv.leaseVal === 'number' ? rv.leaseVal : null, resmanVal: typeof rv.resmanVal === 'number' ? rv.resmanVal : null });
     }
   }
   return out;
 }
 
+/* Sorting the flat mismatch list.
+
+   Sorting by Item is the reason this exists: it gathers every unit's copy of
+   the same finding together, so "show me the deposit problem across the whole
+   property" is one click instead of opening ninety units. Unit stays the
+   tiebreaker so equal values read in a sensible order.
+
+   Amount columns sort numerically off the underlying value, not the "$1,225.00"
+   string -- sorting money as text puts $9 above $80. */
+let flatSortKey = null, flatSortDir = 1;
+const FLAT_SORT_ACCESSORS = {
+  unit:      r => String(r.unit),
+  residents: r => String(r.residents || ''),
+  item:      r => String(r.item || ''),
+  onLease:   r => (typeof r.leaseVal === 'number' ? r.leaseVal : null),
+  inResman:  r => (typeof r.resmanVal === 'number' ? r.resmanVal : null),
+};
+
+function applyFlatSort(rows){
+  if (!flatSortKey || !FLAT_SORT_ACCESSORS[flatSortKey]) return rows;
+  const get = FLAT_SORT_ACCESSORS[flatSortKey];
+  return rows.slice().sort((a, b) => {
+    const av = get(a), bv = get(b);
+    const aEmpty = av == null || av === '';
+    const bEmpty = bv == null || bv === '';
+    if (aEmpty && bEmpty) return String(a.unit).localeCompare(String(b.unit), undefined, {numeric:true});
+    if (aEmpty) return 1;
+    if (bEmpty) return -1;
+    let cmp = (typeof av === 'number' && typeof bv === 'number')
+      ? av - bv
+      : String(av).localeCompare(String(bv), undefined, {numeric:true});
+    if (cmp === 0) return String(a.unit).localeCompare(String(b.unit), undefined, {numeric:true});
+    return cmp * flatSortDir;
+  });
+}
+
+function syncFlatSortIndicators(){
+  document.querySelectorAll('.flat-sortable').forEach(th => {
+    th.classList.remove('sorted-asc', 'sorted-desc');
+    if (th.dataset.flatSort === flatSortKey){
+      th.classList.add(flatSortDir === 1 ? 'sorted-asc' : 'sorted-desc');
+    }
+  });
+}
+
 function renderFlatIssuesTable(){
   const body = document.getElementById('flat-issues-body');
-  const rows = buildFlatIssuesRows();
+  const rows = applyFlatSort(buildFlatIssuesRows());
+  syncFlatSortIndicators();
   document.getElementById('flat-empty-state').classList.toggle('hidden', rows.length>0);
   body.innerHTML = rows.map(r =>
     '<tr><td><b>'+escapeHtml(r.unit)+'</b></td><td>'+escapeHtml(r.residents)+'</td><td>'+escapeHtml(r.item)+

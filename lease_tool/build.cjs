@@ -30,6 +30,14 @@ out = out.replace('<!--RR_PROPERTY_NAME-->', () => '<script>\n' + rrPropertyName
 if (out.includes('<!--RR_PROPERTY_NAME-->')) throw new Error('Property-name placeholder not replaced');
 if (!out.includes('function extractPropertyNameFromRentRoll')) throw new Error('Property-name reader missing from build output');
 
+// The house-rules schema and validator, shared with the tests that prove a
+// rule cannot be saved unless it refers to charges these documents contain.
+const propertyRules = fs.readFileSync('../shared/property_rules.js', 'utf8');
+out = out.replace('<!--PROPERTY_RULES-->', () => '<script>\n' + propertyRules + '\n</script>');
+if (out.includes('<!--PROPERTY_RULES-->')) throw new Error('Property-rules placeholder not replaced');
+if (!out.includes('function prValidateRule')) throw new Error('Property-rules module missing from build output');
+
+
 
 fs.writeFileSync('./lease_reconciler.html', out);
 fs.writeFileSync('./lease-resman-reconciler.html', out);

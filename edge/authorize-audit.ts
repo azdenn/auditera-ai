@@ -272,8 +272,20 @@ Deno.serve(async (req) => {
     // A developer account skips the property match entirely -- deliberately
     // ahead of the entitlement check too, so a lapsed trial on a dev's own
     // account cannot lock the people who maintain this out of their own tools.
+    //
+    // It still RESOLVES the property when one matches, though the verdict
+    // stays 'dev'. Without that, a maintainer auditing their own building had
+    // no property id, so the tool could not load or save that property's house
+    // rules -- the two accounts most likely to be testing them were the only
+    // two that could not use them.
+    const devMatch = DEV_USER_IDS.has(user.id)
+      ? decide(detectedName, detectedAddress, licensed)
+      : null;
+
     const outcome = DEV_USER_IDS.has(user.id)
-      ? { verdict: 'dev' as const, property: null, via: 'dev' as const }
+      ? { verdict: 'dev' as const,
+          property: devMatch && devMatch.verdict === 'allowed' ? devMatch.property : null,
+          via: 'dev' as const }
       : entitled === true
         ? decide(detectedName, detectedAddress, licensed)
         : { verdict: 'unlicensed' as const, property: null, via: null };
@@ -308,7 +320,11 @@ Deno.serve(async (req) => {
       // override. Everything else -- including anything unforeseen -- is a no.
       allowed: outcome.verdict === 'allowed' || outcome.verdict === 'dev',
       verdict: outcome.verdict,
-      property: outcome.property ? { name: outcome.property.name } : null,
+      // The id is what lets the tool load and save this property's house
+      // rules. It identifies a row the caller already owns and grants
+      // nothing -- every read and write of those rules is gated by the same
+      // row-level policies as the properties table itself.
+      property: outcome.property ? { id: outcome.property.id, name: outcome.property.name } : null,
       via: outcome.via,
       // Told back to the caller so a refusal can name the account on screen.
       // This is the address on the token the caller already holds -- it

@@ -14,7 +14,8 @@
 //     right count
 //   - the per-unit detail still SHOWS the deposit check, muted as "Hidden by
 //     Filter" (never silently deleted) with the real fail values intact
-//   - the setting persists in localStorage across a fresh page load
+//   - the setting survives a bare page reload, but EVERY new run clears it
+//     (this supersedes the old behaviour -- see the note on the checks)
 //   - unchecking restores normal flagging
 const { chromium } = require('playwright');
 const path = require('path');
@@ -106,8 +107,12 @@ const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
   await page.waitForFunction(() => document.getElementById('parse-status').textContent === 'Done.', {timeout: 90000});
   await page.waitForTimeout(300);
   const afterReloadEntry = await getEntry105();
+  const afterReloadCb = await page.evaluate(() => {
+    const cb = document.querySelector('input[data-check-key="deposit"]');
+    return { checked: cb ? cb.checked : null, isHidden: isCheckHidden('deposit') };
+  });
 
-  // Now uncheck it and confirm normal flagging is restored.
+  // Re-tick it and confirm hiding still works after the reset.
   await page.evaluate(() => { document.getElementById('discrepancy-filter-panel').open = true; });
   await page.click('input[data-check-key="deposit"]');
   await page.waitForTimeout(300);
@@ -129,12 +134,28 @@ const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
     ['KPI tile shows the true hidden count (1)', !!kpiHtml && /^1/.test(kpiHtml) && /hidden/i.test(kpiHtml)],
     ['Per-unit detail still shows the deposit row (never silently deleted)', !!detailHtml && /Security Deposit/i.test(detailHtml)],
     ['Per-unit detail marks it "Hidden by Filter" instead of a plain mismatch', !!detailHtml && /Hidden by Filter/i.test(detailHtml)],
-    ['localStorage persists the hidden setting across reload (checkbox)', afterReload.checked === true],
-    ['localStorage persists the hidden setting across reload (isCheckHidden)', afterReload.isHidden === true],
-    ['After reload + reprocess: filter still effective (clean, 0 issues)', afterReloadEntry.category === 'clean' && afterReloadEntry.issueCount === 0],
-    ['Unchecking restores normal flagging: category back to mismatch', afterUnhide.category === 'mismatch'],
-    ['Unchecking restores normal flagging: issueCount back to 1', afterUnhide.issueCount === 1],
-    ['Unchecking restores normal flagging: hiddenFailCount back to 0', afterUnhide.hiddenFailCount === 0],
+    // A reload on its own processes nothing, so the tick is still there.
+    ['The hidden setting survives a bare page reload (checkbox)', afterReload.checked === true],
+    ['The hidden setting survives a bare page reload (isCheckHidden)', afterReload.isHidden === true],
+
+    /* SUPERSEDES the earlier behaviour, deliberately. This used to assert the
+       filter was STILL effective after re-processing. It is not any more, and
+       that is the fix: Option Filters are cleared by every run.
+
+       They were the tool's only memory when that was written. They are not
+       now -- a property's standing conventions live in its house rules, saved
+       against that property. What was left of localStorage was the dangerous
+       half: it is per-browser, not per-property, so a filter ticked while
+       auditing one building silently followed the user into the next set of
+       documents and suppressed findings at a property nobody tuned it for. */
+    ['A NEW RUN CLEARS THE FILTERS: the finding is reported again',
+      afterReloadEntry.category === 'mismatch' && afterReloadEntry.issueCount === 1],
+    ['...and nothing is left counted as hidden', afterReloadEntry.hiddenFailCount === 0],
+    ['...with the checkbox visibly cleared, not just ignored',
+      afterReloadCb.checked === false && afterReloadCb.isHidden === false],
+    ['Hiding still works after the reset: category flips to clean', afterUnhide.category === 'clean'],
+    ['Hiding still works after the reset: issueCount excludes it', afterUnhide.issueCount === 0],
+    ['Hiding still works after the reset: it is counted as hidden', afterUnhide.hiddenFailCount === 1],
   ];
   let allPass = true;
   console.log('=== PASS/FAIL ===');

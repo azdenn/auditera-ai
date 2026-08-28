@@ -127,6 +127,62 @@ function agDashboardUrl(){
   return null;
 }
 
+/* Set by agAuthorizeAudit on a yes. Null until then, and null again for any
+   refusal — a tool that was not authorised has no property to act on. */
+var AG_PROPERTY = null;
+
+/* Read and write this property's house rules.
+
+   WHAT TRAVELS: charge labels the property writes on its own paperwork, and
+   nothing else. No amounts, no residents, no document text. The arithmetic
+   that decides whether a rule still holds runs here, in the browser, against
+   documents that never leave it — the server stores the convention, never the
+   evidence for it. */
+function agRulesEndpoint(query){
+  return AG_SUPABASE_URL + '/rest/v1/property_rules' + (query || '');
+}
+function agRulesHeaders(extra){
+  var h = { 'Authorization': 'Bearer ' + AG_TOKEN, 'apikey': AG_ANON_KEY,
+            'Content-Type': 'application/json' };
+  for (var k in (extra || {})) h[k] = extra[k];
+  return h;
+}
+
+async function agLoadRules(propertyId){
+  if (!AG_TOKEN || !propertyId) return [];
+  try {
+    var res = await fetch(agRulesEndpoint('?property_id=eq.' + encodeURIComponent(propertyId) +
+      '&enabled=is.true&select=id,rule,source,created_at'),
+      { headers: agRulesHeaders(), cache: 'no-store' });
+    if (!res.ok) return [];
+    var rows = await res.json();
+    return Array.isArray(rows) ? rows : [];
+  } catch (_e){ return []; }   // rules are a convenience; never block an audit
+}
+
+async function agSaveRule(propertyId, rule, source){
+  if (!AG_TOKEN || !propertyId) return null;
+  try {
+    var res = await fetch(agRulesEndpoint(''), {
+      method: 'POST',
+      headers: agRulesHeaders({ 'Prefer': 'return=representation' }),
+      body: JSON.stringify({ property_id: propertyId, rule: rule, source: source || 'proposed' }),
+    });
+    if (!res.ok) return null;
+    var rows = await res.json();
+    return (Array.isArray(rows) && rows[0]) ? rows[0] : null;
+  } catch (_e){ return null; }
+}
+
+async function agDeleteRule(id){
+  if (!AG_TOKEN || !id) return false;
+  try {
+    var res = await fetch(agRulesEndpoint('?id=eq.' + encodeURIComponent(id)),
+      { method: 'DELETE', headers: agRulesHeaders() });
+    return res.ok;
+  } catch (_e){ return false; }
+}
+
 function agEscape(v){
   return String(v == null ? '' : v)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -257,7 +313,17 @@ async function agAuthorizeAudit(tool, detectedName, detectedAddress){
 
   // Strictly true, not truthy. A string, a 1, an object -- anything other than
   // the boolean the server promised -- is treated as a refusal.
-  if (payload && payload.allowed === true) return true;
+  if (payload && payload.allowed === true){
+    /* The property this audit was authorised against, kept for the tool to
+       read. It is how the tool knows which property's house rules to load and
+       save — the server resolved it from the documents' own identifiers and
+       the caller's licence, so the browser never has to guess or be trusted
+       about which building it is looking at. */
+    AG_PROPERTY = (payload.property && payload.property.id)
+      ? { id: payload.property.id, name: payload.property.name || null }
+      : null;
+    return true;
+  }
 
   agBlockScreen(
     (payload && payload.message)
@@ -310,5 +376,6 @@ if (typeof document !== 'undefined'){
 
 if (typeof module !== 'undefined' && module.exports){
   module.exports = { agAuthorizeAudit, agBlockScreen, agEscape,
-                     agAccountEmail, agDashboardUrl, agRenderAccountChip };
+                     agAccountEmail, agDashboardUrl, agRenderAccountChip,
+                     agLoadRules, agSaveRule, agDeleteRule };
 }
