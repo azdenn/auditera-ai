@@ -1003,8 +1003,10 @@ const CATEGORY_LABELS = {
   DEPOSIT_WAIVER: 'Deposit Waiver / LeaseLock',
   CREDIT_BUILDER: 'Credit Builder',
   PET: 'Pet / Animal rent',
-  CABLE: 'Cable/Satellite',
-  INTERNET: 'Internet',
+  // Cable and internet used to be two categories. They are one now -- see the
+  // note on CABLE_INTERNET in DEFAULT_ALIAS_MAP below.
+  CABLE_INTERNET: 'Cable / Internet',
+  INSURANCE: 'Resident liability insurance',
   PACKAGE: 'Package service',
   STORMWATER: 'Stormwater/Drainage',
   WASHERDRYER: 'Washer/Dryer',
@@ -1019,8 +1021,48 @@ const DEFAULT_ALIAS_MAP = {
   DEPOSIT_WAIVER: ['LeaseLock','Lease Lock','Deposit Waiver','Deposit Waiver Fee'],
   CREDIT_BUILDER: ['Credit Builder'],
   PET: ['Animal Rent','Pet Rent','Pet Fee','Pet Fees & Charges','Dog Rent','Cat Rent','Animal'],
-  CABLE: ['Cable','Cable/satellite','Cable TV','Satellite'],
-  INTERNET: ['Internet','Internet Fee','WiFi'],
+  /* ONE category, not two, and this is a real-world correction rather than a
+     tidy-up.
+
+     The TAA lease prints "Cable/satellite" and "Internet" as two separate
+     Section L rows, because they are two separate boxes on the form. Property
+     management systems routinely bill them as ONE line -- a real rent roll
+     reads "Cable / Internet Fee" -- because the property buys them as one
+     bundled service from one provider.
+
+     With two categories that is guaranteed to look wrong on every single unit:
+     the lease side shows two charges, the rent roll side shows one, and
+     whichever category the combined line happened to fall into reported the
+     other as missing. Worse, "Cable / Internet Fee" contains one word from
+     each alias list, so which category won was decided by whichever happened
+     to be iterated first -- a coin toss, not a rule.
+
+     As one category it just works, because Pass 1 of reconcileUnit already
+     sums every lease line in a category against every rent roll line in it:
+     lease Cable/satellite + lease Internet vs the one bundled rent roll line,
+     compared on the total, which is the number the resident actually pays.
+
+     Keeping them separate would only be worth it if the tool could tell a
+     property overbilling internet from one overbilling cable -- and it cannot,
+     because the rent roll it is checking against does not separate them
+     either. */
+  CABLE_INTERNET: ['Cable','Cable/satellite','Cable TV','Satellite','Internet','Internet Fee',
+                   'Cable Internet','Cable / Internet','Cable/Internet Fee','WiFi','Wi-Fi'],
+
+  /* Resident liability insurance had no category at all, so every unit
+     carrying it fell into Unrecognized and flagged as a discrepancy -- on one
+     real property, 93 of 112 units. It is a standard renters-liability
+     product, written a dozen different ways, and it is a normal lease charge
+     rather than an anomaly.
+
+     Both the long form the rent roll uses ("Resident Liability Insurance") and
+     the short form written onto the lease's Other: line ("Liability
+     Insurance") land here, which is the whole point: they are the same charge
+     and must reconcile against each other rather than appearing as one
+     unmatched line on each side. */
+  INSURANCE: ['Renters Insurance','Renter Insurance','Resident Liability Insurance',
+              'Liability Insurance','Legal Liability Insurance','Renters Legal Liability',
+              'Liability Waiver','Tenant Insurance','Resident Insurance','HO4'],
   PACKAGE: ['Package service','Package Fee','Package'],
   STORMWATER: ['Stormwater','Stormwater/drainage','Drainage','Storm Water Fee'],
   // "WD Rent" and "W/D Rent" are spelled out in full rather than adding a bare
@@ -1234,8 +1276,29 @@ function saveMtmFeeExpected(){
 let MTM_FEE_EXPECTED = loadMtmFeeExpected();
 
 const STOPWORDS = new Set(['fee','fees','charge','charges','service','services','rental','monthly','the','and','a','or']);
+/* Fold a word to its singular so a charge and an alias that differ only in
+   plurality still match. A real rent roll line reads "Fresh Spring Move In
+   Specials!" while the alias is "Move In Special"; without this, one letter
+   made that an unrecognised charge and a mismatch on every unit that got the
+   special.
+
+   Deliberately conservative. Words of three letters or fewer are left alone
+   ("gas"), as is anything ending in a doubled or Latin -ss/-us/-is ("access",
+   "campus", "chassis"), because chopping those produces a different word.
+   This is not a stemmer and should not become one -- aggressive stemming would
+   start matching charges that are genuinely different. */
+function singularizeWord(w){
+  if (w.length <= 3) return w;
+  if (/(ss|us|is)$/.test(w)) return w;
+  if (/ies$/.test(w)) return w.slice(0, -3) + 'y';
+  if (/(ch|sh|x|z|s)es$/.test(w)) return w.slice(0, -2);
+  if (/s$/.test(w)) return w.slice(0, -1);
+  return w;
+}
 function toWords(text){
-  return (text||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').split(/\s+/).filter(w => w && !STOPWORDS.has(w));
+  return (text||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').split(/\s+/)
+    .map(w => w && singularizeWord(w))
+    .filter(w => w && !STOPWORDS.has(w));
 }
 function wordSet(text){ return new Set(toWords(text)); }
 function isSubset(small, big){ for (const w of small) if (!big.has(w)) return false; return true; }
@@ -2446,7 +2509,19 @@ function appendNewerLeaseCheck(verify, pick, chosenVerification, block){
 
 function verifyCheckTitle(c){
   switch(c.key){
-    case 'signatures': return c.status==='fail' ? 'Missing Signature' : (c.status==='unable' ? 'Signatures — Unable to verify' : 'All Required Signatures Present');
+    /* "Missing Signature" on its own made you open the row to learn anything
+       at all -- which one, and where. Someone chasing signatures across a
+       property wants to go straight to the page, so the page (and how many)
+       goes in the title. */
+    case 'signatures': {
+      if (c.status === 'unable') return 'Signatures — Unable to verify';
+      if (c.status !== 'fail') return 'All Required Signatures Present';
+      const m = c.missing || [];
+      if (!m.length) return 'Missing Signature';
+      if (m.length === 1) return 'Missing Signature — ' + m[0].signer + ', page ' + m[0].page;
+      const pages = Array.from(new Set(m.map(f => f.page))).sort((a,b) => a-b);
+      return m.length + ' Missing Signatures — page' + (pages.length===1?'':'s') + ' ' + pages.join(', ');
+    }
     case 'residentName': return c.status==='fail' ? 'Resident Name Mismatch' : (c.status==='unable' ? 'Resident Name — Unable to verify' : 'Resident Name Match');
     case 'unitNumber': return c.status==='fail' ? 'Unit Number Mismatch' : (c.status==='unable' ? 'Unit Number — Unable to verify' : 'Unit Number Match');
     case 'deposit': return c.status==='fail' ? 'Security Deposit Mismatch' : (c.status==='unable' ? 'Security Deposit — Unable to verify' : 'Security Deposit Match');
@@ -2741,7 +2816,37 @@ function unitFolderNameAtDepth(zipPath, depth){
   return name || null;
 }
 function looksLikeLeaseFilename(zipPath){
-  return /lease|agreement|contract/i.test(zipPath.split('/').pop() || '');
+  return /lease|agreement|contract|renewal|addendum/i.test(zipPath.split('/').pop() || '');
+}
+
+/* Folders inside a unit that cannot contain the signed lease, and filenames
+   that cannot be one.
+
+   WHY THIS EARNS ITS KEEP
+   On a real export, 54 of 103 units had no "Signed Lease Documents" folder at
+   all -- their lease sat loose in the unit folder, or in "Lease Documents".
+   The fallback found them, then spent its six-file budget per unit on
+   "Invoice - 03-26-2026.pdf", "Richard Hawk Application.pdf", "NTN Hawk.pdf"
+   (notice to vacate) and "POI Hawk.pdf" (proof of income). Units carrying a
+   year of monthly invoices could push the actual lease out of the budget
+   entirely -- and every one of those files still had to be decompressed and
+   run through the PDF parser first.
+
+   These lists only ever REMOVE candidates from the fallback. They never
+   suppress a document found in a real "Signed Lease Documents" folder, and a
+   filename that says lease/renewal/addendum overrides them, so a lease filed
+   under an odd folder name is still picked up. */
+const NON_LEASE_FOLDER_RE = /^(email attachments|application|applications|invoice|invoices|photo|photos|inspection|inspections|notice|notices|ledger|ledgers|correspondence|move ?out|maintenance|work orders?)$/i;
+const NON_LEASE_FILENAME_RE = /invoice|receipt|statement|ledger|application|proof of income|\bpoi\b|\bntn\b|\bntv\b|\bid\b|insurance|inspection|guarantor|photo|work ?order|notice|vacate|delinquen/i;
+
+function isNonLeaseCandidate(zipPath, unitDirDepth){
+  const parts = zipPath.split('/');
+  const file = parts.pop() || '';
+  if (looksLikeLeaseFilename(file)) return false;   // the filename wins
+  for (let i = unitDirDepth + 1; i < parts.length; i++){
+    if (NON_LEASE_FOLDER_RE.test(String(parts[i]).trim())) return true;
+  }
+  return NON_LEASE_FILENAME_RE.test(file);
 }
 
 /* ResMan names each unit's folder after the unit alone ("A301"). Other exports
@@ -2821,12 +2926,26 @@ async function scanZipForSignedLeases(file, cbs){
   // did produce one, so we only go looking where nothing was found.
   const unitDirsWithLease = new Set();
   const otherPdfs = [];
+  const emptyPdfs = [];   // zero-byte files -- failed uploads, never candidates
   const depthTally = new Map(); // how deep this archive's unit folders sit
 
   const unzipper = new fflate.Unzip((stream) => {
     const name = stream.name || '';
     if (!name || name.charAt(name.length-1) === '/') return; // directory entry
     if (!/\.pdf$/i.test(name)) return;
+
+    /* A zero-byte PDF is not a lease, it is a failed upload -- and there were
+       twenty of them in one real export, several named exactly like the
+       lease ("23 Tinoco Lease.pdf", "D1 Lease Nelson.pdf"). Because they read
+       as lease-named they sorted FIRST, took the unit's budget, and then
+       failed to parse -- so a unit whose real lease sat next to an empty
+       decoy reported no readable lease at all.
+
+       They are recorded rather than silently dropped: an empty lease PDF in
+       the property's own document store is worth knowing about. */
+    const bytes = (stream.originalSize != null) ? stream.originalSize : stream.size;
+    if (bytes === 0){ emptyPdfs.push(name); return; }
+
     const folderKey = signedLeaseFolderKey(name);
     if (!folderKey){
       otherPdfs.push(name); // held back -- promoted below only if its unit found nothing
@@ -2873,6 +2992,7 @@ async function scanZipForSignedLeases(file, cbs){
     const dir = unitDirPathAtDepth(name, unitDirDepth);
     if (!dir) continue;                                   // loose at the root -- belongs to no unit
     if (unitDirsWithLease.has(dir.toLowerCase())) continue; // this unit is already answered
+    if (isNonLeaseCandidate(name, unitDirDepth)) continue;  // invoices, IDs, notices, applications
     if (!byUnitDir.has(dir)) byUnitDir.set(dir, []);
     byUnitDir.get(dir).push(name);
   }
@@ -2900,7 +3020,8 @@ async function scanZipForSignedLeases(file, cbs){
 
   return { selectedPaths: selected, foldersFound: folderKeysSeen.size, filesConsidered,
            extraVersionsFound, fallbackPaths, unitDirDepth,
-           fallbackUnitsSearched: byUnitDir.size };
+           fallbackUnitsSearched: byUnitDir.size,
+           emptyPdfs, emptyLeaseNamedPdfs: emptyPdfs.filter(looksLikeLeaseFilename) };
 }
 
 async function runZipIngestion(file, selectedPaths, cbs){
@@ -3623,7 +3744,19 @@ function reconcileUnit(leaseRawItems, block, verification){
   const leftoverResman = resmanClassified.map((it,i)=>({...it, i})).filter(it => !usedResmanIdx.has(it.i));
   const pairedResman = new Set();
   for (const lItem of leftoverLease){
-    const match = leftoverResman.find(rItem => !pairedResman.has(rItem.i) && Math.abs(rItem.amount - lItem.amount) < 0.01);
+    // Every unclaimed rent roll line at this exact amount is a candidate.
+    // Where there is more than one, the names decide -- a lease "Community
+    // Fee 1" belongs with a rent roll "Community Fee", not with whichever
+    // other $145 line happened to sit earlier in the list. Taking the first
+    // arithmetic match is how two unrelated charges get paired and then
+    // reported as reconciled.
+    const candidates = leftoverResman.filter(rItem =>
+      !pairedResman.has(rItem.i) && Math.abs(rItem.amount - lItem.amount) < 0.01);
+    let match = null, bestAffinity = -1;
+    for (const c of candidates){
+      const a = bundleNameAffinity(c.description, [lItem.rawLabel]);
+      if (a > bestAffinity){ bestAffinity = a; match = c; }
+    }
     if (match){
       pairedResman.add(match.i);
       usedLeaseIdx.add(lItem.i);
@@ -3632,7 +3765,12 @@ function reconcileUnit(leaseRawItems, block, verification){
         label: lItem.rawLabel + ' / ' + match.description,
         leaseVal: lItem.amount, resmanVal: match.amount, status: 'probable', category: 'UNMAPPED',
         leaseRaw: [lItem.rawLabel], resmanRaw: [match.description],
-        note: 'Matched only by an identical dollar amount (' + money(lItem.amount) + ') — lease says "' + lItem.rawLabel + '", ResMan says "' + match.description + '". Neither matched a known alias; add one below if this keeps happening.',
+        note: (bestAffinity > 0
+            ? 'Matched on both the amount (' + money(lItem.amount) + ') and the wording — lease says "' + lItem.rawLabel +
+              '", ResMan says "' + match.description + '". Neither matched a known alias, so add one below to make this exact rather than probable.'
+            : 'Matched only by an identical dollar amount (' + money(lItem.amount) + ') — lease says "' + lItem.rawLabel +
+              '", ResMan says "' + match.description + '". The names have nothing in common, so check this one before trusting it; ' +
+              'add an alias below if it is right and keeps happening.'),
       }, lItem.fromOther ? [lItem.rawLabel] : null));
     }
   }
@@ -3642,9 +3780,31 @@ function reconcileUnit(leaseRawItems, block, verification){
   // the flood of mismatches this whole group exists to make manageable.
   leaseClassified.forEach((it,i) => {
     if (usedLeaseIdx.has(i)) return;
-    rows.push(tagPropertySpecific(
-      { label: it.rawLabel, leaseVal: it.amount, resmanVal: null, status:'leaseonly', category:'UNMAPPED', leaseRaw:[it.rawLabel], resmanRaw:[] },
-      it.fromOther ? [it.rawLabel] : null));
+    const row = { label: it.rawLabel, leaseVal: it.amount, resmanVal: null, status:'leaseonly',
+                  category:'UNMAPPED', leaseRaw:[it.rawLabel], resmanRaw:[] };
+
+    /* A lease line left over whose NAME matches a rent roll line that has
+       already been reconciled against a different lease line. Seen for real:
+       the lease prints "Community Fee 1" and "Community Fee 2", the rent roll
+       bills one "Community Fee", and the office simply never removed the
+       second row from the lease template.
+
+       This stays a flagged discrepancy on purpose. The resident signed a
+       document disclosing a charge -- one billing change away from actually
+       being collected -- and quietly hiding that is the opposite of what this
+       tool is for. What it gets instead is a note that names the sibling, so
+       whoever reads it can see in one line that it is a duplicated lease row
+       rather than a missing charge. */
+    const twin = resmanClassified.find((rr, ri) => usedResmanIdx.has(ri) &&
+      bundleNameAffinity(rr.description, [it.rawLabel]) > 0);
+    if (twin){
+      row.duplicateLeaseLine = true;
+      row.note = 'The lease lists this separately from "' + twin.description + '", which the Rent Roll already bills at ' +
+        money(twin.amount) + '. It looks like the same charge written on the lease twice, and only one of them is being ' +
+        'collected — but the resident has signed for both, so it is worth having the second line removed from the lease ' +
+        'template rather than left disclosed and unbilled.';
+    }
+    rows.push(tagPropertySpecific(row, it.fromOther ? [it.rawLabel] : null));
   });
   resmanClassified.forEach((it,i) => {
     if (usedResmanIdx.has(i)) return;
@@ -3783,6 +3943,32 @@ function applyBundleRules(leaseClassified, resmanClassified, usedLeaseIdx, usedR
    a single unit are a handful of lines; anything larger is skipped rather than
    allowed to blow up. */
 const BUNDLE_DETECT_MAX_ITEMS = 12;
+/* How much a candidate bundle LOOKS like the rent roll line it claims to
+   explain: how many of its lease lines share a real word with that line.
+
+   THIS IS NOT COSMETIC -- IT IS THE FIX FOR A WRONG ANSWER.
+   On a real unit the rent roll carried a single "Community Fee". The lease
+   carried "Community Fee 1" and "Community Fee 2" -- and also Washer/Dryer
+   and Animal Rent, which happened to add up to exactly the same number. Both
+   pairs summed to the target, both had two members, and the tie was broken by
+   whichever appeared first in the array. It chose washer/dryer + animal rent
+   and reported that the community fee was unexplained -- while a line called
+   Community Fee sat on both documents.
+
+   An arithmetic coincidence is not evidence. A shared name is. So a candidate
+   that shares a word with the rent roll line beats one that does not, no
+   matter how many lines it explains, and only then does explaining more lines
+   break the tie. */
+function bundleNameAffinity(rentRollLabel, leaseLabels){
+  const target = new Set(toWords(rentRollLabel));
+  if (!target.size) return 0;
+  let hits = 0;
+  for (const lbl of leaseLabels){
+    if (toWords(lbl).some(w => target.has(w))) hits++;
+  }
+  return hits;
+}
+
 function detectBundlesForUnit(rows){
   const leaseOnly = rows.filter(r => r.status === 'leaseonly' && r.leaseVal > 0);
   const resmanOnly = rows.filter(r => r.status === 'resmanonly' && r.resmanVal > 0);
@@ -3800,9 +3986,21 @@ function detectBundlesForUnit(rows){
       }
       if (count < 2) continue;                                   // 1:1 is an alias
       if (Math.abs(sum - target.resmanVal) > 0.005) continue;     // must be exact
-      // Prefer the reading that explains the most lease lines: a bundle of
-      // four is a far better explanation than a coincidental pair.
-      if (!best || count > best.count) best = {mask, count, sum};
+
+      // Name first, size second. A candidate that shares wording with the
+      // rent roll line is a better explanation than a bigger one that shares
+      // nothing -- see bundleNameAffinity above for the unit this got wrong.
+      const labels = [];
+      for (let i = 0; i < n; i++){
+        if (mask & (1 << i)){
+          const r = leaseOnly[i];
+          labels.push.apply(labels, (r.leaseRaw && r.leaseRaw.length) ? r.leaseRaw : [r.label]);
+        }
+      }
+      const affinity = bundleNameAffinity((target.resmanRaw && target.resmanRaw[0]) || target.label, labels);
+      if (!best || affinity > best.affinity || (affinity === best.affinity && count > best.count)){
+        best = {mask, count, sum, affinity};
+      }
     }
     if (best){
       const items = [];
@@ -5009,9 +5207,16 @@ function buildVerifyItemDetail(c, hiddenFail){
     for (const f of c.missing){
       const loc = document.createElement('div');
       loc.className = 'verify-sig-loc';
-      loc.innerHTML = '<div class="loc-title">Missing Signature</div>'+
-        '<div>'+escapeHtml(f.signer)+' signature not found</div>'+
-        '<div class="loc-where">Page '+f.page+(f.section?' &middot; '+escapeHtml(f.section):'')+'</div>';
+      // Lead with WHERE, because that is what someone acts on. The section
+      // heading is the document's own words, so it matches what they are
+      // looking at on paper; the page number is the fallback when the PDF
+      // has no usable heading above that signature block.
+      loc.innerHTML = '<div class="loc-title">'+escapeHtml(f.section || ('Page ' + f.page))+'</div>'+
+        '<div>No <b>'+escapeHtml(f.signer)+'</b> signature found on page '+f.page+'.</div>'+
+        '<div class="loc-where">'+
+          (f.section ? 'Page '+f.page+' &middot; ' + escapeHtml(f.section) : 'Page '+f.page)+
+          ' &middot; checked the signature area for typed text and for a pen mark'+
+        '</div>';
       box.appendChild(loc);
     }
   } else {
