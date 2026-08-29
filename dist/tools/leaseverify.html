@@ -988,10 +988,158 @@ function prExplainStatus(rule, evidence, status){
          ' in this export.';
 }
 
+/* ---------------------------------------------------------------------------
+   Turning a typed sentence into a rule.
+
+   WHY THIS IS NOT A LANGUAGE MODEL (yet), AND WHY IT STILL WORKS
+   The hard part of "just let them type it" was never the understanding -- it
+   is that the OUTPUT space is four verbs and the arguments must be charge
+   labels these documents actually contain. That is a closed-world matching
+   problem, and closed-world matching is something ordinary code is better at
+   than a model: it cannot hallucinate a charge, it costs nothing, it needs no
+   server, and it keeps the promise that documents never leave the browser.
+
+   So this handles the sentences people actually type, deterministically. What
+   it does NOT do is guess. A sentence it cannot resolve returns null with a
+   reason and the vocabulary it knows -- never a rule nobody asked for.
+
+   A model slots in exactly here, later, as the fallback for that null: same
+   four verbs, same validator, same evidence check, same confirmation screen.
+   Everything downstream of this function already treats a rule as a claim to
+   be checked rather than an instruction to be obeyed, so adding a model
+   changes where a candidate comes from and nothing about what happens to it.
+   ------------------------------------------------------------------------- */
+
+/* Charge labels mentioned in a sentence, longest first so "Community Fee - 1
+   Bedroom" wins over "Community Fee" when both would match. Returned in the
+   order they appear, because word order is most of what tells a bundle's
+   parts from its total. */
+function prFindLabels(text, vocab){
+  var hay = ' ' + prNormalizeLabel(text) + ' ';
+  var found = [];
+  var claimed = [];   // character ranges already spoken for
+  var sorted = (vocab || []).slice().sort(function(a, b){
+    return prNormalizeLabel(b).length - prNormalizeLabel(a).length;
+  });
+  sorted.forEach(function(v){
+    var n = prNormalizeLabel(v);
+    if (!n || n.length < 3) return;
+    /* EVERY occurrence, not just the first. "Community Fee - 1 Bedroom and
+       Community Fee - 2 Bedroom are the same as Community Fee" mentions the
+       bare charge three times, and the first two are inside the longer tier
+       names. Stopping at the first hit meant the overlap check rejected it and
+       the charge the sentence was actually ABOUT went unrecognised. */
+    var from = 0;
+    while (true){
+      var at = hay.indexOf(' ' + n + ' ', from);
+      if (at === -1) return;
+      var start = at + 1, end = start + n.length;
+      var overlaps = false;
+      for (var i = 0; i < claimed.length; i++){
+        if (start < claimed[i][1] && end > claimed[i][0]){ overlaps = true; break; }
+      }
+      if (!overlaps){
+        claimed.push([start, end]);
+        found.push({ label: v, at: start });
+        return;
+      }
+      from = at + 1;
+    }
+  });
+  return found.sort(function(a, b){ return a.at - b.at; }).map(function(f){ return f.label; });
+}
+
+var PR_BUNDLE_WORDS  = /\b(plus|adds? up|added|combine[ds]?|combined|together|makes? up|lumps?|lumped|bundle[ds]?|into one|all in|rolled into)\b/i;
+var PR_ALIAS_WORDS   = /\b(same as|same charge|same thing|is our|is the|we call|they call|called|means|aka|tier|tiers|version|renamed?)\b/i;
+var PR_IGNORE_WORDS  = /\b(do ?n[o']?t charge|not charged|never charge[ds]?|never billed|not billed|do ?n[o']?t bill|left ?over|old template|template|not owed|do ?n[o']?t collect|stop flagging|do ?n[o']?t flag|ignore|leave it|not a problem|that ?s? fine|normal for us)\b/i;
+var PR_HIDE_WORDS    = /\b(hide|do ?n[o']?t show|stop showing|take it off|remove from)\b/i;
+
+/* Returns { rule, reading } on success, or { rule: null, reason, knownLabels }
+   when it will not guess. `reading` is a plain sentence saying what it
+   understood, shown for confirmation before anything is saved. */
+function prParseSentence(text, vocab){
+  var raw = String(text || '').trim();
+  if (!raw) return { rule: null, reason: 'Nothing typed.', knownLabels: [] };
+
+  var labels = prFindLabels(raw, vocab);
+  if (!labels.length){
+    return { rule: null, knownLabels: (vocab || []).slice(0, 40),
+      reason: 'None of the charges in these documents were mentioned. Name a charge exactly as ' +
+              'it appears on the lease or the rent roll — the ones found in this run are listed below.' };
+  }
+
+  /* A bundle needs a total and at least two parts. "X plus Y is Z" and
+     "Z is X plus Y" both occur, so the total is whichever side of the
+     is/equals the parts are not on. Falls back to last-mentioned, which is
+     how people usually write it. */
+  if (PR_BUNDLE_WORDS.test(raw) && labels.length >= 3){
+    var norm = prNormalizeLabel(raw);
+    var firstIsTotal = /^\s*[^a-z0-9]*$/.test('') && new RegExp('^' + prNormalizeLabel(labels[0]) + '\\b').test(norm)
+                       && /\b(is|are|equals?|comes? to|shows? up as|bills? as)\b/i.test(raw)
+                       && raw.toLowerCase().indexOf(labels[0].toLowerCase()) <
+                          raw.search(PR_BUNDLE_WORDS);
+    var total = firstIsTotal ? labels[0] : labels[labels.length - 1];
+    var parts = labels.filter(function(l){ return l !== total; });
+    if (parts.length >= 2){
+      return { rule: { type: 'bundle', rentRollLabel: total, leaseLabels: parts },
+        reading: 'On the lease, ' + parts.map(function(p){ return '“' + p + '”'; }).join(' + ') +
+                 ' add up to the single “' + total + '” line on the rent roll.' };
+    }
+  }
+
+  // Not charged / leftover template row -> report it once, not per unit.
+  if (PR_IGNORE_WORDS.test(raw) && labels.length >= 1){
+    var subj = labels[labels.length - 1];
+    return { rule: { type: 'rollup', subject: subj },
+      reading: '“' + subj + '” is a standing quirk at this property, so report it once for the ' +
+               'whole property instead of on every unit.' };
+  }
+
+  if (PR_HIDE_WORDS.test(raw) && labels.length >= 1){
+    return { rule: { type: 'hide', subject: labels[labels.length - 1], reason: raw.slice(0, 200) },
+      reading: 'Stop flagging “' + labels[labels.length - 1] + '” at this property.' };
+  }
+
+  /* By elimination. Bundles, "we don't charge it" and "hide it" have all been
+     ruled out above, so two or more charges named in one sentence means the
+     person is telling us they are the same charge. Requiring a phrase from a
+     list was tried and failed on ordinary English -- "WD Rent and W/D RG are
+     just our Washer/Dryer charge" matches none of them. The reading is shown
+     for confirmation and the evidence check still runs, so a misread costs a
+     glance rather than a bad rule. */
+  if (labels.length >= 2){
+    /* WHICH ONE IS THE REAL NAME: the last one named.
+       English puts the canonical name at the end of this kind of sentence --
+       "WD Rent is the same as Washer/Dryer", "1 Bedroom and 2 Bedroom are the
+       same as Community Fee", "WD Rent and W/D RG are just our Washer/Dryer
+       charge". All three land correctly on the last charge mentioned.
+
+       Length was tried first and is a trap: it picks "Community Fee - 1
+       Bedroom" over "Community Fee" -- a tier over the charge itself, exactly
+       backwards. Position after the connective was tried second and is fragile
+       for the same reason any phrase list is. Last-mentioned is simpler than
+       both and beat them on every real sentence tested. */
+    var target = labels[labels.length - 1];
+    var spellings = labels.filter(function(l){ return l !== target; });
+    if (spellings.length){
+      return { rule: { type: 'alias', target: target, spellings: spellings },
+        reading: spellings.map(function(sp){ return '“' + sp + '”'; }).join(' and ') +
+                 ' mean the same charge as “' + target + '”.' };
+    }
+  }
+
+  return { rule: null, knownLabels: labels,
+    reason: 'That named ' + (labels.length === 1 ? 'one charge' : labels.length + ' charges') +
+            ' (' + labels.map(function(l){ return '“' + l + '”'; }).join(', ') + ') but not what to do ' +
+            'with ' + (labels.length === 1 ? 'it' : 'them') + '. Try “A and B are the same charge”, ' +
+            '“A plus B add up to C”, or “we don’t charge A”.' };
+}
+
 if (typeof module !== 'undefined' && module.exports){
   module.exports = { RULE_TYPES, PROTECTED_SUBJECTS, prNormalizeLabel,
                      prValidateRule, prCheckRuleAgainstData, prDescribeRule,
-                     prRuleKey, prRuleStatus, prExplainStatus };
+                     prRuleKey, prRuleStatus, prExplainStatus,
+                     prFindLabels, prParseSentence };
 }
 
 </script>
@@ -4960,7 +5108,9 @@ function renderHouseRules(){
 
   // With no property resolved (a tool opened outside the dashboard) there is
   // nowhere to save anything, so the whole feature stays out of the way.
-  if (!PROPERTY_ID || (!RULE_PROPOSALS.length && !PROPERTY_RULES.length)){
+  // Shown whenever a property is known, even with nothing proposed and nothing
+  // saved -- otherwise there would be nowhere to type the first rule.
+  if (!PROPERTY_ID){
     wrap.classList.add('hidden');
     return;
   }
@@ -5054,6 +5204,39 @@ function renderHouseRules(){
     wrap.appendChild(block);
   }
 
+  /* Tell it about this property, in your own words.
+     ------------------------------------------------
+     Deliberately at the BOTTOM, under the proposals. The tool has already
+     looked at every unit and offered what it found; typing is for the things
+     pattern-matching cannot see. Putting the box first would invite people to
+     describe what the tool was about to tell them.
+
+     Nothing typed here is saved directly. It is read into one of the four
+     rules, shown back in plain English, checked against the documents, and
+     only then offered for saving. */
+  {
+    const ask = document.createElement('div');
+    ask.className = 'hr-block';
+    ask.innerHTML =
+      '<div class="hr-head"><div>' +
+        '<h3>Anything else about how this property works?</h3>' +
+        '<p>Type it in your own words — “WD Rent is just our Washer/Dryer charge”, ' +
+        '“we don’t charge Community Fee - 2 Bedroom”. Nothing is saved until you see ' +
+        'what it understood.</p>' +
+      '</div></div>' +
+      '<div class="hr-body">' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+          '<input id="hr-say" type="text" placeholder="e.g. Internet and Washer/Dryer are lumped into the Community Fee" ' +
+            'style="flex:1 1 320px;min-width:0;background:#171a28;border:1px solid #2a3040;border-radius:7px;' +
+            'padding:9px 12px;color:#eef0f6;font:inherit;font-size:13.5px;">' +
+          '<button id="hr-say-go" style="font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;' +
+            'border-radius:7px;padding:9px 16px;border:1px solid #6c5ce7;background:#6c5ce7;color:#fff;">Read it</button>' +
+        '</div>' +
+        '<div id="hr-say-out"></div>' +
+      '</div>';
+    wrap.appendChild(ask);
+  }
+
   wrap.onclick = (ev) => {
     const btn = ev.target.closest('button');
     if (!btn) return;
@@ -5064,8 +5247,103 @@ function renderHouseRules(){
       const card = btn.closest('.hr-card');
       card.classList.toggle('open');
       btn.textContent = card.classList.contains('open') ? 'Hide the units' : 'Show the units';
+      return;
     }
+    if (btn.id === 'hr-say-go'){ readTypedRule(); return; }
+    if (btn.dataset.saveTyped){ saveTypedRule(); return; }
   };
+
+  const box = document.getElementById('hr-say');
+  if (box) box.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter'){ ev.preventDefault(); readTypedRule(); }
+  });
+}
+
+/* What the tool understood, before anything is saved. Four outcomes, and only
+   the last one offers a button:
+     - nothing recognised            -> say so, list the charges it knows
+     - recognised but not allowed    -> the validator's own words
+     - recognised but the documents disagree -> show where, offer nothing
+     - recognised and supported      -> the reading, the evidence, and Save */
+let TYPED_CANDIDATE = null;
+
+function readTypedRule(){
+  const out = document.getElementById('hr-say-out');
+  const text = (document.getElementById('hr-say') || {}).value || '';
+  TYPED_CANDIDATE = null;
+  if (!out) return;
+
+  const vocab = observedChargeVocabulary();
+  const parsed = prParseSentence(text, vocab);
+  const box = (cls, html) => '<div style="margin-top:11px;padding:12px 13px;border-radius:8px;' +
+    'border:1px solid ' + cls + ';background:#171a28;font-size:13px;color:#a7adc0;line-height:1.55;">' + html + '</div>';
+
+  if (!parsed.rule){
+    out.innerHTML = box('#2a3040', escapeHtml(parsed.reason) +
+      (parsed.knownLabels && parsed.knownLabels.length
+        ? '<div style="margin-top:9px;color:#767d94;font-size:12px;">Charges found in this run: ' +
+          parsed.knownLabels.map(l => escapeHtml(l)).join(' · ') + '</div>'
+        : ''));
+    return;
+  }
+
+  const v = prValidateRule(parsed.rule, vocab);
+  if (!v.ok){
+    out.innerHTML = box('#5c2b30', '<b style="color:#ff8f8f;">That cannot be made into a rule.</b><br>' +
+      v.errors.map(e => escapeHtml(e)).join('<br>'));
+    return;
+  }
+
+  const ev = prCheckRuleAgainstData(parsed.rule, unitEntries);
+  if (ev.blocked){
+    out.innerHTML = box('#5c2b30', '<b style="color:#ff8f8f;">That cannot be saved.</b><br>' +
+      escapeHtml('“' + parsed.rule.subject + '” is billed on the rent roll with no matching line on the ' +
+      'lease for ' + ev.wouldHideUndisclosed.length + ' unit(s). A charge a resident is paying without ' +
+      'having signed for it is never suppressed.'));
+    return;
+  }
+
+  let verdict, cls, canSave;
+  if (ev.unitsExamined === 0){
+    cls = '#584119'; canSave = true;
+    verdict = '<b style="color:#f0b35f;">Nothing in this run matches it.</b> It can still be saved — it ' +
+      'will simply do nothing until those charges appear.';
+  } else if (ev.contradictedOn > 0){
+    cls = '#584119'; canSave = false;
+    const c = ev.counterExamples[0];
+    verdict = '<b style="color:#f0b35f;">The documents disagree.</b> It holds on ' + ev.holdsOn +
+      ' unit' + (ev.holdsOn===1?'':'s') + ' and fails on ' + ev.contradictedOn + '.' +
+      (c && c.sum != null ? ' On unit ' + escapeHtml(String(c.unit)) + ' those lines come to ' +
+        money(c.sum) + ' against ' + money(c.billed) + ' billed.' : '') +
+      ' Nothing was saved — check whether that is a real billing problem first.';
+  } else {
+    cls = '#2f6b52'; canSave = true;
+    verdict = '<b style="color:#3ddc97;">The documents agree</b> — holds on ' + ev.holdsOn +
+      ' unit' + (ev.holdsOn===1?'':'s') + ', contradicted on none.' +
+      (ev.amountDiffers && ev.amountDiffers.length
+        ? ' On ' + ev.amountDiffers.length + ' other unit' + (ev.amountDiffers.length===1?'':'s') +
+          ' the money still does not line up — those stay flagged either way.' : '');
+  }
+
+  TYPED_CANDIDATE = canSave ? parsed.rule : null;
+  out.innerHTML = box(cls,
+    '<div style="color:#eef0f6;font-size:13.5px;margin-bottom:7px;">Read as: ' +
+      escapeHtml(parsed.reading) + '</div>' + verdict +
+    (canSave ? '<div style="margin-top:11px;"><button data-save-typed="1" style="font:inherit;font-size:13px;' +
+      'font-weight:600;cursor:pointer;border-radius:7px;padding:8px 15px;border:1px solid #6c5ce7;' +
+      'background:#6c5ce7;color:#fff;">Save this rule</button></div>' : ''));
+}
+
+async function saveTypedRule(){
+  if (!TYPED_CANDIDATE) return;
+  const saved = await agSaveRule(PROPERTY_ID, TYPED_CANDIDATE, 'typed');
+  if (!saved){
+    alert('Could not save that rule just now — your audit is unaffected. Check your connection and try again.');
+    return;
+  }
+  PROPERTY_RULES.push({ id: saved.id, rule: TYPED_CANDIDATE, source: 'typed', status: 'active' });
+  TYPED_CANDIDATE = null;
+  reconcileAll();
 }
 
 function autoApplyDetectedBundles(){

@@ -372,8 +372,156 @@ function prExplainStatus(rule, evidence, status){
          ' in this export.';
 }
 
+/* ---------------------------------------------------------------------------
+   Turning a typed sentence into a rule.
+
+   WHY THIS IS NOT A LANGUAGE MODEL (yet), AND WHY IT STILL WORKS
+   The hard part of "just let them type it" was never the understanding -- it
+   is that the OUTPUT space is four verbs and the arguments must be charge
+   labels these documents actually contain. That is a closed-world matching
+   problem, and closed-world matching is something ordinary code is better at
+   than a model: it cannot hallucinate a charge, it costs nothing, it needs no
+   server, and it keeps the promise that documents never leave the browser.
+
+   So this handles the sentences people actually type, deterministically. What
+   it does NOT do is guess. A sentence it cannot resolve returns null with a
+   reason and the vocabulary it knows -- never a rule nobody asked for.
+
+   A model slots in exactly here, later, as the fallback for that null: same
+   four verbs, same validator, same evidence check, same confirmation screen.
+   Everything downstream of this function already treats a rule as a claim to
+   be checked rather than an instruction to be obeyed, so adding a model
+   changes where a candidate comes from and nothing about what happens to it.
+   ------------------------------------------------------------------------- */
+
+/* Charge labels mentioned in a sentence, longest first so "Community Fee - 1
+   Bedroom" wins over "Community Fee" when both would match. Returned in the
+   order they appear, because word order is most of what tells a bundle's
+   parts from its total. */
+function prFindLabels(text, vocab){
+  var hay = ' ' + prNormalizeLabel(text) + ' ';
+  var found = [];
+  var claimed = [];   // character ranges already spoken for
+  var sorted = (vocab || []).slice().sort(function(a, b){
+    return prNormalizeLabel(b).length - prNormalizeLabel(a).length;
+  });
+  sorted.forEach(function(v){
+    var n = prNormalizeLabel(v);
+    if (!n || n.length < 3) return;
+    /* EVERY occurrence, not just the first. "Community Fee - 1 Bedroom and
+       Community Fee - 2 Bedroom are the same as Community Fee" mentions the
+       bare charge three times, and the first two are inside the longer tier
+       names. Stopping at the first hit meant the overlap check rejected it and
+       the charge the sentence was actually ABOUT went unrecognised. */
+    var from = 0;
+    while (true){
+      var at = hay.indexOf(' ' + n + ' ', from);
+      if (at === -1) return;
+      var start = at + 1, end = start + n.length;
+      var overlaps = false;
+      for (var i = 0; i < claimed.length; i++){
+        if (start < claimed[i][1] && end > claimed[i][0]){ overlaps = true; break; }
+      }
+      if (!overlaps){
+        claimed.push([start, end]);
+        found.push({ label: v, at: start });
+        return;
+      }
+      from = at + 1;
+    }
+  });
+  return found.sort(function(a, b){ return a.at - b.at; }).map(function(f){ return f.label; });
+}
+
+var PR_BUNDLE_WORDS  = /\b(plus|adds? up|added|combine[ds]?|combined|together|makes? up|lumps?|lumped|bundle[ds]?|into one|all in|rolled into)\b/i;
+var PR_ALIAS_WORDS   = /\b(same as|same charge|same thing|is our|is the|we call|they call|called|means|aka|tier|tiers|version|renamed?)\b/i;
+var PR_IGNORE_WORDS  = /\b(do ?n[o']?t charge|not charged|never charge[ds]?|never billed|not billed|do ?n[o']?t bill|left ?over|old template|template|not owed|do ?n[o']?t collect|stop flagging|do ?n[o']?t flag|ignore|leave it|not a problem|that ?s? fine|normal for us)\b/i;
+var PR_HIDE_WORDS    = /\b(hide|do ?n[o']?t show|stop showing|take it off|remove from)\b/i;
+
+/* Returns { rule, reading } on success, or { rule: null, reason, knownLabels }
+   when it will not guess. `reading` is a plain sentence saying what it
+   understood, shown for confirmation before anything is saved. */
+function prParseSentence(text, vocab){
+  var raw = String(text || '').trim();
+  if (!raw) return { rule: null, reason: 'Nothing typed.', knownLabels: [] };
+
+  var labels = prFindLabels(raw, vocab);
+  if (!labels.length){
+    return { rule: null, knownLabels: (vocab || []).slice(0, 40),
+      reason: 'None of the charges in these documents were mentioned. Name a charge exactly as ' +
+              'it appears on the lease or the rent roll — the ones found in this run are listed below.' };
+  }
+
+  /* A bundle needs a total and at least two parts. "X plus Y is Z" and
+     "Z is X plus Y" both occur, so the total is whichever side of the
+     is/equals the parts are not on. Falls back to last-mentioned, which is
+     how people usually write it. */
+  if (PR_BUNDLE_WORDS.test(raw) && labels.length >= 3){
+    var norm = prNormalizeLabel(raw);
+    var firstIsTotal = /^\s*[^a-z0-9]*$/.test('') && new RegExp('^' + prNormalizeLabel(labels[0]) + '\\b').test(norm)
+                       && /\b(is|are|equals?|comes? to|shows? up as|bills? as)\b/i.test(raw)
+                       && raw.toLowerCase().indexOf(labels[0].toLowerCase()) <
+                          raw.search(PR_BUNDLE_WORDS);
+    var total = firstIsTotal ? labels[0] : labels[labels.length - 1];
+    var parts = labels.filter(function(l){ return l !== total; });
+    if (parts.length >= 2){
+      return { rule: { type: 'bundle', rentRollLabel: total, leaseLabels: parts },
+        reading: 'On the lease, ' + parts.map(function(p){ return '“' + p + '”'; }).join(' + ') +
+                 ' add up to the single “' + total + '” line on the rent roll.' };
+    }
+  }
+
+  // Not charged / leftover template row -> report it once, not per unit.
+  if (PR_IGNORE_WORDS.test(raw) && labels.length >= 1){
+    var subj = labels[labels.length - 1];
+    return { rule: { type: 'rollup', subject: subj },
+      reading: '“' + subj + '” is a standing quirk at this property, so report it once for the ' +
+               'whole property instead of on every unit.' };
+  }
+
+  if (PR_HIDE_WORDS.test(raw) && labels.length >= 1){
+    return { rule: { type: 'hide', subject: labels[labels.length - 1], reason: raw.slice(0, 200) },
+      reading: 'Stop flagging “' + labels[labels.length - 1] + '” at this property.' };
+  }
+
+  /* By elimination. Bundles, "we don't charge it" and "hide it" have all been
+     ruled out above, so two or more charges named in one sentence means the
+     person is telling us they are the same charge. Requiring a phrase from a
+     list was tried and failed on ordinary English -- "WD Rent and W/D RG are
+     just our Washer/Dryer charge" matches none of them. The reading is shown
+     for confirmation and the evidence check still runs, so a misread costs a
+     glance rather than a bad rule. */
+  if (labels.length >= 2){
+    /* WHICH ONE IS THE REAL NAME: the last one named.
+       English puts the canonical name at the end of this kind of sentence --
+       "WD Rent is the same as Washer/Dryer", "1 Bedroom and 2 Bedroom are the
+       same as Community Fee", "WD Rent and W/D RG are just our Washer/Dryer
+       charge". All three land correctly on the last charge mentioned.
+
+       Length was tried first and is a trap: it picks "Community Fee - 1
+       Bedroom" over "Community Fee" -- a tier over the charge itself, exactly
+       backwards. Position after the connective was tried second and is fragile
+       for the same reason any phrase list is. Last-mentioned is simpler than
+       both and beat them on every real sentence tested. */
+    var target = labels[labels.length - 1];
+    var spellings = labels.filter(function(l){ return l !== target; });
+    if (spellings.length){
+      return { rule: { type: 'alias', target: target, spellings: spellings },
+        reading: spellings.map(function(sp){ return '“' + sp + '”'; }).join(' and ') +
+                 ' mean the same charge as “' + target + '”.' };
+    }
+  }
+
+  return { rule: null, knownLabels: labels,
+    reason: 'That named ' + (labels.length === 1 ? 'one charge' : labels.length + ' charges') +
+            ' (' + labels.map(function(l){ return '“' + l + '”'; }).join(', ') + ') but not what to do ' +
+            'with ' + (labels.length === 1 ? 'it' : 'them') + '. Try “A and B are the same charge”, ' +
+            '“A plus B add up to C”, or “we don’t charge A”.' };
+}
+
 if (typeof module !== 'undefined' && module.exports){
   module.exports = { RULE_TYPES, PROTECTED_SUBJECTS, prNormalizeLabel,
                      prValidateRule, prCheckRuleAgainstData, prDescribeRule,
-                     prRuleKey, prRuleStatus, prExplainStatus };
+                     prRuleKey, prRuleStatus, prExplainStatus,
+                     prFindLabels, prParseSentence };
 }

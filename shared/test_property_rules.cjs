@@ -14,8 +14,8 @@
    And one thing that no phrasing gets past: rent, signatures, and charges
    billed without being disclosed.
 */
-const { prValidateRule, prCheckRuleAgainstData, prDescribeRule, RULE_TYPES }
-  = require('./property_rules.js');
+const { prValidateRule, prCheckRuleAgainstData, prDescribeRule, RULE_TYPES,
+        prParseSentence, prFindLabels } = require('./property_rules.js');
 
 const results = [];
 function check(label, cond){ results.push([label, !!cond]); }
@@ -168,6 +168,64 @@ check('A hide carries the reason it was hidden',
   /dropped in 2024/.test(prDescribeRule({type:'hide', subject:'Community Fee 2', reason:'dropped in 2024'})));
 check('Hiding without a reason is allowed but warned about',
   prValidateRule({type:'hide', subject:'Community Fee 2'}, VOCAB).warnings.length === 1);
+
+/* ---- 6. reading a typed sentence ---------------------------------------
+   The point of this half is not that it understands English. It is that the
+   only things it can produce are the four verbs, using charge names these
+   documents contain -- and that when it cannot resolve a sentence it says so
+   instead of guessing. Everything it does produce still goes through
+   prValidateRule and prCheckRuleAgainstData before anyone can save it. */
+const TYPED_VOCAB = ['Rent','Community Fee','Community Fee - 1 Bedroom','Community Fee - 2 Bedroom',
+  'Resident Liability Insurance','Cable / Internet Fee','Internet','Washer/Dryer','WD Rent','Washer / Dryer RG'];
+const parse = t => prParseSentence(t, TYPED_VOCAB);
+
+const pAlias = parse('community fee 1 bedroom and community fee 2 bedroom are the same as community fee');
+check('Tiers named against their base charge read as one alias rule',
+  pAlias.rule && pAlias.rule.type === 'alias' && pAlias.rule.target === 'Community Fee');
+check('...capturing BOTH tiers, not just the nearer one',
+  pAlias.rule && pAlias.rule.spellings.length === 2);
+
+// A shorter charge name sitting inside two longer ones must still be found --
+// stopping at the first occurrence used to lose it entirely.
+check('A charge whose name is contained in longer ones is still recognised',
+  prFindLabels('community fee 1 bedroom and community fee 2 bedroom are the same as community fee',
+    TYPED_VOCAB).indexOf('Community Fee') !== -1);
+
+check('The canonical name is the last one mentioned, not the longest',
+  parse('wd rent and washer / dryer rg are just our washer/dryer charge').rule.target === 'Washer/Dryer');
+
+const pBundle = parse('we lump internet and washer/dryer into the community fee');
+check('"lumped into" reads as a bundle', pBundle.rule && pBundle.rule.type === 'bundle');
+check('...with the rent roll line as the total', pBundle.rule.rentRollLabel === 'Community Fee');
+check('...and the lease lines as the parts', pBundle.rule.leaseLabels.length === 2);
+
+check('"we don\'t charge it" reads as a roll-up',
+  parse("we dont charge community fee - 2 bedroom, its left over from the old template").rule.type === 'rollup');
+
+// It must refuse rather than invent.
+const pJunk = parse('the blue widget thing');
+check('A sentence naming no real charge produces NO rule', pJunk.rule === null);
+check('...and offers the vocabulary it does know', pJunk.knownLabels.length > 0);
+
+const pVague = parse('community fee');
+check('A charge named with no instruction produces no rule', pVague.rule === null);
+check('...and says what kinds of sentence do work', /same charge|add up/.test(pVague.reason));
+
+check('Empty input is not a rule', parse('').rule === null);
+
+// The boundary holds on typed input exactly as it does everywhere else.
+const pRent = parse('stop flagging rent');
+check('A typed attempt at rent still produces a rule object to be judged',
+  pRent.rule && (pRent.rule.subject === 'Rent'));
+check('...which the validator then refuses',
+  prValidateRule(pRent.rule, TYPED_VOCAB).ok === false);
+
+// Every reading is a sentence a person can check.
+check('A parsed rule always comes with a plain-English reading',
+  ['community fee 1 bedroom and community fee 2 bedroom are the same as community fee',
+   'we lump internet and washer/dryer into the community fee',
+   "we dont charge community fee - 2 bedroom"].every(t => {
+     const r = parse(t); return r.rule && typeof r.reading === 'string' && r.reading.length > 20; }));
 
 console.log('=== PASS/FAIL ===');
 for (const [l, ok] of results) console.log((ok ? 'PASS -- ' : 'FAIL -- ') + l);
