@@ -3323,6 +3323,47 @@ function reconcileUnit(leaseRawItems, block, verification){
 
     for (const [, g] of byCanon){
       if (!g.lease.length || !g.resman.length) continue;
+
+      /* TIER FAMILY, NOT A SUM.
+         When several lease lines and ONE rent roll line share a charge, and
+         exactly one of those lease lines is the amount actually billed, the
+         lease is listing tiers and the resident owes one of them. Adding them
+         together would invent a charge nobody has: on a real unit the lease
+         prints "Community Fee - 1 Bedroom $70" and "- 2 Bedroom $100" against
+         a billed $70, and summing gives $170 against $70 — a mismatch created
+         entirely by the tool.
+
+         Only an exact, unambiguous single match counts. Two lease lines at the
+         billed amount, or none, falls through to the sum below, where a real
+         difference still shows as a real difference. */
+      if (g.lease.length > 1 && g.resman.length === 1){
+        const billed = resmanClassified[g.resman[0]].amount;
+        const exact = g.lease.filter(i => Math.abs((leaseClassified[i].amount || 0) - billed) < 0.005);
+        if (exact.length === 1){
+          g.lease.forEach(i => usedLeaseIdx.add(i));
+          g.resman.forEach(i => usedResmanIdx.add(i));
+          const applied = exact[0];
+          const appliedRow = rowFor(propertyCanonicalLabel(resmanClassified[g.resman[0]].description),
+            leaseClassified[applied].amount, billed, true, true);
+          appliedRow.category = 'UNMAPPED';
+          appliedRow.leaseRaw = [leaseClassified[applied].rawLabel];
+          appliedRow.resmanRaw = [resmanClassified[g.resman[0]].description];
+          appliedRow.byHouseRule = true;
+          appliedRow.note = 'This property told us these are tiers of one charge. “' +
+            leaseClassified[applied].rawLabel + '” is the tier billed on this unit.';
+          rows.push(appliedRow);
+          for (const i of g.lease){
+            if (i === applied) continue;
+            rows.push({ label: leaseClassified[i].rawLabel, leaseVal: leaseClassified[i].amount,
+              resmanVal: null, status: 'leaseonly', category: 'UNMAPPED', soft: true, tierOption: true,
+              byHouseRule: true, leaseRaw: [leaseClassified[i].rawLabel], resmanRaw: [],
+              note: 'Another tier of the same charge printed on this lease. The Rent Roll bills ' +
+                money(billed) + ', so this tier is not owed on this unit.' });
+          }
+          continue;
+        }
+      }
+
       g.lease.forEach(i => usedLeaseIdx.add(i));
       g.resman.forEach(i => usedResmanIdx.add(i));
       const lv = g.lease.reduce((s,i)=>s+(leaseClassified[i].amount||0), 0);
@@ -3435,7 +3476,12 @@ function reconcileUnit(leaseRawItems, block, verification){
         money(resolvedSibling.resmanVal) + ' — which matches “' + (resolvedSibling.leaseRaw || []).join(', ') +
         '”. This line is the other tier printed on the same form, so it is not owed on this unit ' +
         'and is not counted as a discrepancy.';
-      rows.push(tagPropertySpecific(row, it.fromOther ? [it.rawLabel] : null));
+      /* Deliberately NOT tagged as a property-specific charge. Those tags
+         become Option Filters, and offering "switch off Community Fee - 1
+         Bedroom / switch off Community Fee - 2 Bedroom" as two independent
+         choices is wrong twice over: neither is a finding any more, and which
+         tier applies is decided by the unit, not by a preference. */
+      rows.push(row);
       return;
     }
 
@@ -3856,9 +3902,31 @@ function detectRuleProposals(entries){
       probable.get(k).units.push(e.unit);
     }
   }
+  /* ONE offer per charge, not one per spelling.
+     -------------------------------------------
+     A lease that prints tiers produces a separate probable match for each
+     tier — "Community Fee - 1 Bedroom" on some units, "- 2 Bedroom" on others.
+     Offered separately they read as a choice between them, which is wrong:
+     they are not alternatives, they are tiers of one charge, and which one
+     applies is decided by the unit's own billed amount rather than by anyone's
+     preference. Merged into a single rule with several spellings, accepting it
+     once teaches the whole family, and reconcileUnit picks the tier that
+     matches each unit. */
+  const byTarget = new Map();
   for (const [, p] of probable){
-    add({type:'alias', target: p.resman, spellings: [p.lease]}, p.units, 'Naming',
-        'Two names for one charge, matched only by the amount so far');
+    const k = prNormalizeLabel(p.resman);
+    if (!byTarget.has(k)) byTarget.set(k, {resman: p.resman, spellings: [], units: []});
+    const t = byTarget.get(k);
+    if (!t.spellings.some(x => prNormalizeLabel(x) === prNormalizeLabel(p.lease))) t.spellings.push(p.lease);
+    t.units = t.units.concat(p.units);
+  }
+  for (const [, t] of byTarget){
+    const tiered = t.spellings.length > 1;
+    add({type:'alias', target: t.resman, spellings: t.spellings},
+        Array.from(new Set(t.units)), tiered ? 'Tiers' : 'Naming',
+        tiered
+          ? 'One charge your lease prints at several tiers — the tier billed on each unit is the one that applies'
+          : 'Two names for one charge, matched only by the amount so far');
   }
 
   // 3. A lease line duplicated on the template and billed once.
@@ -3990,7 +4058,17 @@ function renderHouseRules(){
           '<div class="hr-main">' +
             '<p class="hr-title">' + escapeHtml(p.describe) + '</p>' +
             '<p class="hr-why">' + escapeHtml(p.headline) + ' — holds on <b>' + p.units.length +
-              ' unit' + (p.units.length===1?'':'s') + '</b>, contradicted on none.</p>' +
+              ' unit' + (p.units.length===1?'':'s') + '</b>, contradicted on none.' +
+              /* Units the rule applies to where the money still does not line
+                 up. Saying it here matters: someone approving a naming rule
+                 should not be left thinking it also settled a billing gap. */
+              ((p.evidence.amountDiffers && p.evidence.amountDiffers.length)
+                ? ' On <b>' + p.evidence.amountDiffers.length + '</b> other unit' +
+                  (p.evidence.amountDiffers.length===1?'':'s') + ' (' +
+                  escapeHtml(p.evidence.amountDiffers.slice(0,3).map(x=>x.unit).join(', ')) +
+                  ') no tier matches what is billed — those stay flagged either way.'
+                : '') +
+            '</p>' +
           '</div>' +
         '</div>' +
         '<div class="hr-evidence">' +

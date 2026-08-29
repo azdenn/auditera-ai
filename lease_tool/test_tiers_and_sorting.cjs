@@ -148,6 +148,59 @@ function toBlock(u, rows){ return {unit:u, residents:'R', total:rows.reduce((s,r
   check('Unsorted, the list keeps the order the audit produced',
     sorted.def[0].startsWith('C4'));
 
+  /* ---- one offer per charge, not one per tier ----------------------------
+     Reported from real use: the tool offered "treat 1 Bedroom as Community
+     Fee" and "treat 2 Bedroom as Community Fee" as two separate choices,
+     reading as an either/or. They are not alternatives -- they are tiers of
+     one charge, and which applies is decided by the unit. */
+  const merged = await page.evaluate(() => {
+    const mk = (u, tier, leaseAmt, billed) => ({unit:u, rows:[
+      {label: tier + ' / Community Fee', status:'probable',
+       leaseRaw:[tier], resmanRaw:['Community Fee'], leaseVal:leaseAmt, resmanVal:billed}]});
+    PROPERTY_RULES = []; DECLINED_RULE_KEYS = new Set(); BUNDLE_RULES = [];
+    const entries = [
+      mk('A2','Community Fee - 1 Bedroom',70,70),
+      mk('B2','Community Fee - 1 Bedroom',70,70),
+      mk('C4','Community Fee - 1 Bedroom',70,70),
+      mk('22','Community Fee - 2 Bedroom',145,145),
+      mk('26','Community Fee - 2 Bedroom',100,100),
+    ];
+    const props = detectRuleProposals(entries);
+    const alias = props.filter(x => x.rule.type === 'alias');
+    return { count: alias.length, kind: alias[0] && alias[0].kind,
+             spellings: alias[0] ? alias[0].rule.spellings.slice().sort() : [],
+             units: alias[0] ? alias[0].units.length : 0,
+             headline: alias[0] ? alias[0].headline : '' };
+  });
+  check('The tiers are offered as ONE rule, not one choice per tier', merged.count === 1);
+  check('...covering every tier the lease prints',
+    JSON.stringify(merged.spellings) === JSON.stringify(['Community Fee - 1 Bedroom','Community Fee - 2 Bedroom']));
+  check('...across every unit either tier appeared on', merged.units === 5);
+  check('...and labelled as tiers rather than as a naming choice', merged.kind === 'Tiers');
+  check('...saying the billed tier is the one that applies',
+    /the tier billed on each unit is the one that applies/.test(merged.headline));
+
+  // The rule applied: tiers are picked, never summed.
+  const tierApplied = await page.evaluate(() => {
+    HIDDEN_CHECK_KEYS.clear(); BUNDLE_RULES = []; ROLLUP_SUBJECTS = new Map();
+    PROPERTY_RULES = [{id:'t1', status:'active', rule:{type:'alias', target:'Community Fee',
+      spellings:['Community Fee - 1 Bedroom','Community Fee - 2 Bedroom']}}];
+    rebuildRuleEngine();
+    const cmp = reconcileUnit(
+      [{rawLabel:'Community Fee - 1 Bedroom', amount:70, fromOther:true},
+       {rawLabel:'Community Fee - 2 Bedroom', amount:100, fromOther:true}],
+      {unit:'B4', residents:'R', total:70, charges:[{description:'Community Fee', amount:70}]});
+    PROPERTY_RULES = []; rebuildRuleEngine();
+    return cmp.rows.map(r => ({label:r.label, status:r.status, lease:r.leaseVal, rr:r.resmanVal,
+                               issue:isRealIssueRow(r), tier:!!r.tierOption}));
+  });
+  check('WITH THE RULE ON: the billed tier matches, it is not summed to $170',
+    tierApplied.some(r => r.lease === 70 && r.rr === 70 && r.status === 'match'));
+  check('...the other tier is marked as a tier, not a finding',
+    tierApplied.some(r => r.tier === true && r.issue === false && r.lease === 100));
+  check('...and the unit raises nothing at all',
+    tierApplied.every(r => r.issue === false));
+
   check('No page or console errors', errors.length === 0);
 
   console.log('\n=== PASS/FAIL ===');

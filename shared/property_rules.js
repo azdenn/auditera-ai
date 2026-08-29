@@ -148,6 +148,7 @@ function prValidateRule(rule, vocab){
 function prCheckRuleAgainstData(rule, entries){
   var holds = [], contradicts = [], seen = 0;
   var undisclosed = [];   // billed on the rent roll with no lease line at all
+  var amountDiffers = [];  // alias holds, but no tier matches what is billed there
 
   (entries || []).forEach(function(e){
     var rows = (e && Array.isArray(e.rows)) ? e.rows : null;
@@ -177,18 +178,52 @@ function prCheckRuleAgainstData(rule, entries){
 
     if (rule.type === 'alias'){
       var a = findByLabel(rule.target, 'resman') || findByLabel(rule.target, 'lease');
-      rule.spellings.forEach(function(s){
-        var r = findByLabel(s, 'resman') || findByLabel(s, 'lease');
-        if (!r) return;
-        seen++;
-        var av = a ? (a.resmanVal != null ? a.resmanVal : a.leaseVal) : null;
-        var rv = r.resmanVal != null ? r.resmanVal : r.leaseVal;
-        var rec = { unit: e.unit, spelling: s, amount: prRound(rv), usual: av == null ? null : prRound(av) };
-        // An alias whose amount never matches the charge it claims to be is
-        // worth querying -- it may be a different charge that merely reads
-        // like one. Not fatal: amounts legitimately vary by unit.
-        if (av == null || Math.abs(rv - av) < 0.005) holds.push(rec); else contradicts.push(rec);
+      var av = a ? (a.resmanVal != null ? a.resmanVal : a.leaseVal) : null;
+
+      /* Judged PER UNIT, not per spelling, because several spellings of one
+         charge is a tier family and only one tier is ever owed.
+
+         A lease printing "Community Fee - 1 Bedroom $70" and "- 2 Bedroom
+         $100" against a billed $70 is correct: the first is this unit's tier
+         and the second is another line on the same form. Checking each
+         spelling on its own would score that as one agreement and one
+         contradiction, and the contradiction would block the rule from ever
+         being offered -- the tool refusing to learn the very thing the
+         documents are showing it.
+
+         So the question per unit is: does ANY of these spellings carry the
+         amount actually billed? If none does, the rule really is wrong here
+         and the unit is a counter-example. */
+      var present = [];
+      rule.spellings.forEach(function(sp){
+        var r = findByLabel(sp, 'resman') || findByLabel(sp, 'lease');
+        if (r) present.push({ spelling: sp, amount: r.resmanVal != null ? r.resmanVal : r.leaseVal });
       });
+      if (!present.length) return;
+      seen++;
+      var hit = av == null ? present[0]
+              : present.find(function(x){ return Math.abs(x.amount - av) < 0.005; });
+      var rec = { unit: e.unit, spelling: (hit || present[0]).spelling,
+                  amount: prRound((hit || present[0]).amount),
+                  usual: av == null ? null : prRound(av) };
+      holds.push(rec);
+
+      /* A unit where no spelling carries the billed amount is NOT evidence
+         against the alias, and treating it as such was a real mistake worth
+         recording.
+
+         An alias only ever claims that two labels name the same charge. It
+         claims nothing about the money -- the amounts are still compared, and
+         a difference is still reported, rule or no rule. So a unit billed $115
+         against a lease that says $70 is a BILLING finding, not a naming one.
+
+         Scoring it as a contradiction meant a property with any genuine
+         overcharge could never be taught its own vocabulary: on real data,
+         eighteen units agreed, two were real overcharges, and the rule was
+         refused because of the two. The overcharges are still flagged either
+         way. They are surfaced here as their own list so the person approving
+         sees them, rather than being silently folded into agreement. */
+      if (!hit) amountDiffers.push(rec);
       return;
     }
 
@@ -230,6 +265,9 @@ function prCheckRuleAgainstData(rule, entries){
     // rent roll and on no lease. It is refused outright -- see the note in the
     // rollup/hide branch above.
     wouldHideUndisclosed: undisclosed,
+    // Units the rule applies to where the money still does not line up. Not a
+    // reason to refuse the rule -- a reason to say so on the card.
+    amountDiffers: amountDiffers,
     // Enough to show a person, not enough to bury them.
     examples: holds.slice(0, 3),
     counterExamples: contradicts.slice(0, 3),
@@ -245,8 +283,15 @@ function prCheckRuleAgainstData(rule, entries){
 function prDescribeRule(rule){
   if (!rule) return '';
   if (rule.type === 'alias'){
-    return 'Treat ' + rule.spellings.map(function(s){ return '“' + s + '”'; }).join(' and ') +
-           ' as the same charge as “' + rule.target + '”.';
+    /* Deliberately the same sentence whether there are two spellings or five.
+       Several spellings sometimes means tiers of one charge and sometimes just
+       means two names for the same $50 -- and this function only sees the rule,
+       never the amounts, so it cannot tell them apart and must not pretend to.
+       The proposal card says which it is, because that is built with the
+       evidence in hand. */
+    var q = rule.spellings.map(function(s){ return '“' + s + '”'; });
+    var list = q.length > 1 ? q.slice(0, -1).join(', ') + ' and ' + q[q.length - 1] : q[0];
+    return 'Treat ' + list + ' as the same charge as “' + rule.target + '”.';
   }
   if (rule.type === 'bundle'){
     return 'Treat ' + rule.leaseLabels.map(function(l){ return '“' + l + '”'; }).join(' + ') +
