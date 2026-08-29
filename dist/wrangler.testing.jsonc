@@ -1,0 +1,35 @@
+{
+  // ---------------------------------------------------------------------
+  // TESTING config. Identical to wrangler.jsonc in every way except the
+  // worker NAME, which is what gives it its own URL and its own deployment:
+  //
+  //     live     auditera          -> https://auditera.net
+  //     testing  auditera-testing  -> https://auditera-testing.azden-kumar.workers.dev
+  //
+  // Same Supabase project, same database, same accounts. Only the code being
+  // served differs. That is deliberate: a second Supabase project would mean
+  // test logins that do not exist in production and licences that do not match
+  // real properties, which makes a staging site that cannot actually rehearse
+  // anything. The cost of sharing is that a property licensed while testing is
+  // really licensed -- be deliberate about test data.
+  //
+  // Deployed by redeploy-testing.bat. Nothing deploys this automatically.
+  // ---------------------------------------------------------------------
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "auditera-testing",
+  "main": "./_worker.js",
+  "compatibility_date": "2026-08-21",
+  "assets": {
+    "directory": "./",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    // Load-bearing, same as production. Without this Cloudflare serves the
+    // tool files directly and NEVER runs the licence gate -- which would make
+    // the testing site a way to obtain the tools without a licence.
+    "run_worker_first": ["/tools/*"]
+  },
+  "vars": {
+    "SUPABASE_URL": "https://kyfvrkghqohkhwidqwst.supabase.co",
+    "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5ZnZya2docW9oa2h3aWRxd3N0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0MTE4ODcsImV4cCI6MjEwMTk4Nzg4N30.PZQsIhFAxM-PiHwSuSfSWeIx2mVeDZ4FgVR3wDJLXu4"
+  }
+}

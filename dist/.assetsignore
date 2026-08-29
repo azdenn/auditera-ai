@@ -1,4 +1,6 @@
 _worker.js
 wrangler.jsonc
+wrangler.testing.jsonc
 README-DEPLOY.md
 redeploy.bat
+redeploy-testing.bat
