@@ -5217,12 +5217,23 @@ function renderHouseRules(){
   {
     const ask = document.createElement('div');
     ask.className = 'hr-block';
+    /* COLLAPSED BY DEFAULT, and that is the design decision, not a detail.
+       Left open, a text box competes for attention with the proposals above
+       it and invites people to type descriptions of things the tool was about
+       to tell them. The proposals are the product: they ask nothing of the
+       reader, they are the same every run, and they arrive already knowing
+       how many units they hold on. Typing is the escape hatch for the one
+       thing detection cannot do -- say WHY -- so it waits behind a link until
+       someone actually needs it. */
     ask.innerHTML =
-      '<div class="hr-head"><div>' +
-        '<h3>Anything else about how this property works?</h3>' +
-        '<p>Type it in your own words — “WD Rent is just our Washer/Dryer charge”, ' +
-        '“we don’t charge Community Fee - 2 Bedroom”. Nothing is saved until you see ' +
-        'what it understood.</p>' +
+      '<details>' +
+      '<summary style="cursor:pointer;padding:13px 15px;font-size:13.5px;color:#a7adc0;list-style:none;">' +
+        '<span style="color:#b3a6ff;font-weight:600;">Something else about this property?</span>' +
+        '<span style="color:#767d94;"> &mdash; tell it in your own words</span>' +
+      '</summary>' +
+      '<div class="hr-head" style="padding-top:0;"><div>' +
+        '<p>“WD Rent is just our Washer/Dryer charge”, “we don’t charge Community Fee - 2 Bedroom”. ' +
+        'Nothing is saved until you see what it understood and the documents agree.</p>' +
       '</div></div>' +
       '<div class="hr-body">' +
         '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
@@ -5233,7 +5244,8 @@ function renderHouseRules(){
             'border-radius:7px;padding:9px 16px;border:1px solid #6c5ce7;background:#6c5ce7;color:#fff;">Read it</button>' +
         '</div>' +
         '<div id="hr-say-out"></div>' +
-      '</div>';
+      '</div>' +
+      '</details>';
     wrap.appendChild(ask);
   }
 
