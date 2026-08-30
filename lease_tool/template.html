@@ -4019,10 +4019,30 @@ function renderHouseRules(){
 
   // With no property resolved (a tool opened outside the dashboard) there is
   // nowhere to save anything, so the whole feature stays out of the way.
-  // Shown whenever a property is known, even with nothing proposed and nothing
-  // saved -- otherwise there would be nowhere to type the first rule.
+  /* Shown whenever a property is known, even with nothing proposed and nothing
+     saved -- otherwise there would be nowhere to type the first rule.
+
+     When no property was resolved, SAY SO. House rules are stored against the
+     account that owns the property, so a developer override -- which authorises
+     the audit without the account owning the building -- has nothing to attach
+     them to. That is correct: rules are the owner's configuration and another
+     account has no business reading or writing them. But a panel that just
+     disappears reads as a broken feature, which is the same mistake the licence
+     refusal used to make by not naming the account. */
   if (!PROPERTY_ID){
-    wrap.classList.add('hidden');
+    wrap.classList.remove('hidden');
+    const why = (typeof AG_VERDICT !== 'undefined' && AG_VERDICT === 'dev')
+      ? 'This audit ran on a developer override, which allows the documents to be read without ' +
+        'this account holding the property. House rules are saved against the account that owns ' +
+        'the property, so there is nothing here to load or save. Sign in as the account that ' +
+        'holds this property to use them.'
+      : 'This run did not resolve to a licensed property, so there is nothing to attach house ' +
+        'rules to. Open the tool from your dashboard and audit a property on your own account.';
+    wrap.innerHTML =
+      '<div class="hr-block"><div class="hr-head"><div>' +
+        '<h3>House rules aren\u2019t available for this run</h3>' +
+        '<p>' + escapeHtml(why) + '</p>' +
+      '</div></div></div>';
     return;
   }
   wrap.classList.remove('hidden');

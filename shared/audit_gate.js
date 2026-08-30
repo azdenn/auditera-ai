@@ -130,6 +130,7 @@ function agDashboardUrl(){
 /* Set by agAuthorizeAudit on a yes. Null until then, and null again for any
    refusal — a tool that was not authorised has no property to act on. */
 var AG_PROPERTY = null;
+var AG_VERDICT = null;
 
 /* Read and write this property's house rules.
 
@@ -322,6 +323,11 @@ async function agAuthorizeAudit(tool, detectedName, detectedAddress){
     AG_PROPERTY = (payload.property && payload.property.id)
       ? { id: payload.property.id, name: payload.property.name || null }
       : null;
+    /* Kept so the tool can explain an ABSENT property rather than silently
+       dropping features that depend on one. A developer override authorises
+       the audit without resolving a property the account owns, and a feature
+       that just vanishes in that case looks broken. */
+    AG_VERDICT = payload.verdict || null;
     return true;
   }
 
