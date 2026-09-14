@@ -315,7 +315,10 @@ Live manifest matches local SHA-256
 
 Owner explicitly authorized updating GitHub testing and refreshing the testing site
 for manager acceptance. The tested release is being recorded on testing, not main.
-See Git history for its exact commit. The application build above is live-verified.
+Application release commit `e889d9e5cc4f9ca69e9e58e6e9e568684ef3d0c4` was pushed
+successfully; GitHub refs/heads/testing matched local HEAD after the push.
+The application build above is live-verified. This checkpoint update follows that
+application commit; Git history records the final documentation commit separately.
 Private historical handbooks/exports and unrelated diagnostics are left local;
 ENGINEERING-GUIDE.md is the portable, privacy-safe development reference. Inherited
 resident names in new test examples/comments were replaced with invented names.

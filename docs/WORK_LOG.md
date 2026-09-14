@@ -495,3 +495,6 @@ separate privacy/data contract and budget; broader launch risks remain in the re
   Live manifest exactly matches a88a0034923b4bb7206a20d2f120ec1bd5bb40c3dc606c6b02a9f6065c468f0e.
   Git commit/push follow as the explicit owner-authorized release action; verify
   origin/testing equals local HEAD before reporting the Git update successful.
+- Verified completion: application commit e889d9e5cc4f9ca69e9e58e6e9e568684ef3d0c4
+  pushed to origin/testing; git ls-remote returned that exact SHA. No main push.
+  This documentation-only follow-up records the successful release action.
