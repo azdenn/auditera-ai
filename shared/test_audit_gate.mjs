@@ -12,16 +12,16 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
-const require = createRequire('/home/claude/.npm-global/lib/node_modules/x.js');
+const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 
 const results = [];
 function check(label, cond){ results.push([label, !!cond]); }
 
 const TOOLS = {
-  leaseverify:      '/home/claude/dist/tools/leaseverify.html',
-  concessionverify: '/home/claude/dist/tools/concessionverify.html',
-  depositverify:    '/home/claude/dist/tools/depositverify.html',
+  leaseverify:      new URL('../dist/tools/leaseverify.html', import.meta.url),
+  concessionverify: new URL('../dist/tools/concessionverify.html', import.meta.url),
+  depositverify:    new URL('../dist/tools/depositverify.html', import.meta.url),
 };
 
 // What the fake authorize-audit endpoint will answer next.
@@ -42,6 +42,7 @@ const ORIGIN = 'http://127.0.0.1:' + server.address().port;
 
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
 const context = await browser.newContext();
+await context.route(ORIGIN + '/**', route => route.continue());
 const page = await context.newPage();
 const pageErrors = [];
 page.on('pageerror', e => pageErrors.push(e.message));
@@ -172,6 +173,7 @@ await page.route(AUTH_ROUTE, answerAuthorize);
 // existing page would not test this at all, because the token deliberately
 // survives a refresh within the same tab.
 const strangerCtx = await browser.newContext();
+await strangerCtx.route(ORIGIN + '/**', route => route.continue());
 const stranger = await strangerCtx.newPage();
 const strangerCalls = [];
 await stranger.route(AUTH_ROUTE, route => {

@@ -63,11 +63,12 @@ function installRulesStub(page, initialRows){
       return route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify([row]) });
     }
     if (method === 'DELETE'){
+      let removed = [];
       const m = /id=eq\.([^&]+)/.exec(req.url());
       if (m){ const id = decodeURIComponent(m[1]);
         const ix = store.findIndex(r => r.id === id);
-        if (ix !== -1) store.splice(ix, 1); }
-      return route.fulfill({ status: 204, body: '' });
+        if (ix !== -1) removed = store.splice(ix, 1); }
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(removed) });
     }
     return route.fulfill({ status: 405, body: '' });
   });

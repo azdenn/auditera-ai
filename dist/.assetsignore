@@ -4,3 +4,8 @@ wrangler.testing.jsonc
 README-DEPLOY.md
 redeploy.bat
 redeploy-testing.bat
+.wrangler/
+.dev.vars*
+.env*
+*.log
+*.map

@@ -258,13 +258,13 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
     </div>
     <div>
       <h1>ConcessionVerify — Auditera AI</h1>
-      <p>Checks two things for every unit: (1) if a resident got a move-in discount (a "concession"), were they credited the right amount, and (2) is everyone being billed the correct rent and fees. Just upload your files below and click one button &mdash; everything else happens automatically.</p>
+      <p>Checks move-in specials and prorated rent concessions against resident ledgers and the rent roll. Add lease PDFs to compare against the signed concession terms and base rent.</p>
     </div>
   </header>
 
   <div class="card">
     <h2><span class="step-num">1</span> Upload your files</h2>
-    <p class="card-intro">Upload all three files below, then click Process. This tool checks <b>concessions only</b> &mdash; move-in specials and prorated free rent. <b>All three are required</b>, including the leases: the lease is the binding document, so its rent and its term are what every week of free rent is measured against. Nothing is uploaded to the internet; it all stays on this page.</p>
+    <p class="card-intro">Upload <b>resident ledgers and the rent roll</b>, then click Process. Lease PDFs are optional but recommended: without them, signed lease terms cannot be verified and calculations use the available rent-roll or ledger information. This tool checks <b>concessions</b> and the base rent used to calculate them, not a complete recurring-fee audit. Nothing is uploaded to the internet; it all stays on this page.</p>
 
 
 
@@ -325,10 +325,10 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
       </div>
       <div class="drop" id="drop-lease">
         <div class="drop-num">3</div>
-        <label class="filelabel" for="lease-files">Lease PDFs <span style="font-weight:400;color:var(--ink-soft);">(required)</span></label>
+        <label class="filelabel" for="lease-files">Lease PDFs <span style="font-weight:400;color:var(--ink-soft);">(optional, recommended)</span></label>
         <input type="file" id="lease-files" accept="application/pdf" multiple>
         <div class="filename" id="lease-filename">No files selected</div>
-        <div class="hint">Only needed to double-check the monthly rent amount. If you skip this, the rent roll's number is used instead &mdash; most people can skip it.</div>
+        <div class="hint">Recommended to verify the signed concession terms and base rent. Without a readable lease, those comparisons remain unverified; available rent-roll or ledger information is used for calculations.</div>
       </div>
       <div class="drop hidden" id="drop-lease-zip">
         <div class="drop-num">3</div>

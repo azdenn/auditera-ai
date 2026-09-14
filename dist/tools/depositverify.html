@@ -675,8 +675,13 @@ var AG_TOKEN = (function(){
       var cleaned = (window.location.hash || '')
         .replace(/(?:^|[#&])tk=[^&]*/, '')
         .replace(/^#?&/, '#');
-      history.replaceState(null, '', window.location.pathname + window.location.search
-        + (cleaned && cleaned !== '#' ? cleaned : ''));
+      /* Keep the exact current document URL and change only its fragment.
+         Rebuilding from pathname works for https/file pages but turns a blob
+         URL into a different URL, so replaceState throws and leaves the bearer
+         token visible. Dashboard tools are blob documents: preserve their full
+         blob URL and remove only tk. */
+      var base = window.location.href.split('#')[0];
+      history.replaceState(null, '', base + (cleaned && cleaned !== '#' ? cleaned : ''));
     } catch (_e){ /* cosmetic only */ }
 
     return t;
@@ -732,6 +737,80 @@ function agDashboardUrl(){
     if (o && /^https?:\/\/./.test(o)) return o + '/app';
   } catch (_e){ /* fall through */ }
   return null;
+}
+
+/* Set by agAuthorizeAudit on a yes. Null until then, and null again for any
+   refusal — a tool that was not authorised has no property to act on. */
+var AG_PROPERTY = null;
+var AG_VERDICT = null;
+
+/* The tool and verdict of the run currently in flight, so its ending can be
+   reported once and only once. Cleared the moment it is reported. */
+var AG_OPEN_RUN = null;
+
+/* Read and write this property's house rules.
+
+   WHAT TRAVELS: charge labels the property writes on its own paperwork, and
+   nothing else. No amounts, no residents, no document text. The arithmetic
+   that decides whether a rule still holds runs here, in the browser, against
+   documents that never leave it — the server stores the convention, never the
+   evidence for it. */
+function agRulesEndpoint(query){
+  return AG_SUPABASE_URL + '/rest/v1/property_rules' + (query || '');
+}
+function agRulesHeaders(extra){
+  var h = { 'Authorization': 'Bearer ' + AG_TOKEN, 'apikey': AG_ANON_KEY,
+            'Content-Type': 'application/json' };
+  for (var k in (extra || {})) h[k] = extra[k];
+  return h;
+}
+
+var AG_RULES_LOAD_ERROR = false;
+async function agLoadRules(propertyId){
+  AG_RULES_LOAD_ERROR = false;
+  if (!AG_TOKEN || !propertyId) return [];
+  try {
+    var res = await fetch(agRulesEndpoint('?property_id=eq.' + encodeURIComponent(propertyId) +
+      '&enabled=is.true&select=id,rule,source,created_at'),
+      { headers: agRulesHeaders(), cache: 'no-store' });
+    if (!res.ok) throw new Error('Rules unavailable');
+    var rows = await res.json();
+    if (!Array.isArray(rows) || rows.some(function(row){
+      return !row || typeof row !== 'object' || typeof row.id !== 'string' || !('rule' in row);
+    })) throw new Error('Invalid rules response');
+    return rows;
+  } catch (_e){ AG_RULES_LOAD_ERROR = true; return []; } // retain findings and disclose the failed load
+}
+
+function agTestingRulesReadOnly(){
+  // Testing shares the live database. Test conventions belong in local pilot storage.
+  return ['https://testing.auditera.net', 'https://auditera-testing.azden-kumar.workers.dev'].includes(location.origin);
+}
+async function agSaveRule(propertyId, rule, source){
+  if (agTestingRulesReadOnly()) return null;
+  if (!AG_TOKEN || !propertyId) return null;
+  try {
+    var res = await fetch(agRulesEndpoint(''), {
+      method: 'POST',
+      headers: agRulesHeaders({ 'Prefer': 'return=representation' }),
+      body: JSON.stringify({ property_id: propertyId, rule: rule, source: source || 'proposed' }),
+    });
+    if (!res.ok) return null;
+    var rows = await res.json();
+    return (Array.isArray(rows) && rows.length === 1 && rows[0] && rows[0].id && rows[0].rule) ? rows[0] : null;
+  } catch (_e){ return null; }
+}
+
+async function agDeleteRule(id){
+  if (agTestingRulesReadOnly()) return false;
+  if (!AG_TOKEN || !id) return false;
+  try {
+    var res = await fetch(agRulesEndpoint('?id=eq.' + encodeURIComponent(id)),
+      { method: 'DELETE', headers: agRulesHeaders({ 'Prefer': 'return=representation' }) });
+    if (!res.ok) return false;
+    var rows = await res.json();
+    return Array.isArray(rows) && rows.length === 1 && rows[0].id === id;
+  } catch (_e){ return false; }
 }
 
 function agEscape(v){
@@ -864,7 +943,23 @@ async function agAuthorizeAudit(tool, detectedName, detectedAddress){
 
   // Strictly true, not truthy. A string, a 1, an object -- anything other than
   // the boolean the server promised -- is treated as a refusal.
-  if (payload && payload.allowed === true) return true;
+  if (payload && payload.allowed === true){
+    /* The property this audit was authorised against, kept for the tool to
+       read. It is how the tool knows which property's house rules to load and
+       save — the server resolved it from the documents' own identifiers and
+       the caller's licence, so the browser never has to guess or be trusted
+       about which building it is looking at. */
+    AG_PROPERTY = (payload.property && payload.property.id)
+      ? { id: payload.property.id, name: payload.property.name || null }
+      : null;
+    /* Kept so the tool can explain an ABSENT property rather than silently
+       dropping features that depend on one. A developer override authorises
+       the audit without resolving a property the account owns, and a feature
+       that just vanishes in that case looks broken. */
+    AG_VERDICT = payload.verdict || null;
+    AG_OPEN_RUN = tool;
+    return true;
+  }
 
   agBlockScreen(
     (payload && payload.message)
@@ -915,9 +1010,49 @@ if (typeof document !== 'undefined'){
   }
 }
 
+/* Report how the run ended: duration, size, and completed-or-errored.
+   ---------------------------------------------------------------------------
+   WHAT TRAVELS: four numbers and one of two words. Nothing else may ever be
+   added here. No charge labels, no amounts, no residents, no unit numbers, no
+   document text. The tool's entire promise is that documents never leave the
+   browser, and usage statistics are the classic place where that gets quietly
+   broken one "useful" field at a time.
+
+   NEVER THROWS, NEVER BLOCKS, NEVER RETRIES. A finished audit whose statistics
+   failed to send is a finished audit. Every failure path here is swallowed on
+   purpose: the person in front of the screen has their answer, and no
+   measurement is worth putting an error in front of them for. */
+async function agRecordRunOutcome(outcome, stats){
+  try {
+    if (!AG_OPEN_RUN || !AG_TOKEN) return false;
+    var body = {
+      tool: AG_OPEN_RUN,
+      outcome: outcome === 'error' ? 'error' : 'completed',
+      duration_ms:   Math.max(0, Math.round((stats && stats.durationMs) || 0)),
+      unit_count:    Math.max(0, Math.round((stats && stats.unitCount) || 0)),
+      finding_count: Math.max(0, Math.round((stats && stats.findingCount) || 0)),
+    };
+    var res = await fetch(AG_SUPABASE_URL + '/functions/v1/record-run-outcome', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': AG_ANON_KEY,
+        'Authorization': 'Bearer ' + AG_TOKEN,
+      },
+      body: JSON.stringify(body),
+    });
+    /* Reported once per run and never again. Without this the same run could
+       be re-reported on a re-render and inflate every count that matters. */
+    AG_OPEN_RUN = null;
+    return res.ok;
+  } catch (_e){ return false; }
+}
+
 if (typeof module !== 'undefined' && module.exports){
   module.exports = { agAuthorizeAudit, agBlockScreen, agEscape,
-                     agAccountEmail, agDashboardUrl, agRenderAccountChip };
+                     agAccountEmail, agDashboardUrl, agRenderAccountChip,
+                     agLoadRules, agSaveRule, agDeleteRule,
+                     agRecordRunOutcome };
 }
 
 </script>
@@ -1565,10 +1700,8 @@ function mkFinding(key, severity, note, facts){
        LeaseLock problem — no "missing LeaseLock charge", nothing.
      • A unit with none of the three is a real, flagged discrepancy.
      • For LeaseLock units, the resident should be charged the invoice amount
-       plus the property's markup. Anything else is flagged — UNLESS the
-       invoice's covered date range is longer than a normal month, which is a
-       legitimate reason for the invoice to be bigger, in which case it is
-       recorded as an explained non-issue.
+       plus the property's markup. Any unexplained difference is flagged.
+       A longer coverage period is context, not proof of the rate or proration.
 */
 function reconcileUnitCoverage(block, invLine, opts){
   opts = opts || {};
@@ -1584,15 +1717,15 @@ function reconcileUnitCoverage(block, invLine, opts){
     if (Math.abs(diff) > CENT){
       if (diff < 0){
         // The invoice is bigger than one month at the resident's charge rate.
-        // A longer covered period is the ordinary, legitimate explanation.
+        // A longer period may explain a difference; it does not verify any amount.
         const days = invLine.coverageDays;
         if (days !== null && days > NORMAL_MONTH_MAX_DAYS){
           const extra = days - NORMAL_MONTH_MAX_DAYS;
-          findings.push(mkFinding('llAmountMismatch', 'soft',
+          findings.push(mkFinding('llAmountMismatch', 'flag',
             'Invoice of ' + money(invoiced) + ' is higher than the ' + money(charged - LEASELOCK_MARKUP) +
             ' implied by the resident\'s ' + money(charged) + ' charge, but it covers ' + days + ' days (' +
             fmtDateShort(invLine.coverageStart) + ' – ' + fmtDateShort(invLine.coverageEnd) + ') — ' + extra +
-            ' day' + (extra===1?'':'s') + ' more than a normal month. The longer coverage period explains the higher invoice, so this is not counted as a Mismatch.',
+            ' day' + (extra===1?'':'s') + ' more than a normal month. A longer period may explain part of the difference, but the rate and proration have not been verified. This remains a Mismatch pending review of the invoice terms.',
             {charged, invoiced, expected, coverageDays: days}));
         } else if (days === null){
           // No usable dates: say so rather than inventing an explanation.

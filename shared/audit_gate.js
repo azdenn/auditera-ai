@@ -68,8 +68,13 @@ var AG_TOKEN = (function(){
       var cleaned = (window.location.hash || '')
         .replace(/(?:^|[#&])tk=[^&]*/, '')
         .replace(/^#?&/, '#');
-      history.replaceState(null, '', window.location.pathname + window.location.search
-        + (cleaned && cleaned !== '#' ? cleaned : ''));
+      /* Keep the exact current document URL and change only its fragment.
+         Rebuilding from pathname works for https/file pages but turns a blob
+         URL into a different URL, so replaceState throws and leaves the bearer
+         token visible. Dashboard tools are blob documents: preserve their full
+         blob URL and remove only tk. */
+      var base = window.location.href.split('#')[0];
+      history.replaceState(null, '', base + (cleaned && cleaned !== '#' ? cleaned : ''));
     } catch (_e){ /* cosmetic only */ }
 
     return t;
@@ -132,6 +137,10 @@ function agDashboardUrl(){
 var AG_PROPERTY = null;
 var AG_VERDICT = null;
 
+/* The tool and verdict of the run currently in flight, so its ending can be
+   reported once and only once. Cleared the moment it is reported. */
+var AG_OPEN_RUN = null;
+
 /* Read and write this property's house rules.
 
    WHAT TRAVELS: charge labels the property writes on its own paperwork, and
@@ -149,19 +158,29 @@ function agRulesHeaders(extra){
   return h;
 }
 
+var AG_RULES_LOAD_ERROR = false;
 async function agLoadRules(propertyId){
+  AG_RULES_LOAD_ERROR = false;
   if (!AG_TOKEN || !propertyId) return [];
   try {
     var res = await fetch(agRulesEndpoint('?property_id=eq.' + encodeURIComponent(propertyId) +
       '&enabled=is.true&select=id,rule,source,created_at'),
       { headers: agRulesHeaders(), cache: 'no-store' });
-    if (!res.ok) return [];
+    if (!res.ok) throw new Error('Rules unavailable');
     var rows = await res.json();
-    return Array.isArray(rows) ? rows : [];
-  } catch (_e){ return []; }   // rules are a convenience; never block an audit
+    if (!Array.isArray(rows) || rows.some(function(row){
+      return !row || typeof row !== 'object' || typeof row.id !== 'string' || !('rule' in row);
+    })) throw new Error('Invalid rules response');
+    return rows;
+  } catch (_e){ AG_RULES_LOAD_ERROR = true; return []; } // retain findings and disclose the failed load
 }
 
+function agTestingRulesReadOnly(){
+  // Testing shares the live database. Test conventions belong in local pilot storage.
+  return ['https://testing.auditera.net', 'https://auditera-testing.azden-kumar.workers.dev'].includes(location.origin);
+}
 async function agSaveRule(propertyId, rule, source){
+  if (agTestingRulesReadOnly()) return null;
   if (!AG_TOKEN || !propertyId) return null;
   try {
     var res = await fetch(agRulesEndpoint(''), {
@@ -171,16 +190,19 @@ async function agSaveRule(propertyId, rule, source){
     });
     if (!res.ok) return null;
     var rows = await res.json();
-    return (Array.isArray(rows) && rows[0]) ? rows[0] : null;
+    return (Array.isArray(rows) && rows.length === 1 && rows[0] && rows[0].id && rows[0].rule) ? rows[0] : null;
   } catch (_e){ return null; }
 }
 
 async function agDeleteRule(id){
+  if (agTestingRulesReadOnly()) return false;
   if (!AG_TOKEN || !id) return false;
   try {
     var res = await fetch(agRulesEndpoint('?id=eq.' + encodeURIComponent(id)),
-      { method: 'DELETE', headers: agRulesHeaders() });
-    return res.ok;
+      { method: 'DELETE', headers: agRulesHeaders({ 'Prefer': 'return=representation' }) });
+    if (!res.ok) return false;
+    var rows = await res.json();
+    return Array.isArray(rows) && rows.length === 1 && rows[0].id === id;
   } catch (_e){ return false; }
 }
 
@@ -328,6 +350,7 @@ async function agAuthorizeAudit(tool, detectedName, detectedAddress){
        the audit without resolving a property the account owns, and a feature
        that just vanishes in that case looks broken. */
     AG_VERDICT = payload.verdict || null;
+    AG_OPEN_RUN = tool;
     return true;
   }
 
@@ -380,8 +403,47 @@ if (typeof document !== 'undefined'){
   }
 }
 
+/* Report how the run ended: duration, size, and completed-or-errored.
+   ---------------------------------------------------------------------------
+   WHAT TRAVELS: four numbers and one of two words. Nothing else may ever be
+   added here. No charge labels, no amounts, no residents, no unit numbers, no
+   document text. The tool's entire promise is that documents never leave the
+   browser, and usage statistics are the classic place where that gets quietly
+   broken one "useful" field at a time.
+
+   NEVER THROWS, NEVER BLOCKS, NEVER RETRIES. A finished audit whose statistics
+   failed to send is a finished audit. Every failure path here is swallowed on
+   purpose: the person in front of the screen has their answer, and no
+   measurement is worth putting an error in front of them for. */
+async function agRecordRunOutcome(outcome, stats){
+  try {
+    if (!AG_OPEN_RUN || !AG_TOKEN) return false;
+    var body = {
+      tool: AG_OPEN_RUN,
+      outcome: outcome === 'error' ? 'error' : 'completed',
+      duration_ms:   Math.max(0, Math.round((stats && stats.durationMs) || 0)),
+      unit_count:    Math.max(0, Math.round((stats && stats.unitCount) || 0)),
+      finding_count: Math.max(0, Math.round((stats && stats.findingCount) || 0)),
+    };
+    var res = await fetch(AG_SUPABASE_URL + '/functions/v1/record-run-outcome', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': AG_ANON_KEY,
+        'Authorization': 'Bearer ' + AG_TOKEN,
+      },
+      body: JSON.stringify(body),
+    });
+    /* Reported once per run and never again. Without this the same run could
+       be re-reported on a re-render and inflate every count that matters. */
+    AG_OPEN_RUN = null;
+    return res.ok;
+  } catch (_e){ return false; }
+}
+
 if (typeof module !== 'undefined' && module.exports){
   module.exports = { agAuthorizeAudit, agBlockScreen, agEscape,
                      agAccountEmail, agDashboardUrl, agRenderAccountChip,
-                     agLoadRules, agSaveRule, agDeleteRule };
+                     agLoadRules, agSaveRule, agDeleteRule,
+                     agRecordRunOutcome };
 }

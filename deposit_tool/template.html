@@ -1074,10 +1074,8 @@ function mkFinding(key, severity, note, facts){
        LeaseLock problem — no "missing LeaseLock charge", nothing.
      • A unit with none of the three is a real, flagged discrepancy.
      • For LeaseLock units, the resident should be charged the invoice amount
-       plus the property's markup. Anything else is flagged — UNLESS the
-       invoice's covered date range is longer than a normal month, which is a
-       legitimate reason for the invoice to be bigger, in which case it is
-       recorded as an explained non-issue.
+       plus the property's markup. Any unexplained difference is flagged.
+       A longer coverage period is context, not proof of the rate or proration.
 */
 function reconcileUnitCoverage(block, invLine, opts){
   opts = opts || {};
@@ -1093,15 +1091,15 @@ function reconcileUnitCoverage(block, invLine, opts){
     if (Math.abs(diff) > CENT){
       if (diff < 0){
         // The invoice is bigger than one month at the resident's charge rate.
-        // A longer covered period is the ordinary, legitimate explanation.
+        // A longer period may explain a difference; it does not verify any amount.
         const days = invLine.coverageDays;
         if (days !== null && days > NORMAL_MONTH_MAX_DAYS){
           const extra = days - NORMAL_MONTH_MAX_DAYS;
-          findings.push(mkFinding('llAmountMismatch', 'soft',
+          findings.push(mkFinding('llAmountMismatch', 'flag',
             'Invoice of ' + money(invoiced) + ' is higher than the ' + money(charged - LEASELOCK_MARKUP) +
             ' implied by the resident\'s ' + money(charged) + ' charge, but it covers ' + days + ' days (' +
             fmtDateShort(invLine.coverageStart) + ' – ' + fmtDateShort(invLine.coverageEnd) + ') — ' + extra +
-            ' day' + (extra===1?'':'s') + ' more than a normal month. The longer coverage period explains the higher invoice, so this is not counted as a Mismatch.',
+            ' day' + (extra===1?'':'s') + ' more than a normal month. A longer period may explain part of the difference, but the rate and proration have not been verified. This remains a Mismatch pending review of the invoice terms.',
             {charged, invoiced, expected, coverageDays: days}));
         } else if (days === null){
           // No usable dates: say so rather than inventing an explanation.

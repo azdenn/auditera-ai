@@ -82,7 +82,8 @@ for (const [name, src] of Object.entries(TOOLS)){
   fs.copyFileSync(p, path.join(dist, 'tools', name));
   console.log('  tools/' + name, '-', (fs.statSync(p).size/1024/1024).toFixed(2), 'MB');
 }
-fs.copyFileSync(path.join(dir, 'worker.js'), path.join(dist, '_worker.js'));
+// dist/_worker.js is authoritative. Never overwrite the current RPC-based gate
+// with the legacy homepage_assets/worker.js during a marketing-page build.
 console.log('Wrote', dist, '- homepage', (Buffer.byteLength(out)/1024).toFixed(0), 'KB (was ~9.6 MB with tools embedded)');
 
 // ---- Standalone pages (pricing, sign in, app) ----

@@ -33,7 +33,58 @@
    rent, a signature or a charge billed without being disclosed. Those are
    guarded again in PROTECTED_SUBJECTS below, because a boundary worth having
    is worth enforcing twice. */
-var RULE_TYPES = ['alias', 'bundle', 'rollup', 'hide'];
+var RULE_TYPES = ['alias', 'bundle', 'rollup', 'hide', 'includes'];
+
+/* WHY 'includes' EXISTS ALONGSIDE 'bundle', WHICH LOOKS LIKE THE SAME THING.
+   ---------------------------------------------------------------------------
+   A BUNDLE is arithmetic: these lease lines ADD UP TO that billed line, and
+   the tool proves it every run. It is refused the moment the numbers stop
+   agreeing, which is what makes it safe to apply on its own.
+
+   An INCLUDES is a statement of MEMBERSHIP, made by the person who sets the
+   prices: "our Community Fee covers pet, pest and cable." Azden, 2026-09-06:
+   "community fee is always going to be a group of fees... so you know that
+   it's all accounted for, even if it doesn't say pet pest cable on the rent
+   roll, it just says community fee."
+
+   The difference is the whole point. A property picks a round number for a
+   package -- $115 -- and it is not the sum of its parts and was never meant to
+   be. Forcing that through the bundle machinery would mean either refusing a
+   true statement about the property, or loosening the exact-sum test that
+   stops real gaps getting through. Neither is acceptable, so membership gets
+   its own verb.
+
+   WHAT IT DOES AND DOES NOT DO. It stops the named lease lines being reported
+   as "on the lease, never billed", because they ARE billed -- inside the fee.
+   It does NOT make the arithmetic close, and it never reports a difference as
+   a match: the itemised total and the billed amount are both shown, every
+   time, whether or not they agree. A membership rule can only ever explain a
+   charge, never silence a number. */
+
+/* The largest gap a bundle may declare between its lease lines and the single
+   billed line. See the long note in prValidateRule: this is the line between
+   describing a package price and explaining away a discrepancy. A proportional
+   ceiling applies as well (PR_MAX_BUNDLE_DIFFERENCE_RATIO of the billed
+   amount), so a small line cannot carry a large gap merely because the
+   absolute cap is generous. */
+var PR_MAX_BUNDLE_DIFFERENCE = 20;
+var PR_MAX_BUNDLE_DIFFERENCE_RATIO = 0.10;
+
+function prMoney(n){
+  var v = Math.abs(Number(n) || 0);
+  return (Number(n) < 0 ? '-$' : '$') + v.toFixed(2);
+}
+
+/* True when `diff` is small enough, relative to what is actually billed, to be
+   a package price rather than a missing charge. BOTH ceilings must hold. */
+function prBundleDifferenceAllowed(diff, billed){
+  var d = Math.abs(Number(diff) || 0);
+  if (d === 0) return true;
+  if (d > PR_MAX_BUNDLE_DIFFERENCE) return false;
+  var b = Math.abs(Number(billed) || 0);
+  if (!b) return false;
+  return d <= b * PR_MAX_BUNDLE_DIFFERENCE_RATIO;
+}
 
 /* Subjects no rule may ever touch, whoever asks and however they phrase it.
    These are the findings the product exists to produce; a tool that can be
@@ -117,6 +168,49 @@ function prValidateRule(rule, vocab){
       errors.push('A bundle needs at least two lease lines. One lease line matching one rent ' +
                   'roll line is an alias, not a bundle — say “these are the same charge” instead.');
     }
+    /* A BUNDLE PRICED BELOW ITS PARTS.
+       -------------------------------------------------------------------
+       Found at The Rail: the property folds cable into the Community Fee and
+       charges $115 where the lease itemises $70 + $50 = $120. Confirmed with
+       the owner as an intentional bundle discount, not an error. Without
+       somewhere to record that, the only options were to report five dollars
+       as a discrepancy on 33 units forever, or to loosen the exact-sum test
+       and let real gaps through with it.
+
+       So the gap is DECLARED, as a number, on the rule. Nothing is loosened:
+       the arithmetic still has to close, it just closes at `difference`
+       instead of at zero, and the same evidence check that governs every
+       other rule verifies that this exact difference is what the documents
+       show — a rule whose gap changes is a rule that stops applying.
+
+       Bounded on purpose. A bundle discount is small next to the bundle; a
+       missing charge is not. Anything larger than PR_MAX_BUNDLE_DIFFERENCE is
+       not a discount being described, it is a discrepancy being explained
+       away, and this refuses to be the tool for that. The $45 that started
+       this whole investigation could never be absorbed here. */
+    if (rule.difference != null){
+      var d = Number(rule.difference);
+      if (!isFinite(d)) errors.push('A bundle’s difference has to be a number.');
+      else if (d === 0) warnings.push('A difference of zero is the same as no difference at all.');
+      else if (Math.abs(d) > PR_MAX_BUNDLE_DIFFERENCE){
+        errors.push('A bundle difference of ' + prMoney(d) + ' is too large to be a bundle price. ' +
+                    'A gap that size is a discrepancy worth reporting, not a discount worth recording.');
+      }
+    }
+  }
+
+  if (rule.type === 'includes'){
+    // { type:'includes', rentRollLabel:'Community Fee', leaseLabels:[...] }
+    refuseProtected(rule.rentRollLabel);
+    requireKnown(rule.rentRollLabel, 'The rent roll line');
+    var il = Array.isArray(rule.leaseLabels) ? rule.leaseLabels : [];
+    il.forEach(function(l){ refuseProtected(l); requireKnown(l, 'The charge “' + l + '”'); });
+    if (!il.length){
+      errors.push('Tick at least one charge that is included in “' + rule.rentRollLabel + '”.');
+    }
+    if (il.some(function(l){ return prNormalizeLabel(l) === prNormalizeLabel(rule.rentRollLabel); })){
+      warnings.push('“' + rule.rentRollLabel + '” is listed as being inside itself — that entry will be ignored.');
+    }
   }
 
   if (rule.type === 'rollup' || rule.type === 'hide'){
@@ -170,9 +264,29 @@ function prCheckRuleAgainstData(rule, entries){
       var parts = rule.leaseLabels.map(function(l){ return findByLabel(l, 'lease'); });
       if (parts.some(function(p){ return !p || p.leaseVal == null; })) return;
       seen++;
-      var sum = prRound(parts.reduce(function(s, p){ return s + p.leaseVal; }, 0));
-      var rec = { unit: e.unit, sum: sum, billed: prRound(target.resmanVal) };
-      if (Math.abs(sum - rec.billed) < 0.005) holds.push(rec); else contradicts.push(rec);
+      /* THE SAME ROW MUST NOT BE COUNTED ONCE PER LABEL.
+         -----------------------------------------------------------------
+         A saved bundle is APPLIED before this check runs, which collapses its
+         lease lines into one row carrying their total. Every one of the rule's
+         labels then resolves to that single row, and summing per-label counted
+         the total twice or three times over -- so a saved bundle contradicted
+         itself on every unit and was SUSPENDED on its very next run.
+         Undetected because nothing re-checked a bundle across two runs.
+         Deduplicate by row: when all the labels land on one row, that row is
+         already the sum. */
+      var uniq = [];
+      parts.forEach(function(p){ if (uniq.indexOf(p) === -1) uniq.push(p); });
+      var sum = prRound(uniq.reduce(function(s, p){ return s + p.leaseVal; }, 0));
+      var declared = Number(rule.difference) || 0;
+      var rec = { unit: e.unit, sum: sum, billed: prRound(target.resmanVal),
+                  difference: prRound(target.resmanVal - sum) };
+      /* With a declared difference the arithmetic still has to close — it just
+         closes at `difference` rather than at zero. A unit where the gap is
+         some OTHER number contradicts the rule and, with enough of them,
+         suspends it. That is the whole safety story for this feature: the
+         property's package price is recorded once and re-proved every run, and
+         the month it stops being true the rule stops applying. */
+      if (Math.abs(sum + declared - rec.billed) < 0.005) holds.push(rec); else contradicts.push(rec);
       return;
     }
 
@@ -224,6 +338,28 @@ function prCheckRuleAgainstData(rule, entries){
          way. They are surfaced here as their own list so the person approving
          sees them, rather than being silently folded into agreement. */
       if (!hit) amountDiffers.push(rec);
+      return;
+    }
+
+    if (rule.type === 'includes'){
+      /* Evidence for a membership rule is simply whether the documents still
+         contain what it talks about: the billed line, and at least one of the
+         charges said to be inside it. There is no sum to prove, because the
+         rule never claimed one.
+
+         The undisclosed-charge floor still applies and is enforced in the
+         reconcile: a charge appearing ONLY on the rent roll can never be
+         declared "included" in something, because there is no lease line for
+         it to be included FROM. */
+      var billed = findByLabel(rule.rentRollLabel, 'resman');
+      if (!billed) return;
+      var members = (rule.leaseLabels || []).map(function(l){ return findByLabel(l, 'lease'); })
+                      .filter(function(x){ return !!x; });
+      seen++;
+      if (members.length) holds.push({ unit: e.unit, members: members.length,
+                                       billed: prRound(billed.resmanVal) });
+      else contradicts.push({ unit: e.unit, members: 0,
+                              billed: prRound(billed.resmanVal) });
       return;
     }
 
@@ -294,8 +430,20 @@ function prDescribeRule(rule){
     return 'Treat ' + list + ' as the same charge as “' + rule.target + '”.';
   }
   if (rule.type === 'bundle'){
-    return 'Treat ' + rule.leaseLabels.map(function(l){ return '“' + l + '”'; }).join(' + ') +
-           ' on the lease as the single “' + rule.rentRollLabel + '” line on the rent roll.';
+    var base = 'Treat ' + rule.leaseLabels.map(function(l){ return '“' + l + '”'; }).join(' + ') +
+               ' on the lease as the single “' + rule.rentRollLabel + '” line on the rent roll';
+    var bd = Number(rule.difference) || 0;
+    if (!bd) return base + '.';
+    // Said as a price, not as an offset. "$5 less than those lines add up to"
+    // is what the person approving this actually has to weigh.
+    return base + ', billed ' + prMoney(Math.abs(bd)) +
+           (bd < 0 ? ' LESS' : ' MORE') + ' than those lines add up to.';
+  }
+  if (rule.type === 'includes'){
+    var mem = (rule.leaseLabels || []).map(function(l){ return '“' + l + '”'; });
+    var memList = mem.length > 1 ? mem.slice(0, -1).join(', ') + ' and ' + mem[mem.length - 1] : (mem[0] || 'nothing');
+    return '“' + rule.rentRollLabel + '” on the rent roll covers ' + memList +
+           '. Those stop being reported as unbilled — the amounts are still shown and still compared.';
   }
   if (rule.type === 'rollup'){
     return 'Report “' + rule.subject + '” once for the whole property instead of on every unit.';
@@ -313,13 +461,23 @@ function prDescribeRule(rule){
    is the same rule. */
 function prRuleKey(rule){
   if (!rule || !rule.type) return '';
+  if (rule.type === 'alias' && !Array.isArray(rule.spellings)) return '';
+  if ((rule.type === 'bundle' || rule.type === 'includes') && !Array.isArray(rule.leaseLabels)) return '';
   if (rule.type === 'alias'){
     return 'alias::' + prNormalizeLabel(rule.target) + '::' +
       (rule.spellings || []).map(prNormalizeLabel).sort().join('|');
   }
-  if (rule.type === 'bundle'){
-    return 'bundle::' + prNormalizeLabel(rule.rentRollLabel) + '::' +
+  if (rule.type === 'includes'){
+    return 'includes::' + prNormalizeLabel(rule.rentRollLabel) + '::' +
       (rule.leaseLabels || []).map(prNormalizeLabel).sort().join('|');
+  }
+  if (rule.type === 'bundle'){
+    // The difference is part of the identity. "these lines are that line" and
+    // "...at five dollars less" are different claims about the property, and
+    // accepting one must not silently satisfy the other.
+    var diffKey = rule.difference ? '::d' + prRound(Number(rule.difference)) : '';
+    return 'bundle::' + prNormalizeLabel(rule.rentRollLabel) + '::' +
+      (rule.leaseLabels || []).map(prNormalizeLabel).sort().join('|') + diffKey;
   }
   return rule.type + '::' + prNormalizeLabel(rule.subject);
 }
@@ -343,6 +501,7 @@ function prRuleKey(rule){
    the same month, and the person is told which rule and on which units, rather
    than finding out a year later that an audit had a hole in it. */
 function prRuleStatus(rule, evidence){
+  if (evidence && (evidence.blocked || (evidence.wouldHideUndisclosed || []).length)) return 'suspended';
   if (!evidence || !evidence.unitsExamined) return 'dormant';
   if (evidence.contradictedOn > 0) return 'suspended';
   return 'active';
@@ -354,6 +513,10 @@ function prExplainStatus(rule, evidence, status){
            'the charge comes back.';
   }
   if (status === 'suspended'){
+    if (evidence.blocked || (evidence.wouldHideUndisclosed || []).length){
+      return 'Switched off for this run — this rule would suppress a protected finding or is invalid. ' +
+             'The original findings are retained. Review the rule before using it again.';
+    }
     var eg = evidence.counterExamples[0];
     var detail = '';
     if (eg && eg.sum != null){
@@ -446,6 +609,22 @@ function prParseSentence(text, vocab){
   if (!raw) return { rule: null, reason: 'Nothing typed.', knownLabels: [] };
 
   var labels = prFindLabels(raw, vocab);
+  // A negative or uncertain statement is not consent. Check outside charge labels,
+  // so a legitimate label such as "No Deposit Fee" is not itself interpreted as intent.
+  var intent = raw.toLowerCase().replace(/[’]/g, "'");
+  labels.slice().sort(function(a,b){ return b.length-a.length; }).forEach(function(label){
+    intent = intent.split(label.toLowerCase()).join(' CHARGE ');
+  });
+  if (/^\s*no\b|\b(?:do not|don't|never)\s+(?:hide|ignore|stop|remove|change|combine)|\b(?:keep|leave)\s+(?:the\s+)?(?:original|findings|results|checks)|\bnot\s+(?:an?\s+)?(?:old\s+)?template\b/.test(intent)){
+    return {rule:null, knownLabels:labels, reason:'No change proposed. Keep the original findings.'};
+  }
+  // "We don't charge X" is a supported positive convention. Remove only that
+  // recognized phrase, not other negation such as "X is NOT normal for us".
+  var remainingIntent = labels.length === 1 ? intent.replace(PR_IGNORE_WORDS, '') : intent;
+  if (/\b(no|not|never|separate|separately|different|unrelated|unsure|maybe|perhaps|unless)\b|\b(?:isn|aren|don|doesn|can|shouldn|wouldn)'?t\b|\?/.test(remainingIntent)){
+    return {rule:null, knownLabels:labels,
+      reason:'No change proposed. Your explanation is negative or uncertain. Please clarify the relationship, or keep the original findings.'};
+  }
   if (!labels.length){
     return { rule: null, knownLabels: (vocab || []).slice(0, 40),
       reason: 'None of the charges in these documents were mentioned. Name a charge exactly as ' +
@@ -480,18 +659,13 @@ function prParseSentence(text, vocab){
   }
 
   if (PR_HIDE_WORDS.test(raw) && labels.length >= 1){
-    return { rule: { type: 'hide', subject: labels[labels.length - 1], reason: raw.slice(0, 200) },
+    return { rule: { type: 'hide', subject: labels[labels.length - 1], reason: 'Manager requested exclusion' },
       reading: 'Stop flagging “' + labels[labels.length - 1] + '” at this property.' };
   }
 
-  /* By elimination. Bundles, "we don't charge it" and "hide it" have all been
-     ruled out above, so two or more charges named in one sentence means the
-     person is telling us they are the same charge. Requiring a phrase from a
-     list was tried and failed on ordinary English -- "WD Rent and W/D RG are
-     just our Washer/Dryer charge" matches none of them. The reading is shown
-     for confirmation and the evidence check still runs, so a misread costs a
-     glance rather than a bad rule. */
-  if (labels.length >= 2){
+  /* Naming two charges is not enough to infer equivalence. Require positive
+     relationship language; uncertain wording needs clarification instead. */
+  if (labels.length >= 2 && (PR_ALIAS_WORDS.test(raw) || /\b(?:are|is) (?:just )?our\b/i.test(raw))){
     /* WHICH ONE IS THE REAL NAME: the last one named.
        English puts the canonical name at the end of this kind of sentence --
        "WD Rent is the same as Washer/Dryer", "1 Bedroom and 2 Bedroom are the
@@ -523,5 +697,7 @@ if (typeof module !== 'undefined' && module.exports){
   module.exports = { RULE_TYPES, PROTECTED_SUBJECTS, prNormalizeLabel,
                      prValidateRule, prCheckRuleAgainstData, prDescribeRule,
                      prRuleKey, prRuleStatus, prExplainStatus,
-                     prFindLabels, prParseSentence };
+                     prFindLabels, prParseSentence,
+                     PR_MAX_BUNDLE_DIFFERENCE, PR_MAX_BUNDLE_DIFFERENCE_RATIO,
+                     prBundleDifferenceAllowed, prMoney };
 }

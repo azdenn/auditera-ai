@@ -1,5 +1,11 @@
 @echo off
 cd /d "%~dp0"
+node ..\build.cjs --check
+if errorlevel 1 (
+  echo   Build verification failed. Run node build.cjs from the repository root first.
+  pause >nul
+  exit /b 1
+)
 echo.
 echo   Deploying to the TESTING site only.
 echo   Live auditera.net is NOT touched by this.
@@ -10,7 +16,7 @@ if errorlevel 1 (
   echo   ^>^> TESTING DEPLOY FAILED - see the error above.
 ) else (
   echo   ^>^> Done. Testing site:
-  echo      https://auditera-testing.azden-kumar.workers.dev
+  echo      https://testing.auditera.net
   echo.
   echo   When it looks right, run redeploy.bat to put the SAME files live.
 )

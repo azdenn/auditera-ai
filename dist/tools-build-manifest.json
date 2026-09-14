@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "tools": {
+    "leaseverify": {
+      "inputs": {
+        "lease_tool/template.html": "62af6c8bd75b0a2e8fd9d69061da69c9b238374c94bf1db56613b36e4a302213",
+        "shared/build_tool.cjs": "12c3bb03b4d4efaebbd68f9684bab693e12dda8cb6810cc80722839f5cb9cf9e",
+        "build.cjs": "a037b6225c7f2126756ab8528416f79bc73ffe72f76354c08936605e5adf643c",
+        "lease_tool/package-lock.json": "7269db2b9d194bb0e85ab6d3c4eaeb2ba8aca4359dbabe7a7429e7752627cd3e",
+        "lease_tool/node_modules/pdfjs-dist/build/pdf.min.js": "5b5799e6f8c680663207ac5b42ee14eed2a406fa7af48f50c154f0c0b1566946",
+        "lease_tool/node_modules/pdfjs-dist/build/pdf.worker.min.js": "feabdf309770ed24bba31a5467836cdc8cf639c705af27d52b585b041bb8527b",
+        "lease_tool/node_modules/xlsx/dist/xlsx.full.min.js": "c9506197caf809a075b6dee1da0d36fb19da7158ffe8a88e7b0c96c5d8623c99",
+        "lease_tool/node_modules/fflate/umd/index.js": "462ef8041fc970e3615a20a9dd2b2e3047a073b2da729ef4f02b634bba8b7b83",
+        "shared/audit_gate.js": "0da517c4d2a94ac39a1c7846299487a042a5eaf9a9fb889e16f13a5d82338ee3",
+        "shared/rentroll_property_name.js": "190373f3eaca7fa0232760f09ae37822d0c3949b9993312701e287431aa76e07",
+        "shared/property_rules.js": "828cb990b16098452d47d92b3b7f5b7771c08c7dce940d8f331d728b0786ba54",
+        "shared/property_assistant.js": "a910a9d03781a7d28baf35d6d321dda88e1a72f4342aefd948f9ecfe40ecd1ae",
+        "shared/property_assistant_ui.js": "c3c1197252651c878ecaf798c54ec5e7b30d6e90a4360a76dd8b54aafa2f1331"
+      },
+      "sha256": "26cb6509b38188919ef504caec5579cf79ae9bec89e8b2bb406e821ecb80bf8d"
+    },
+    "concessionverify": {
+      "inputs": {
+        "concession_tool/template.html": "53c1d2155b2bc8f4497aa75e0589f077c7e0e14b7491fdf0ee7baf2ae2ecbbeb",
+        "shared/build_tool.cjs": "12c3bb03b4d4efaebbd68f9684bab693e12dda8cb6810cc80722839f5cb9cf9e",
+        "build.cjs": "a037b6225c7f2126756ab8528416f79bc73ffe72f76354c08936605e5adf643c",
+        "lease_tool/package-lock.json": "7269db2b9d194bb0e85ab6d3c4eaeb2ba8aca4359dbabe7a7429e7752627cd3e",
+        "lease_tool/node_modules/pdfjs-dist/build/pdf.min.js": "5b5799e6f8c680663207ac5b42ee14eed2a406fa7af48f50c154f0c0b1566946",
+        "lease_tool/node_modules/pdfjs-dist/build/pdf.worker.min.js": "feabdf309770ed24bba31a5467836cdc8cf639c705af27d52b585b041bb8527b",
+        "lease_tool/node_modules/xlsx/dist/xlsx.full.min.js": "c9506197caf809a075b6dee1da0d36fb19da7158ffe8a88e7b0c96c5d8623c99",
+        "lease_tool/node_modules/fflate/umd/index.js": "462ef8041fc970e3615a20a9dd2b2e3047a073b2da729ef4f02b634bba8b7b83",
+        "shared/audit_gate.js": "0da517c4d2a94ac39a1c7846299487a042a5eaf9a9fb889e16f13a5d82338ee3",
+        "shared/rentroll_property_name.js": "190373f3eaca7fa0232760f09ae37822d0c3949b9993312701e287431aa76e07"
+      },
+      "sha256": "efaba14ebf308e7eb124000317beec9970b0883fa030f5b82c8ed81d555cc0aa"
+    },
+    "depositverify": {
+      "inputs": {
+        "deposit_tool/template.html": "83f4e136e806ca3861289799b3ed36ac8ab4eb46ab85595cb4141e1084659ab3",
+        "shared/build_tool.cjs": "12c3bb03b4d4efaebbd68f9684bab693e12dda8cb6810cc80722839f5cb9cf9e",
+        "build.cjs": "a037b6225c7f2126756ab8528416f79bc73ffe72f76354c08936605e5adf643c",
+        "lease_tool/package-lock.json": "7269db2b9d194bb0e85ab6d3c4eaeb2ba8aca4359dbabe7a7429e7752627cd3e",
+        "lease_tool/node_modules/pdfjs-dist/build/pdf.min.js": "5b5799e6f8c680663207ac5b42ee14eed2a406fa7af48f50c154f0c0b1566946",
+        "lease_tool/node_modules/pdfjs-dist/build/pdf.worker.min.js": "feabdf309770ed24bba31a5467836cdc8cf639c705af27d52b585b041bb8527b",
+        "lease_tool/node_modules/xlsx/dist/xlsx.full.min.js": "c9506197caf809a075b6dee1da0d36fb19da7158ffe8a88e7b0c96c5d8623c99",
+        "shared/audit_gate.js": "0da517c4d2a94ac39a1c7846299487a042a5eaf9a9fb889e16f13a5d82338ee3",
+        "shared/rentroll_property_name.js": "190373f3eaca7fa0232760f09ae37822d0c3949b9993312701e287431aa76e07"
+      },
+      "sha256": "d18f2dd12c42c9f132c5bc8294e0378e6a473f3e700660daf244d54a32576cac"
+    }
+  }
+}

@@ -94,8 +94,14 @@ const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
   await page.click('.filter-group-all[data-group="Charges & fees"]');
   await page.waitForTimeout(300);
   const afterToggleAll = await page.evaluate(() => {
-    const charges = allOptionFilterTypes().filter(t => t.group === 'Charges & fees');
-    return { allHidden: charges.every(t => isCheckHidden(t.key)), count: charges.length };
+    // The panel lists THIS RUN's filters, not the whole catalogue (asked for
+    // on 2026-09-06: "the optional filters are strictly optional based on what
+    // is uploaded"), so "toggle all" acts on what is actually on screen.
+    const charges = observedOptionFilterTypes(unitEntries).filter(t => t.group === 'Charges & fees');
+    const rendered = Array.from(document.querySelectorAll('#discrepancy-filter-panel input[data-check-key]'))
+      .map(el => el.getAttribute('data-check-key'));
+    return { allHidden: charges.every(t => isCheckHidden(t.key)), count: charges.length,
+             renderedAllTicked: rendered.filter(k => charges.some(t => t.key === k)).every(k => isCheckHidden(k)) };
   });
 
   // Toggle the group back off, then untick rent, and confirm full restore.
@@ -128,7 +134,8 @@ const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
     ['Unit detail still shows the row, muted as "Hidden by Filter"', !!detail && /Hidden by Filter/.test(detail)],
     ['Detail explains it was excluded by choice', !!detail && /chosen not to analyze/i.test(detail)],
     ['Flat mismatches view excludes the hidden charge', !flatRows.includes('Rent')],
-    ['"Toggle all" switches the whole charges family at once', afterToggleAll.allHidden === true && afterToggleAll.count > 5],
+    ['"Toggle all" switches the whole charges family at once', afterToggleAll.allHidden === true && afterToggleAll.count > 1],
+    ['...and every charge checkbox actually on screen is ticked', afterToggleAll.renderedAllTicked === true],
     ['Toggling the group back restores 303 exactly', afterRestore.issueCount === baseline.issueCount && afterRestore.category === baseline.category && afterRestore.hiddenChargeCount === 0],
   ];
   let allPass = true;

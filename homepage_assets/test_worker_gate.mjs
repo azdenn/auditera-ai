@@ -3,7 +3,7 @@
    driven, including the ones that only happen when something is broken.
    The cases that matter most are the FAILURE ones: a gate that fails open is
    worse than no gate, because it looks like protection and isn't. */
-import worker from './worker.mjs';
+import worker from '../dist/_worker.js';
 
 const ASSET_BODY = '<html>THE TOOL</html>';
 const ASSETS = { fetch: async () => new Response(ASSET_BODY, {status:200, headers:{'Content-Type':'text/html'}}) };
@@ -13,12 +13,12 @@ function req(path, token){
   return new Request('https://auditly.example' + path, token ? {headers:{Authorization:'Bearer ' + token}} : {});
 }
 // Stub Supabase: token 'good' is valid; 'licensed' is valid AND has a licence.
-function stubSupabase({userStatus = 200, propsStatus = 200, props = [], throwOn = null} = {}){
+function stubSupabase({userStatus = 200, propsStatus = 200, props = false, throwOn = null} = {}){
   globalThis.fetch = async (url) => {
     const u = String(url);
     if (throwOn && u.includes(throwOn)) throw new Error('network down');
     if (u.includes('/auth/v1/user')) return new Response('{}', {status: userStatus});
-    if (u.includes('/rest/v1/properties')) return new Response(JSON.stringify(props), {status: propsStatus});
+    if (u.includes('/rest/v1/rpc/has_active_licence')) return new Response(JSON.stringify(props), {status: propsStatus});
     throw new Error('unexpected call: ' + u);
   };
 }
@@ -48,19 +48,19 @@ x = await read(await worker.fetch(req('/tools/leaseverify.html', 'expired'), ENV
 check('An expired or forged token is refused', x.status === 401);
 check('...with a message telling them to sign in again', /sign in again/i.test((x.json||{}).message || ''));
 
-stubSupabase({userStatus: 200, props: []});
+stubSupabase({userStatus: 200, props: false});
 x = await read(await worker.fetch(req('/tools/leaseverify.html', 'good'), ENV));
 check('A valid session with NO active property licence is refused', x.status === 403);
 check('...and does not leak the tool', !x.text.includes('THE TOOL'));
 check('...and says what is missing', /no active property/i.test((x.json||{}).message || ''));
 
-stubSupabase({userStatus: 200, props: [{id: 'p1'}]});
+stubSupabase({userStatus: 200, props: true});
 x = await read(await worker.fetch(req('/tools/leaseverify.html', 'licensed'), ENV));
 check('A valid session WITH an active licence gets the tool', x.status === 200 && x.text.includes('THE TOOL'));
-check('...and it is never stored in a shared cache', /no-store/.test(x.cache));
+check('...and it is never stored in a shared cache', x.cache === 'private, max-age=0, must-revalidate');
 
 // --- failure modes must fail CLOSED --------------------------------------
-stubSupabase({userStatus: 200, props: [{id:'p1'}]});
+stubSupabase({userStatus: 200, props: true});
 x = await read(await worker.fetch(req('/tools/leaseverify.html', 'licensed'), {...ENV, SUPABASE_URL: ''}));
 check('A deploy missing its config refuses rather than serving the tool', x.status === 503);
 check('...and does not leak the tool', !x.text.includes('THE TOOL'));
@@ -77,7 +77,7 @@ stubSupabase({throwOn: '/auth/v1/user'});
 x = await read(await worker.fetch(req('/tools/leaseverify.html', 'licensed'), ENV));
 check('Supabase being unreachable refuses rather than serving the tool', x.status === 503);
 
-stubSupabase({userStatus: 200, throwOn: '/rest/v1/properties'});
+stubSupabase({userStatus: 200, throwOn: '/rest/v1/rpc/has_active_licence'});
 x = await read(await worker.fetch(req('/tools/leaseverify.html', 'licensed'), ENV));
 check('A licence lookup failure refuses rather than serving the tool', x.status === 503);
 
@@ -89,12 +89,28 @@ check('A licence lookup ERROR refuses rather than serving the tool', x.status ==
 let sawAuth = null;
 globalThis.fetch = async (url, init) => {
   const u = String(url);
-  if (u.includes('/rest/v1/properties')) sawAuth = init.headers.Authorization;
-  return new Response(u.includes('/auth/v1/user') ? '{}' : '[{"id":"p1"}]', {status:200});
+  if (u.includes('/rest/v1/rpc/has_active_licence')) sawAuth = init.headers.Authorization;
+  return new Response(u.includes('/auth/v1/user') ? '{}' : 'true', {status:200});
 };
 await worker.fetch(req('/tools/leaseverify.html', 'licensed'), ENV);
 check('The licence query runs as the signed-in user, so RLS scopes it to their own account',
   sawAuth === 'Bearer licensed');
+
+// Strict RPC shape and real non-production/public routing.
+for (const props of [null, {}, [], 'true', 1, [{id:'p1'}]]) {
+  stubSupabase({props});
+  x = await read(await worker.fetch(req('/tools/leaseverify.html', 'licensed'), ENV));
+  check('Unexpected RPC shape fails closed: ' + JSON.stringify(props), x.status === 403 && !x.text.includes('THE TOOL'));
+}
+stubSupabase({props:true});
+for (const host of ['testing.auditera.net', 'auditera-testing.example.workers.dev']) {
+  const response = await worker.fetch(new Request('https://' + host + '/'), ENV);
+  check(host + ': public homepage is noindex', response.headers.get('X-Robots-Tag') === 'noindex, nofollow');
+  const robots = await worker.fetch(new Request('https://' + host + '/robots.txt'), ENV);
+  check(host + ': robots disallows crawling', (await robots.text()).includes('Disallow: /'));
+}
+const live = await worker.fetch(new Request('https://auditera.net/'), ENV);
+check('Canonical marketing site remains indexable', live.headers.get('X-Robots-Tag') === null);
 
 let pass = true;
 console.log('=== PASS/FAIL ===');

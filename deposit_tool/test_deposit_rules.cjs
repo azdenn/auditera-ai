@@ -13,7 +13,7 @@
        false "missing LeaseLock" on a resident who paid a real deposit is the
        most damaging thing this tool could do.
      • $45 invoice over a normal 30-day month  -> flagged (unexplained).
-     • $46.50 invoice over a 45-day period     -> NOT flagged (explained).
+     • $46.50 invoice over a 45-day period     -> flagged until rate/proration is verified.
      • Charged $33 on the rent roll but absent from the invoice -> flagged.
 */
 const { chromium } = require('playwright');
@@ -109,23 +109,23 @@ const { installGateStub, GATE_HASH } = require('../shared/test_gate_stub.cjs');
     ['That overcharge finding says the coverage period does not explain it',
       /does not explain/.test(d.byUnit['302'].notes.join(' '))],
 
-    ['NEGATIVE CONTROL: higher invoice over a LONGER coverage period (402: $46.50, 45 days) is NOT flagged',
-      d.byUnit['402'].flags.length === 0],
-    ['That longer-period case is still recorded as an explained, non-discrepancy finding',
-      d.byUnit['402'].softs.length === 1 && d.byUnit['402'].softs[0] === 'llAmountMismatch'],
+    ['Longer coverage alone does not verify an invoice increase (402: $46.50, 45 days)',
+      d.byUnit['402'].flags.length === 1 && d.byUnit['402'].flags[0] === 'llAmountMismatch'],
+    ['The unverified proration case is not softened',
+      d.byUnit['402'].softs.length === 0],
     ['Its note explains the extra days beyond a normal month',
       /45 days/.test(d.byUnit['402'].notes.join(' ')) && /14 days more than a normal month/.test(d.byUnit['402'].notes.join(' '))],
-    ['A unit whose only finding is explained is not counted as a discrepancy',
-      d.byUnit['402'].category === 'clean'],
+    ['An unverified increase remains counted as a discrepancy',
+      d.byUnit['402'].category === 'discrepancy'],
 
     ['Charged LeaseLock on the rent roll but absent from the invoice (408) IS flagged',
       d.byUnit['408'].flags.length === 1 && d.byUnit['408'].flags[0] === 'llNotOnInvoice'],
     ['That finding records the $33 charge and no invoice amount',
       d.byUnit['408'].charged === 33 && d.byUnit['408'].invoiced === null],
 
-    ['Exactly two units are flagged on this fixture (302 and 408)',
-      JSON.stringify(d.discrepancyUnits.slice().sort()) === JSON.stringify(['302','408'])],
-    ['Two findings in total', d.totalFlags === 2],
+    ['Exactly three units are flagged on this fixture (302, 402 and 408)',
+      JSON.stringify(d.discrepancyUnits.slice().sort()) === JSON.stringify(['302','402','408'])],
+    ['Three findings in total', d.totalFlags === 3],
     ['The results table renders one row per reconciled resident', d.rowUnits.length === 25],
     ['No page errors', errors.length === 0],
   ];

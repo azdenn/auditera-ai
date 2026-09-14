@@ -1,0 +1,8 @@
+# Build manifests hash exact bytes. Keep source inputs and generated tools LF
+# on Windows as well as other platforms so a checkout does not change the build.
+*.html text eol=lf
+/shared/*.js text eol=lf
+/shared/build_tool.cjs text eol=lf
+/build.cjs text eol=lf
+/lease_tool/package-lock.json text eol=lf
+/dist/tools-build-manifest.json text eol=lf

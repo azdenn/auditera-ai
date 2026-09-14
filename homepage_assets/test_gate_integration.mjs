@@ -15,8 +15,8 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 // playwright is installed globally in this environment, not beside the tests.
-const { chromium } = require('/home/claude/.npm-global/lib/node_modules/playwright');
-import worker from './worker.mjs';
+const { chromium } = require('playwright');
+import worker from '../dist/_worker.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.resolve(HERE, '..', 'dist');
@@ -104,6 +104,7 @@ check('The homepage does not contain the tools', !home.includes('process-btn') &
 // --- and from the browser, through launchTool ------------------------------
 const browser = await chromium.launch({executablePath:'/opt/pw-browsers/chromium-1194/chrome-linux/chrome'});
 const context = await browser.newContext();
+await context.route(ORIGIN + '/**', route => route.continue());
 const page = await context.newPage();
 const errs = [];
 page.on('pageerror', e => errs.push(e.message));

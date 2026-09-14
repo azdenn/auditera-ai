@@ -1347,6 +1347,11 @@ loginForm.addEventListener('submit', async (e) => {
       const { data, error } = await sb.auth.signInWithPassword({ email: loginEmail, password });
       if (error){ loginError.textContent = 'Email or password not recognized.'; loginError.classList.remove('hidden'); return; }
       const sub = await ensureSubscriptionForSession(data.user.id, username);
+      // The account is looked up here rather than threaded through
+      // ensureSubscriptionForSession, which has one job and does not need a
+      // second. A null account is fine -- the row still says who signed in and
+      // when, which is the whole point.
+      recordLogin(data.user.id);
       showSignedIn(sub.username, sub.property);
     } finally { setFormBusy(loginForm, false); }
     return;
@@ -1363,6 +1368,34 @@ loginForm.addEventListener('submit', async (e) => {
   sessionStorage.setItem(SESSION_KEY, username);
   showSignedIn(username, acct.property);
 });
+
+/* One row per successful sign-in.
+   ---------------------------------------------------------------------------
+   WHAT TRAVELS: a user id, an account id and the time. Nothing else, ever.
+
+   HONEST ABOUT WHAT THIS IS. Unlike audit_runs -- which the licence gate
+   writes server-side with the service role, so the person being recorded
+   cannot suppress it -- this row is written by the browser after Supabase
+   accepts the password. Someone determined could block it. That makes it good
+   enough for "are my customers actually showing up" and NOT something to build
+   an accusation of password-sharing on; audit_runs stays the honest record for
+   that, because it is the one the audited party cannot edit.
+
+   Never awaited and never surfaced. A sign-in that worked must not show an
+   error because a statistic did not save, and nobody should wait on it to get
+   into the app. */
+async function recordLogin(userId){
+  try {
+    if (!sb || !userId) return;
+    let accountId = null;
+    try {
+      const { data } = await sb.from('subscriptions')
+        .select('account_id').eq('user_id', userId).maybeSingle();
+      accountId = (data && data.account_id) || null;
+    } catch (_e){ /* a login row without an account is still a login row */ }
+    await sb.from('login_events').insert({ user_id: userId, account_id: accountId });
+  } catch (_e){ /* never let a metric break a sign-in */ }
+}
 
 document.getElementById('logout-link').addEventListener('click', async (e) => {
   e.preventDefault();

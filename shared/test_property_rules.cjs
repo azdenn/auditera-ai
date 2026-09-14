@@ -30,8 +30,8 @@ const VOCAB = [
 ];
 
 /* ---- 1. only four shapes exist ------------------------------------------ */
-check('There are exactly four things a rule can do',
-  RULE_TYPES.length === 4);
+check('The five supported rule shapes are pinned',
+  JSON.stringify(RULE_TYPES) === JSON.stringify(['alias','bundle','rollup','hide','includes']));
 for (const bogus of ['recalculate', 'markAsMatched', 'setAmount', 'ignoreEverything', '', null]){
   const v = prValidateRule({type: bogus, subject: 'Community Fee 2'}, VOCAB);
   check('“' + bogus + '” is not something a rule can do', v.ok === false);

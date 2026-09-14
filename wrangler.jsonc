@@ -16,7 +16,7 @@
     "not_found_handling": "404-page",
     // Load-bearing. Without this Cloudflare serves the tool files directly
     // and NEVER runs the licence gate.
-    "run_worker_first": ["/tools/*"]
+    "run_worker_first": true
   },
   "vars": {
     "SUPABASE_URL": "https://kyfvrkghqohkhwidqwst.supabase.co",

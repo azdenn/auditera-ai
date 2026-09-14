@@ -294,6 +294,16 @@ Deno.serve(async (req) => {
     // here -- an audit trail the audited party can edit is not an audit trail.
     // A logging failure must not turn a refusal into a pass, so this is wrapped
     // and the decision stands either way.
+    //
+    // NOTE FOR ANYONE ADDING USAGE STATISTICS: this function deliberately does
+    // NOT hand its row id back to the browser, and record-run-outcome
+    // deliberately does not take one. Returning the id was written and then
+    // reverted on 2026-09-03. It was the more precise design, and it would
+    // have meant REDEPLOYING THE LICENCE GATE -- the one piece of this system
+    // that must never break -- in order to ship an analytics feature. That is
+    // a bad trade at any level of care. record-run-outcome instead finds the
+    // caller's own most recent unfinished run, which is a slightly weaker
+    // match and cannot affect a security decision either way.
     if (accountId){
       try {
         const admin = createClient(

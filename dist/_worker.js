@@ -31,6 +31,33 @@
 
 const TOOL_PREFIX = '/tools/';
 
+/* KEEPING THE TESTING SITE OUT OF GOOGLE.
+   ---------------------------------------------------------------------------
+   The testing site moved from a workers.dev subdomain to testing.auditera.net
+   on 2026-09-02, because workers.dev has none of the caching a real zone has
+   and was unusably slow for a second person. That fixed the speed and created
+   a new problem: it is now a perfectly ordinary, crawlable subdomain of the
+   real site, serving a byte-identical copy of the marketing pages.
+
+   Left alone, Google indexes it. Then there are two Auditera sites in the
+   results, a customer eventually lands on the one that exists to be broken,
+   and the real site is competing with its own duplicate for ranking.
+
+   This cannot be solved with a robots.txt file, because BOTH sites serve the
+   same dist/ folder -- a file that blocks crawlers on testing would block them
+   on auditera.net too. So it is decided per REQUEST, from the hostname: the
+   canonical host is indexable and every other host that reaches this Worker
+   (testing, workers.dev, anything future) is not.
+
+   Belt and braces on purpose: a robots.txt is only a request, so an
+   X-Robots-Tag header goes on every response as well -- that one is an
+   instruction, and it covers pages a crawler reaches without reading robots. */
+const CANONICAL_HOST = 'auditera.net';
+
+function isPublicSite(url){
+  return url.hostname === CANONICAL_HOST || url.hostname === 'www.' + CANONICAL_HOST;
+}
+
 function deny(status, message){
   return new Response(JSON.stringify({error: true, message}), {
     status,
@@ -44,9 +71,24 @@ function deny(status, message){
 export default {
   async fetch(request, env){
     const url = new URL(request.url);
+    const indexable = isPublicSite(url);
+
+    // Every non-live host answers robots.txt with a flat refusal, before
+    // anything else can serve a file of that name.
+    if (!indexable && url.pathname === '/robots.txt'){
+      return new Response('User-agent: *\nDisallow: /\n', {
+        headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' },
+      });
+    }
 
     // Anything that isn't a tool is public: marketing page, sign-in, assets.
-    if (!url.pathname.startsWith(TOOL_PREFIX)) return env.ASSETS.fetch(request);
+    if (!url.pathname.startsWith(TOOL_PREFIX)){
+      const assetRes = await env.ASSETS.fetch(request);
+      if (indexable) return assetRes;
+      const tagged = new Response(assetRes.body, assetRes);
+      tagged.headers.set('X-Robots-Tag', 'noindex, nofollow');
+      return tagged;
+    }
 
     if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY){
       // Fail CLOSED. A misconfigured deploy must not quietly start handing the
@@ -105,11 +147,36 @@ export default {
       return deny(403, 'There is no active property on this account yet. Add one to start your free trial, or get in touch if your trial has ended.');
     }
 
-    // Cleared. Serve the tool, and make sure no shared cache keeps a copy.
+    /* Cleared. Serve the tool.
+
+       WHY THIS IS NOT 'no-store' ANY MORE
+       -----------------------------------
+       It was, and that made every single open of the tool re-download 2.6 MB.
+       'no-store' forbids the BROWSER from keeping a copy too, so a person
+       opening the tool three times in a morning paid for it three times.
+       Reported as "loading the tool takes a very long time, it's not usable".
+
+       'private' is what actually carries the security requirement: no shared
+       cache -- no CDN, no company proxy -- may keep a copy, so the file still
+       cannot be obtained without passing this gate. 'max-age=0,
+       must-revalidate' then forces the browser back here on EVERY open, so the
+       licence check below still runs every single time and revoking an account
+       still takes effect immediately. What changes is only that a browser
+       holding an unchanged copy gets a 304 with no body instead of the whole
+       file again.
+
+       env.ASSETS already emits a strong ETag and answers If-None-Match itself,
+       so the 304 comes from the asset layer -- but only AFTER the gate above
+       has said yes, because run_worker_first means nothing reaches the assets
+       without coming through here first. The gate is unchanged; only the size
+       of the reply on a repeat open is. */
     const res = await env.ASSETS.fetch(request);
     const out = new Response(res.body, res);
-    out.headers.set('Cache-Control', 'private, no-store');
+    out.headers.set('Cache-Control', 'private, max-age=0, must-revalidate');
     out.headers.set('X-Content-Type-Options', 'nosniff');
+    if (!indexable) out.headers.set('X-Robots-Tag', 'noindex, nofollow');
+    // Never let a shared cache key this on anything but the exact URL.
+    out.headers.set('Vary', 'Accept-Encoding');
     return out;
   },
 };

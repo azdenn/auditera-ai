@@ -8,7 +8,7 @@
  */
 const fs = require('fs');
 
-const src = fs.readFileSync('/home/claude/edge/authorize-audit.ts', 'utf8');
+const src = fs.readFileSync(require('path').join(__dirname, '../edge/authorize-audit.ts'), 'utf8');
 const start = src.indexOf('function pgNormalizeName');
 const end = src.indexOf('function messageFor');
 if (start === -1 || end === -1 || end <= start) {
