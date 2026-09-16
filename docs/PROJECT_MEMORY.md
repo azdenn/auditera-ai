@@ -1,9 +1,53 @@
 # Auditera project memory
 
-Owner direction and local technical snapshot verified: 2026-09-14 (America/Chicago).
+Owner direction and local technical snapshot verified: 2026-09-15 (America/Chicago).
 This is the compact current checkpoint. First repairs and the browser-local
 LeaseVerify property-assistant pilot are deployed to TESTING ONLY.
 It is maintained external memory for development, not a model-training system.
+
+## Current checkpoint — September 15 acceptance repairs
+
+Owner authorized implementation of the reported signature, waiver and assistant
+failures. Testing only; production/backend/paid AI remain out of scope. The chatbot
+conventions belong to Janine, NOT Blanco Oaks despite the older screenshot URL.
+Pet rent is separate; washer/dryer and cable are included only where the grouped
+bill exists and the member is not separately billed. Do not hard-code these globally.
+
+- Fixed per-resident signature column isolation, whitespace masks, ordinary
+  underscore-rule masks and individual glyph baselines. Thresholds unchanged.
+  Local original Blanco signed packets now recognize the previously missed marks;
+  an unsigned original control still reports all 22 missing locations.
+- Reproduced and supported the actual one-page Deposit Waiver Addendum (LeaseLock):
+  integer amount, written-out lease date, and signature/date above captions. No
+  nonexistent printed-name field is required for this known layout. Agreement
+  verification is explicitly labeled separately from fee matching. Matching names
+  or prices alone never establishes a signed agreement. Two original Blanco cases
+  now have all required waiver fields recognized. Blank/wrong-price controls pass.
+- All pending assistant questions now appear on one page. Selections highlight;
+  one Review choices action previews a batch. Explicit approval remains required;
+  unsupported selections have a clear unchanged-results exit. Written explanations
+  are optional and separate. Raw structure labels bridge to a unique observed
+  comparison label, fixing Cable / Internet Fee versus Cable / Internet, and the
+  cable question is shown alongside pet/washer choices instead of deferred.
+- Verified 28/28 focused suites, build parity, mobile synthetic review. Full offline
+  Janine UI run: 102 units; conditional cable eligible on 5, washer/dryer on 14;
+  batch approval releases results, inclusion revalidates active, pet remains separate.
+  Real documents processed only locally under network-blocked/stubbed test context.
+  The first file-origin harness run timed out because the pilot was disabled there;
+  rerun used the testing origin with local HTML and mocked requests. Not a live-login test.
+- OPEN: A114-specific contradictory waiver report is not reproduced: the Garden
+  Creek export in Downloads is 0 bytes. Owner asked for a usable copy/path. Do not
+  call all reported cases fixed. Blanket matching by amount, arbitrary AI conversation,
+  cross-device conventions and guarantees of signature authenticity remain unsupported.
+- Testing deployment verified: Worker version `53396760-4824-4638-a0e6-c6101b20461f`;
+  public manifest exactly matches local build, SHA-256
+  `3c714361f389babaaf85757a97913189416ddd837ca4856eaa882988dfb7d846`.
+  Testing app responds 200 with noindex/nofollow; unauthenticated tool download 401.
+  Production homepage hash unchanged. Git release recording is on testing only.
+  Owner will supply the replacement document/export; continue A114 then, not before.
+  No production changes or customer document commits.
+
+Older checkpoint sections below preserve history and may describe superseded state.
 
 ## Owner direction
 

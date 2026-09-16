@@ -81,7 +81,8 @@ function paOnReconcile(){
   const qs=PropertyAssistant.questions({entries:unitEntries,proposals:RULE_PROPOSALS,
     structures:CHARGE_STRUCTURES,rules:[...PROPERTY_RULES,...PA.separations],loadError:AG_RULES_LOAD_ERROR||PA.storageError,
     protectedTest:label=>Object.values(PROTECTED_SUBJECTS).some(re=>{re.lastIndex=0;return re.test(String(label||''));})});
-  PA.current=qs.find(q=>!PA.answered.has(q.key))||null;
+  PA.questions=qs.filter(q=>!PA.answered.has(q.key));
+  PA.current=PA.questions[0]||null;
   PA.preview=null;
   PA.pending=!!PA.current;
   paRender(qs.filter(q=>!PA.answered.has(q.key)).length);
@@ -108,54 +109,60 @@ function paRender(remaining){
     return;
   }
   document.getElementById('results-card').classList.add('hidden');
-  paElement('p',remaining+' question(s) remain before results. You can decline; agreement is never required.',box);
-  const heading=paElement('h3',PA.current.label,box);heading.tabIndex=-1;
-  paElement('p',PA.current.message,box).style.lineHeight='1.6';
+  paElement('p','1. Choose below. 2. Review choices. 3. Confirm and view results. All '+remaining+' question(s) are on this page. Not sure keeps the original findings; agreement is never required.',box);
+  const heading=paElement('h3','Review your property’s billing conventions',box);heading.tabIndex=-1;
+  paElement('p','“Always included” means every unit billed the named package. “Only when not separately billed” leaves separate bills checked. Leave uncertain amenities as “Not sure”. These answers do not verify a package price or replace signed terms.',box).style.lineHeight='1.6';
   if(PA.storageError)paElement('p','Browser conventions could not be read. Nothing missing was treated as verified; remembering is disabled for this run.',box);
-  const controls=paElement('div',null,box);
-  if(PA.current.rule)paButton('Preview suggested convention',()=>paPreview(PA.current.rule),controls);
-  if(PA.current.kind==='structure' && PA.current.part){
-    const guided=paElement('fieldset',null,box);paElement('legend','Quick confirmation',guided);
-    paElement('p','Is '+PA.current.part+' included in '+PA.current.label+' on every affected unit?',guided);
-    paButton('Yes — preview this interpretation',()=>paPreview({type:'includes',rentRollLabel:PA.current.label,leaseLabels:[PA.current.part]}),guided);
-    paButton('Included only when not separately billed — preview',()=>paPreview({type:'includes',scope:'unitemised',rentRollLabel:PA.current.label,leaseLabels:[PA.current.part]}),guided);
-    paButton('Separate — keep checking this charge',()=>paPreview({type:'separate',rentRollLabel:PA.current.label,leaseLabels:[PA.current.part]}),guided);
-    paButton('I’m not sure — keep these findings',()=>paKeep(),guided);
-  }
-  if(PA.current.members){
-    const group=paElement('fieldset',null,box);paElement('legend','Confirm each amenity separately',group);
-    paElement('p','Do not guess the package contents. Leave anything uncertain as “Not sure”. Only confirmed included charges can change comparisons; separate and uncertain charges keep their findings.',group);
-    PA.current.members.forEach((name,i)=>{
+  const questions=PA.questions||[PA.current];
+  const choices=[];
+  for(const q of questions){
+    const group=paElement('fieldset',null,box);group.className='pa-question';
+    group.style.cssText='margin:16px 0;padding:16px;border:1px solid #424760;border-radius:10px;min-width:0';
+    paElement('legend',q.label,group);
+    paElement('p',q.kind==='includes'?'This package is billed on '+q.units.length+' units with unresolved individual charges. Which amenities does it include?':q.message,group).style.lineHeight='1.6';
+    const members=q.members||(q.part?[q.part]:[]);
+    const addChoice=(name,options,member)=>{
       const label=paElement('label',null,group);label.style.display='block';label.style.padding='6px';
       label.appendChild(document.createTextNode(name+' '));
-      const input=paElement('select',null,label);input.dataset.member=String(i);input.className='pa-member';
+      const input=paElement('select',null,label);input.className='pa-member';
       input.style.cssText='display:block;width:100%;max-width:100%;padding:8px;margin-top:6px;font:inherit;background:#1c2030;color:inherit;border:1px solid #424760;border-radius:6px';
-      for(const [value,text] of [['unknown','Not sure'],['included','Included on all grouped units'],['conditional','Included only when not separately billed'],['separate','Separate — keep checking']]){
+      for(const [value,text] of options){
         const option=paElement('option',text,input);option.value=value;
       }
-      input.addEventListener('change',()=>{PA.preview=null;document.getElementById('pa-preview').replaceChildren();});
-    });
-    paButton('Review amenity choices',()=>{
-      const choices=[...group.querySelectorAll('select')];
-      const members=choices.filter(i=>i.value==='included').map(i=>PA.current.members[Number(i.dataset.member)]);
-      const conditional=choices.filter(i=>i.value==='conditional').map(i=>PA.current.members[Number(i.dataset.member)]);
-      const separate=choices.filter(i=>i.value==='separate').map(i=>PA.current.members[Number(i.dataset.member)]);
-      if(!members.length&&!conditional.length&&!separate.length){
-        PA.preview=null;paNotice('No convention confirmed. Uncertain charges keep their original findings and no rule will be remembered.');
-        paButton('Confirm and keep original findings',()=>{
-          paKeep();
-        },document.getElementById('pa-preview'));return;
-      }
-      const rules=[];
-      if(members.length)rules.push({type:'includes',rentRollLabel:PA.current.label,leaseLabels:members});
-      if(conditional.length)rules.push({type:'includes',scope:'unitemised',rentRollLabel:PA.current.label,leaseLabels:conditional});
-      if(separate.length)rules.push({type:'separate',rentRollLabel:PA.current.label,leaseLabels:separate});
-      paPreview(rules);
-    },group);
+      const state=paElement('small','Not sure — findings will stay unchanged.',label);state.style.display='block';
+      input.addEventListener('change',()=>{
+        PA.preview=null;document.getElementById('pa-preview').replaceChildren();
+        const selected=input.value!=='unknown';input.dataset.selected=String(selected);
+        input.style.borderColor=selected?'#b1a2ff':'#424760';input.style.background=selected?'#332b56':'#1c2030';
+        state.textContent=selected?'Selected: '+input.selectedOptions[0].textContent+' — not applied yet.':'Not sure — findings will stay unchanged.';
+      });
+      choices.push({q,member,input});
+    };
+    for(const name of members)addChoice(name,[['unknown','Not sure — keep findings'],['included','Always included when '+q.label+' is billed'],['conditional','Included only when not separately billed'],['separate','Separate — keep checking']],name);
+    if(q.rule&&!members.length)addChoice('Does this suggested convention describe your property?', [['unknown','Not sure / no — keep findings'],['suggested','Yes — review this suggestion']],null);
   }
-  const label=paElement('label','Explain or correct the convention',box);label.htmlFor='pa-answer';
+  paButton('Review choices',()=>{
+    const rules=[];
+    for(const {q,member,input} of choices){
+      if(input.value==='unknown')continue;
+      if(input.value==='suggested'){rules.push(q.rule);continue;}
+      const type=input.value==='separate'?'separate':'includes',scope=input.value==='conditional'?'unitemised':undefined;
+      let rule=rules.find(r=>r.type===type&&r.rentRollLabel===q.label&&r.scope===scope);
+      if(!rule){rule={type,rentRollLabel:q.label,leaseLabels:[]};if(scope)rule.scope=scope;rules.push(rule);}
+      if(!rule.leaseLabels.includes(member))rule.leaseLabels.push(member);
+    }
+    if(!rules.length){
+      PA.preview=null;paNotice('No changes selected. Confirm to view results with the original findings; nothing will be remembered.');
+      paButton('Confirm and keep original findings',()=>paKeepAll(),document.getElementById('pa-preview'));return;
+    }
+    paPreview(rules,questions.map(q=>q.key));
+  },box);
+  paButton('Keep original findings',()=>paKeepAll(),box);
+  const details=paElement('details',null,box);details.style.marginTop='18px';
+  paElement('summary','Need to explain something different? (optional written answer)',details);
+  const label=paElement('label','Written explanation — reviewed separately from the choices above',details);label.htmlFor='pa-answer';
   label.style.display='block';label.style.marginTop='14px';
-  const input=paElement('textarea',null,box);input.id='pa-answer';input.rows=3;input.maxLength=2000;
+  const input=paElement('textarea',null,details);input.id='pa-answer';input.rows=3;input.maxLength=2000;
   input.style.cssText='width:100%;box-sizing:border-box;margin:8px 0;padding:10px;font:inherit';
   input.placeholder='Optional: add detail, or use the guided choices above. Say “no” to keep the findings.';
   input.addEventListener('input',()=>{
@@ -164,7 +171,7 @@ function paRender(remaining){
   paButton('Review my answer',()=>{
     PA.preview=null;document.getElementById('pa-preview').replaceChildren();
     const intent=PropertyAssistant.response(input.value);
-    if(intent==='keep'){paKeep();return;}
+    if(intent==='keep'){paKeepAll();return;}
     if(intent==='empty'){paNotice('Please explain the convention, or choose Keep original findings.');return;}
     const vocab=observedChargeVocabulary();
     const membership=paInterpretMembership(input.value,vocab);
@@ -176,14 +183,14 @@ function paRender(remaining){
       return;
     }
     paPreview(parsed.rule);
-  },box);
-  paButton('Keep original findings',()=>paKeep(),box);
+  },details);
   const preview=paElement('div',null,box);preview.id='pa-preview';preview.setAttribute('aria-live','polite');
   heading.focus();
 }
 function paNotice(message){
   const box=document.getElementById('pa-preview');box.replaceChildren();
   paElement('p',message,box).setAttribute('role','status');
+  box.scrollIntoView({block:'nearest'});
 }
 function paValidate(rule){
   const compact=PropertyAssistant.compactRule(rule);
@@ -222,14 +229,18 @@ function paDescribe(rule){
   if(rule.type==='separate')return rule.leaseLabels.join(', ')+' must stay separate from '+rule.rentRollLabel+'. Do not automatically bundle these charges together. Missing bills, missing lease terms and price mismatches remain checked.';
   return prDescribeRule(rule)+(rule.scope==='unitemised'?' Applies only on units with this grouped bill, a lease-side member, and no separate bill for that member. All other units retain their original findings.':'');
 }
-function paPreview(rule){
+function paPreview(rule,questionKeys){
   if(!paPending())return;
   PA.preview=null;
   const checked=paValidateBatch(Array.isArray(rule)?rule:[rule]);
-  if(checked.error){paNotice(checked.error);return;}
-  PA.preview={...checked,question:PA.current.key};
+  if(checked.error){
+    paNotice(checked.error+' Your selection was received, but nothing was applied or saved. Adjust the choices above, or continue without changes.');
+    paButton('Continue without changes',()=>paKeepAll(),document.getElementById('pa-preview'));return;
+  }
+  PA.preview={...checked,question:PA.current.key,questions:questionKeys||[PA.current.key]};
   const panel=document.getElementById('pa-preview');panel.replaceChildren();
   paElement('h3','Interpretation preview — not yet applied',panel);
+  paElement('p','Unselected or “Not sure” answers keep their original findings. Only the conventions listed below will be applied.',panel);
   for(const item of checked.items){
     paElement('p',paDescribe(item.rule),panel);
     if(item.rule.type==='separate')paElement('p','This records your instruction to keep checking these charges. It is not proof that the current bills are correct.',panel);
@@ -242,6 +253,7 @@ function paPreview(rule){
   label.appendChild(document.createTextNode(' Remember for this property and signed-in user, on this browser only (testing).'));
   if(remember.disabled)paElement('p','Browser memory is unavailable for this session. You may apply the convention for this run only.',panel);
   paButton('Approve and rerun checks',()=>paApprove(),panel);
+  panel.scrollIntoView({block:'nearest'});
 }
 function paApprove(){
   if(!paPending() || !PA.preview || PA.preview.question!==PA.current.key)return;
@@ -255,7 +267,8 @@ function paApprove(){
     if(!saved){PA.preview=null;paNotice('Could not remember this convention. Nothing was applied. Preview again and leave Remember unchecked to use it for this run only.');return;}
     PA.drafts.push(...rows);
   }
-  PA.answered.add(PA.current.key);PA.applied++;PA.preview=null;
+  for(const key of PA.preview.questions||[PA.current.key])PA.answered.add(key);
+  PA.applied+=checked.items.length;PA.preview=null;
   PA.separations.push(...rows.filter(r=>r.rule.type==='separate'));
   PROPERTY_RULES.push(...rows.filter(r=>r.rule.type!=='separate'));
   reconcileAll();
@@ -264,6 +277,14 @@ function paApprove(){
 function paKeep(){
   if(!paPending())return;
   PA.answered.add(PA.current.key);PA.kept++;PA.preview=null;
+  if(!paOnReconcile()){
+    renderHouseRules();syncMtmFeeFromLeases();renderDashboard();reportRunOutcome('completed');
+  }
+}
+function paKeepAll(){
+  if(!paPending())return;
+  for(const q of PA.questions||[PA.current]){PA.answered.add(q.key);PA.kept++;}
+  PA.preview=null;
   if(!paOnReconcile()){
     renderHouseRules();syncMtmFeeFromLeases();renderDashboard();reportRunOutcome('completed');
   }

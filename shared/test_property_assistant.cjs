@@ -6,6 +6,19 @@ check('80 supported structure discrepancies produce one guided question without 
   const before=JSON.stringify(entries);const qs=A.questions({entries,structures:[{inside:'Community Fee',part:'Cable',unexplained:true,bundledUnits:entries.map(e=>e.unit)}]});
   assert.equal(qs.length,1);assert.equal(qs[0].part,'Cable');assert.equal(JSON.stringify(entries),before);
 });
+check('Structure spelling is bridged to the observed category and offered with the other amenities',()=>{
+  const sample=Array.from({length:12},(_,i)=>({unit:'S'+i,rows:[
+    {label:'Community Fee',resmanRaw:['Community Fee'],resmanVal:145,status:'mismatch',leaseVal:100},
+    {label:'Washer/Dryer',leaseRaw:['Washer/Dryer'],leaseVal:20,status:'leaseonly'},
+    i<9?{label:'Cable / Internet',leaseRaw:['Internet'],leaseVal:50,status:'leaseonly'}:
+      {label:'Cable / Internet',resmanRaw:['Cable / Internet Fee'],resmanVal:50,leaseVal:50,status:'match'},
+  ]}));
+  const qs=A.questions({entries:sample,structures:[{inside:'Community Fee',part:'Cable / Internet Fee',unexplained:5,bundledUnits:sample.slice(0,9).map(e=>e.unit)}]});
+  assert.equal(qs.length,1);assert.ok(qs[0].members.includes('Cable / Internet'));assert.ok(qs[0].members.includes('Washer/Dryer'));
+  assert.ok(!qs[0].members.includes('Cable / Internet Fee'));
+  const evidence=A.membershipEvidence({type:'includes',scope:'unitemised',rentRollLabel:'Community Fee',leaseLabels:['Cable / Internet']},sample);
+  assert.equal(evidence.ok,true);assert.equal(evidence.units,9);assert.equal(evidence.counts[0].excluded,3);
+});
 check('Generic repeated findings do not create a dead-end question',()=>assert.deepEqual(A.questions({entries}),[]));
 check('No interruption for clean comparisons',()=>assert.deepEqual(A.questions({entries:[{unit:'1',rows:[{status:'match',label:'Fee'}]}]}),[]));
 check('Small split-price clusters go directly to findings',()=>{

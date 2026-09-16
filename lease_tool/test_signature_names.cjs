@@ -97,6 +97,12 @@ const check = (name, cond) => { console.log((cond ? 'PASS' : 'FAIL') + ' -- ' + 
     res.ownerColumn = collectNamesNear(twoCol, 146, {windowUp:60, windowDown:60, minX:255, expected:['Brian Moore']});
     res.ownerNoColumn = collectNamesNear(twoCol, 146, {windowUp:60, windowDown:60, expected:['Brian Moore']});
 
+    const caption=L(458,[['(Name of Resident)',36,60],['Date signed',253,38],['Date signed',538,38]]);
+    const row=(signed)=>PR([caption,L(470,[[RULE,36,254],...(signed?[['Tay',42,18],['lor',60,17],['Sample',80,40]]:[]),['08/27/2025',236,53],[RULE,314,254],['Morgan Example',319,100],['08/28/2025',519,53]])]);
+    res.rowSigned=extractSignatureFindings([row(true)],['Taylor Sample']).find(f=>f.kind==='row-resident');
+    res.rowBlank=extractSignatureFindings([row(false)],['Taylor Sample']).find(f=>f.kind==='row-resident');
+    res.whitespaceMasks=pageGlyphRects(PR([L(470,[[' ',110,900],['',20,0]])])).length;
+    res.underscoreMask=pageGlyphRects(PR([{y:470,items:[{str:'_'.repeat(54),x:36,y:467,width:254}],text:'_'.repeat(54)}]))[0];
     return res;
   });
 
@@ -121,6 +127,10 @@ const check = (name, cond) => { console.log((cond ? 'PASS' : 'FAIL') + ' -- ' + 
         out.ownerColumn.length > 0 && /Tes/.test(out.ownerColumn.join(' ')));
   check('...and without the column bound, that same line reads as prose (which is why the bound exists)',
         out.ownerNoColumn.length === 0);
+  check('Per-resident caption isolates a split signature from the owner and dates',out.rowSigned.present);
+  check('Owner signature cannot fill a blank resident caption',!out.rowBlank.present);
+  check('Layout whitespace does not mask hundreds of pixels of signature ink',out.whitespaceMasks===0);
+  check('Ordinary underscores get a thin mask at their own baseline, not the grouped text baseline',out.underscoreMask.y0===465.5&&out.underscoreMask.y1===468.5);
   check('No page or console errors', errors.length === 0);
 
   console.log('\n' + pass + '/' + (pass+fail) + ' passed');

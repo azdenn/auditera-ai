@@ -3,7 +3,7 @@
   "tools": {
     "leaseverify": {
       "inputs": {
-        "lease_tool/template.html": "62af6c8bd75b0a2e8fd9d69061da69c9b238374c94bf1db56613b36e4a302213",
+        "lease_tool/template.html": "fa9f71e4de6ed7680a8599d55d8b4c3adcdd16dd8bed714e26ae14c459fd192e",
         "shared/build_tool.cjs": "12c3bb03b4d4efaebbd68f9684bab693e12dda8cb6810cc80722839f5cb9cf9e",
         "build.cjs": "a037b6225c7f2126756ab8528416f79bc73ffe72f76354c08936605e5adf643c",
         "lease_tool/package-lock.json": "7269db2b9d194bb0e85ab6d3c4eaeb2ba8aca4359dbabe7a7429e7752627cd3e",
@@ -14,10 +14,10 @@
         "shared/audit_gate.js": "0da517c4d2a94ac39a1c7846299487a042a5eaf9a9fb889e16f13a5d82338ee3",
         "shared/rentroll_property_name.js": "190373f3eaca7fa0232760f09ae37822d0c3949b9993312701e287431aa76e07",
         "shared/property_rules.js": "828cb990b16098452d47d92b3b7f5b7771c08c7dce940d8f331d728b0786ba54",
-        "shared/property_assistant.js": "a910a9d03781a7d28baf35d6d321dda88e1a72f4342aefd948f9ecfe40ecd1ae",
-        "shared/property_assistant_ui.js": "c3c1197252651c878ecaf798c54ec5e7b30d6e90a4360a76dd8b54aafa2f1331"
+        "shared/property_assistant.js": "dc173b641b8d6fd235b98f159cc7b55bab0be3fbe02a5b7b8a265fdd9f834e7c",
+        "shared/property_assistant_ui.js": "65063bec4607de62df1d2e34d10a2054123eaf0add9d622a6cfd2d49b8761155"
       },
-      "sha256": "26cb6509b38188919ef504caec5579cf79ae9bec89e8b2bb406e821ecb80bf8d"
+      "sha256": "1975583af0aff126f0699e3601c1a7a7b53e8db8332043dad0e6df68e5352ba6"
     },
     "concessionverify": {
       "inputs": {

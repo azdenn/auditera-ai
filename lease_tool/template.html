@@ -1891,9 +1891,14 @@ function extractSignatureFindings(pageRecords, expectedResidents){
       const n = Math.max(residentNames.length, 1);
       residentRowLines.slice(0, n).forEach((line, i) => {
         const section = findNearestHeading(pr, line.y);
-        const names = collectNamesNear(pr, line.y, {windowUp:30, windowDown:0, expected: residentNames});
-        const signer = residentNames[i] || ('Resident ' + (i+1));
         const nameCol = anchorItemXRange(line, 'Name');
+        // Baseline grouping can join a resident signature, both dates and the
+        // owner's signature. Read only the caption's column, just as we do for
+        // generic anchors. Never borrow the adjacent owner's signature.
+        const column = nameCol && nameCol.x0 >= halfW
+          ? {minX:halfW,maxX:pr.width} : {minX:0,maxX:halfW};
+        const names = collectNamesNear(pr, line.y, {windowUp:30, windowDown:0, expected: residentNames, ...column});
+        const signer = residentNames[i] || ('Resident ' + (i+1));
         const box = nameCol ? { page: pr.pageNum, x0: nameCol.x0 - INK_BOX_X_PAD, x1: nameCol.x1 + INK_BOX_X_PAD, y0: line.y - 10, y1: line.y + 45 } : null;
         findings.push({ page: pr.pageNum, section, signer, present: names.length>0, names, kind:'row-resident', box });
       });
@@ -1975,7 +1980,7 @@ function extractSignatureFindings(pageRecords, expectedResidents){
 // still needs to be masked out (see below for why), just not with the same
 // generous padding used for real text.
 function isLineDrawingGlyphRun(str){
-  return !!str && str.length >= 5 && /^(.)\1*$/.test(str) && /[\x00-\x1F\x7F]/.test(str[0]);
+  return !!str && ((/^_{3,}$/.test(str)) || (str.length >= 5 && /^(.)\1*$/.test(str) && /[\x00-\x1F\x7F]/.test(str[0])));
 }
 
 // Every text glyph pdf.js can see on a page, as PDF-point rectangles -- used
@@ -2000,9 +2005,15 @@ function pageGlyphRects(pr){
   const rects = [];
   for (const line of pr.lines){
     for (const it of line.items){
+      // PDF.js inserts layout spaces with widths far beyond the visible text.
+      // They draw no glyphs; masking them can erase a real handwritten mark.
+      if (!String(it.str || '').trim()) continue;
       const w = (it.width && it.width > 0) ? it.width : 6;
       const thin = isLineDrawingGlyphRun(it.str);
-      rects.push({ x0: it.x - 1.5, x1: it.x + w + 1.5, y0: line.y - (thin ? 1.5 : 3), y1: line.y + (thin ? 1.5 : 12) });
+      // Grouping can move the line baseline up to 3pt. Mask each glyph at its
+      // actual baseline, especially thin underscores below a handwritten mark.
+      const y=Number.isFinite(it.y)?it.y:line.y;
+      rects.push({ x0: it.x - 1.5, x1: it.x + w + 1.5, y0: y - (thin ? 1.5 : 3), y1: y + (thin ? 1.5 : 12) });
     }
   }
   return rects;
@@ -2318,7 +2329,9 @@ async function attachInkFallback(doc, findings, pageRecords){
 // Each field: the label that identifies its line, plus the boilerplate that
 // prints on that same line and must be stripped before deciding whether the
 // blank was filled. `key` is what the report shows.
-const DW_AGREEMENT_TITLE_RE = /Deposit\s+Waiver\s+Purchase\s+Agreement/i;
+// Recognize document titles, not incidental program names in fee lists or prose.
+// Title equivalence locates the form; it does NOT verify its amount/signature.
+const DW_AGREEMENT_TITLE_RE = /^(?:Deposit\s+Waiver(?:\s+Purchase)?\s+Agreement|Deposit\s+Waiver\s+Addendum\s*\(Lease\s*Lock\)|Lease\s*Lock(?:\s+Deposit\s+Waiver)?(?:\s+Purchase)?\s+(?:Agreement|Addendum))\s*[:.\-–—]?\s*$/i;
 const DW_SIGNATURE_LABEL_RE = /Resident\s+Signature\s*:/i;
 const DW_NAME_LABEL_RE = /Resident\s+Name\s*:/i;
 const DW_AMOUNT_LABEL_RE = /in\s+the\s+amount\s+of\s*\$/i;
@@ -2338,12 +2351,48 @@ function dwFilledRemainder(lineText, labelRe, boilerplate){
   return s;
 }
 
+// One-page LeaseLock addendum: labels sit BELOW signature/date blanks, the
+// amount may be an integer, and there is no separate printed-name field.
+// Never borrow evidence from the following e-sign certificate or another form.
+function extractLeaseLockAddendum(pr){
+  const find=re=>pr.lines.find(l=>re.test(l.text));
+  const amountLine=find(DW_AMOUNT_LABEL_RE);
+  const amountTail=amountLine?amountLine.text.slice(amountLine.text.search(DW_AMOUNT_LABEL_RE)).replace(DW_AMOUNT_LABEL_RE,''):'';
+  const amounts=amountTail.match(/\b\d[\d,]*(?:\.\d{1,2})?\b/g)||[];
+  const statedAmount=amounts.length===1?Number(amounts[0].replace(/,/g,'')):null;
+  const premisesLine=find(DW_PREMISES_LABEL_RE);
+  const premises=premisesLine?dwFilledRemainder(premisesLine.text,DW_PREMISES_LABEL_RE,[/\.$/]):'';
+  const datedLine=find(DW_DATED_LABEL_RE);
+  const dateRe=/\b(?:\d{1,2}\/\d{1,2}\/\d{2,4}|(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4})\b/i;
+  const agreementDate=datedLine?(datedLine.text.match(dateRe)||[])[0]||null:null;
+  const caption=pr.lines.filter(l=>/^Resident\s+Signature\s+Date\s*$/i.test(l.text)).sort((a,b)=>b.y-a.y)[0];
+  const signatureX=caption&&anchorItemXRange(caption,'Resident');
+  const dateX=caption&&anchorItemXRange(caption,'Date');
+  let signedBy=null,signedDate=null;
+  if(caption&&signatureX&&dateX){
+    const names=collectNamesNear(pr,caption.y,{windowUp:18,windowDown:0,minX:signatureX.x0,maxX:dateX.x0,expected:[]});
+    signedBy=names[0]||null;
+    const dates=pr.lines.filter(l=>l.y>caption.y&&l.y<=caption.y+18)
+      .flatMap(l=>l.items.filter(it=>it.x>=dateX.x0).map(it=>it.str)).join(' ');
+    signedDate=(dates.match(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/)||[])[0]||null;
+  }
+  const values=[['amount','Monthly waiver amount',statedAmount>0,statedAmount],
+    ['premises','Premises address',premises.replace(/[^A-Za-z0-9]/g,'').length>=6,premises],
+    ['leaseDate','Lease agreement date',!!agreementDate,agreementDate],
+    ['signature','Resident signature',!!signedBy,signedBy],
+    ['signatureDate','Signature date',!!signedDate,signedDate]];
+  return {page:pr.pageNum,format:'leaselock-addendum',statedAmount,premises,agreementDate,signedBy,signedDate,
+    fields:values.map(([key,label,filled,value])=>({key,label,filled,value,page:pr.pageNum}))};
+}
+
 /* Reads the Deposit Waiver Purchase Agreement out of a lease's page records.
    Returns null when the lease has no such agreement at all (which is the
    normal, correct state for a unit paying a traditional deposit). */
 function extractDepositWaiverAgreement(pageRecords){
   const startIdx = (pageRecords || []).findIndex(pr => pr.lines.some(l => DW_AGREEMENT_TITLE_RE.test(l.text)));
   if (startIdx === -1) return null;
+  if(pageRecords[startIdx].lines.some(l=>/^Deposit\s+Waiver\s+Addendum\s*\(Lease\s*Lock\)\s*$/i.test(l.text)))
+    return extractLeaseLockAddendum(pageRecords[startIdx]);
   // The agreement is two pages on the real form (terms, then the signature
   // block); allow a third for layout drift.
   const pages = pageRecords.slice(startIdx, startIdx + 3);
@@ -2425,10 +2474,10 @@ function buildDepositWaiverAgreementCheck(agreement, block){
   const billed = rrCharge.amount;
 
   if (!agreement){
-    return { key:'depositWaiverAgreement', label:'Deposit Waiver Agreement', status:'fail',
+    return { key:'depositWaiverAgreement', label:'Deposit Waiver / LeaseLock — agreement verification', status:'fail',
       rentRollValue: billed,
       note: 'The Rent Roll bills a Deposit Waiver / LeaseLock charge of ' + money(billed) +
-            '/mo, but no Deposit Waiver Purchase Agreement was found in this lease.' };
+            '/mo. A fee match does not verify the signed agreement. No supported Deposit Waiver / LeaseLock agreement was located in this lease packet; review the original agreement or supply the missing addendum.' };
   }
 
   const blanks = agreement.fields.filter(f => !f.filled);
@@ -2437,7 +2486,7 @@ function buildDepositWaiverAgreementCheck(agreement, block){
 
   const notes = [];
   if (blanks.length){
-    notes.push('Not filled in on the agreement (page ' + agreement.page + '): ' +
+    notes.push('Could not verify these fields on the agreement (page ' + agreement.page + '): ' +
                blanks.map(f => f.label.toLowerCase()).join(', ') + '.');
   }
   if (amountMismatch){
@@ -2449,7 +2498,7 @@ function buildDepositWaiverAgreementCheck(agreement, block){
     notes.push('Signed by ' + agreement.signedBy + (agreement.signedDate ? ' on ' + agreement.signedDate : '') +
                ' for ' + money(agreement.statedAmount) + '/mo.');
   }
-  return { key:'depositWaiverAgreement', label:'Deposit Waiver Agreement', status,
+  return { key:'depositWaiverAgreement', label:'Deposit Waiver / LeaseLock — agreement verification', status,
     leaseValue: agreement.statedAmount, rentRollValue: billed,
     agreement, blanks, note: notes.join(' ') };
 }

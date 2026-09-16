@@ -50,6 +50,16 @@ var PropertyAssistant = (function(){
     const raw=side==='lease'?row.leaseRaw:row.resmanRaw;
     return value!=null && ([row.label,...(raw||[])].some(x=>key(x)===key(label)));
   }
+  // A structure uses the rent roll's raw spelling, while comparisons may use
+  // a recognized category label. Bridge only an exact observed spelling to a
+  // unique displayed label; never guess equivalence from equal dollar amounts.
+  function comparisonLabel(label,entries){
+    const labels=new Set();
+    for(const e of entries||[])for(const r of e.rows||[]){
+      if([...(r.resmanRaw||[]),...(r.leaseRaw||[])].some(s=>key(s)===key(label)))labels.add(r.label);
+    }
+    return labels.size===1?[...labels][0]:label;
+  }
   function membershipEvidence(rule,entries){
     const compact=compactRule(rule);
     if(!compact || compact.type!=='includes')return {ok:false,error:'Unsupported grouped-charge rule.'};
@@ -138,10 +148,16 @@ var PropertyAssistant = (function(){
         message:'On '+g.units.size+' units, '+g.label+' is billed alongside unresolved lease charges. These may differ by unit. Confirm each amenity and its scope; no choice is assumed. Membership does not prove the total or resolve a price difference.'});
     }
     for(const s of structures){
-      const anchor=key(s.inside);
-      if(!s.unexplained || (s.bundledUnits||[]).length<questionThreshold || protectedTest(s.inside)||protectedTest(s.part)||anchors.has(anchor) || decided(rules,s.inside,s.part))continue;
+      const anchor=key(s.inside),part=comparisonLabel(s.part,entries);
+      if(!s.unexplained || (s.bundledUnits||[]).length<questionThreshold || protectedTest(s.inside)||protectedTest(part) || decided(rules,s.inside,part))continue;
+      const existing=out.find(q=>key(q.label)===anchor);
+      if(existing&&existing.members){
+        if(!sameFamily(part,s.inside)&&!existing.members.some(m=>key(m)===key(part)))existing.members.push(part);
+        continue;
+      }
+      if(anchors.has(anchor))continue;
       anchors.add(anchor);add({key:'structure::'+anchor,kind:'structure',label:s.inside,units:s.bundledUnits||[],
-        part:s.part,message:'The rent-roll pattern suggests '+s.part+' may be included in '+s.inside+' for some units at a different package price. Confirm the relationship below. A billing pattern is not signed lease evidence.'});
+        part,message:'The rent-roll pattern suggests '+part+' may be included in '+s.inside+' for some units at a different package price. Confirm the relationship below. A billing pattern is not signed lease evidence.'});
     }
     // Do not make a manager explain a generic repeated finding. Until a model
     // can ask and validate a specific follow-up, that is a dead-end prompt.

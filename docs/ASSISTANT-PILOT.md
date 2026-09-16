@@ -1,6 +1,6 @@
 # Property assistant: testing pilot
 
-Updated September 14, 2026. LeaseVerify only. This is a browser-local guided
+Updated September 15, 2026. LeaseVerify only. This is a browser-local guided
 assistant with a limited sentence interpreter, NOT a hosted language model.
 
 ## Try it
@@ -18,13 +18,17 @@ that billing is wrong.
 Protected subjects such as Rent and signatures never become assistant questions;
 they remain final findings because no convention is allowed to alter them.
 
+- All presented patterns appear on one page. Select each relationship, then click
+  **Review choices**. Highlighted choices are selected but not yet applied.
 - **Keep original findings**, or answer **no**: continue without a new convention.
-  Answer each presented pattern; existing valid conventions remain in effect.
+  Existing valid conventions remain in effect. Not sure selections change nothing.
 - **Explain/correct**: describe a naming relationship or select the signed lease
   charges included in a grouped bill. Unsupported/uncertain answers do not change
   findings. This pilot does not understand arbitrary natural-language explanations.
 - **Preview**: read the interpretation and evidence summary. This is not a full
   before/after report. No change happens until **Approve and rerun checks**.
+  If validation rejects a selection, adjust it or use **Continue without changes**;
+  the pilot must never require agreement or leave the manager stuck.
 - **Remember**: optionally select the checkbox before approval. Otherwise the rule
   lasts for this run only. Browser memory is separate for each user/property/testing
   origin. It is not shared with coworkers, other devices or production.

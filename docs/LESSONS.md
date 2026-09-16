@@ -3,6 +3,33 @@
 Keep reusable lessons here, with evidence and the rule that prevents recurrence.
 Do not convert customer conventions into global assumptions without validation.
 
+## L24 — Signature masks must describe glyphs, not grouped text rows
+
+September 15 original PDF reproduction: a resident and owner share a grouped text
+baseline; a per-resident name reader without column bounds rejected the combined
+names. Separately, ordinary underscore rules received a full-height text mask,
+erasing handwriting above them. Layout spaces sometimes had enormous widths.
+Isolate signer columns; ignore whitespace in masks; use thin masks for recognized
+rule glyphs at their own baselines. Test both actual signed and unsigned packets,
+never lower thresholds until a false negative disappears.
+
+## L25 — Charge equivalence is not agreement-form recognition
+
+Deposit Waiver and LeaseLock already classified together as charges, but the form
+reader recognized one exact purchase-agreement title/layout. An actual signed
+one-page addendum used another title, integer amount, spelled-out date and captions
+below signature blanks. Add a bounded form parser and test blank/wrong-price cases;
+never remove the agreement check merely because the fee matches. Label each check
+clearly so separate evidence requirements do not appear as duplicated charges.
+
+## L26 — Planner labels, validator labels and user actions must agree
+
+Cable structure used a raw billing spelling while the validator expected a displayed
+category. Bridge only a unique observed spelling-to-category relationship, not fuzzy
+amount coincidences. Show related member questions together. A rejected preview must
+say the click was received and provide a clear unchanged-results exit. Test the real
+upload flow under an origin where the pilot is actually enabled, then test approval.
+
 ## L1 — A deployable artifact can be ahead of its source
 
 Verified 2026-09-12: LeaseVerify's shared rule source has four verbs; the HTML in

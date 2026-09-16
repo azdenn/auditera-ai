@@ -71,7 +71,32 @@ const check = (name, cond) => { console.log((cond ? 'PASS' : 'FAIL') + ' -- ' + 
 
     const a1 = extractDepositWaiverAgreement(A1);
     const u26 = extractDepositWaiverAgreement(U26);
+    const variants=['Deposit Waiver Agreement','LeaseLock Agreement','Lease Lock Addendum','LeaseLock Deposit Waiver Purchase Agreement'].map(title=>{
+      const pages=JSON.parse(JSON.stringify(A1));pages[0].lines[0].text=title;
+      return buildDepositWaiverAgreementCheck(extractDepositWaiverAgreement(pages),blockWithWaiver);
+    });
+    const incidental=JSON.parse(JSON.stringify(A1));incidental[0].lines[0].text='Please ask about the Deposit Waiver Purchase Agreement before moving in.';
+    const position=(y,parts)=>({y,items:parts.map(([str,x,width])=>({str,x,width,y})),text:parts.map(p=>p[0]).join(' ')});
+    const alternate=(signed=true)=>[{pageNum:35,width:612,height:792,lines:[
+      position(766,[['Deposit Waiver Addendum (LeaseLock)',220,170]]),
+      position(700,[['Agreement, dated ______ between ______',36,530],['November 11, 2025',142,100]]),
+      position(660,[['for the premises located at ______',36,530],['100 Example Road, Testville TX',142,180]]),
+      position(423,[['billing statement, in the amount of $____. The Waiver Charge',81,304],['33',222,12],['as outlined in this Agreement is valid exclusively',387,188]]),
+      position(166,[['________',72,290],...(signed?[['Taylor Example',79,85]]:[]),['________',396,180],['11/13/2025',457,53]]),
+      position(154,[['Resident Signature',72,68],['Date',396,17]]),
+      position(34,[['Morgan Owner',79,85],['11/13/2025',457,53]]),
+      position(22,[['Owner/Rep Signature',72,100],['Date',396,17]]),
+    ]}];
+    const altBlock={charges:[{description:'Deposit Waiver Agreement',amount:33}]};
+    const altSigned=extractDepositWaiverAgreement(alternate());
+    const altBlank=alternate(false);
+    altBlank.push({pageNum:36,width:612,height:792,lines:[line(700,'E-SIGNATURE CERTIFICATE'),line(600,'Taylor Example 11/13/2025')]});
     return {
+      altSigned,altCheck:buildDepositWaiverAgreementCheck(altSigned,altBlock),
+      altBlankCheck:buildDepositWaiverAgreementCheck(extractDepositWaiverAgreement(altBlank),altBlock),
+      altPriceCheck:buildDepositWaiverAgreementCheck(altSigned,{charges:[{description:'LeaseLock',amount:42}]}),
+      variants, incidental:extractDepositWaiverAgreement(incidental),
+      aliasCategories:['Deposit Waiver Agreement','Lease Lock Agreement','LeaseLock Fee'].map(s=>classify(s,ALIAS_MAP).category),
       a1, u26,
       none: extractDepositWaiverAgreement(plainLease),
       a1Check: buildDepositWaiverAgreementCheck(a1, blockWithWaiver),
@@ -83,6 +108,13 @@ const check = (name, cond) => { console.log((cond ? 'PASS' : 'FAIL') + ' -- ' + 
     };
   });
 
+  check('Supported alternative titles still require the full completed agreement',out.variants.every(c=>c.status==='pass'));
+  check('One-page LeaseLock addendum recognizes integer amount and written-out date',out.altSigned.statedAmount===33&&out.altSigned.agreementDate==='November 11, 2025');
+  check('One-page signature and date above their captions pass',out.altCheck.status==='pass');
+  check('Blank addendum signature is not filled by owner or next-page certificate',out.altBlankCheck.status==='fail'&&out.altBlankCheck.blanks.some(f=>f.key==='signature'));
+  check('One-page agreement amount difference remains a failure',out.altPriceCheck.status==='fail');
+  check('A prose mention of an agreement is not an agreement title',out.incidental===null);
+  check('Waiver and LeaseLock charge spellings share the same category',out.aliasCategories.every(c=>c==='DEPOSIT_WAIVER'));
   check('A lease with no waiver agreement returns nothing at all', out.none === null);
   check('The agreement is located, on its own page', out.a1 && out.a1.page === 24);
   check('The monthly waiver amount is read off the agreement', out.a1.statedAmount === 42);
@@ -107,7 +139,8 @@ const check = (name, cond) => { console.log((cond ? 'PASS' : 'FAIL') + ' -- ' + 
 
   check('A unit with no waiver charge is not checked at all', out.noWaiverCheck === null);
   check('Billing a waiver with no agreement in the lease fails',
-        out.missingAgreementCheck.status === 'fail' && /no Deposit Waiver Purchase Agreement/.test(out.missingAgreementCheck.note));
+        out.missingAgreementCheck.status === 'fail' && /No supported Deposit Waiver \/ LeaseLock agreement/.test(out.missingAgreementCheck.note)
+        && /fee match does not verify/i.test(out.missingAgreementCheck.note));
   check('A blank waiver amount is itself a blank', out.noAmountCheck.blanks.some(b => b.key === 'amount'));
   check('No page or console errors', errors.length === 0);
 

@@ -1,5 +1,48 @@
 # Auditera work log
 
+## 2026-09-15 — Real-document signature/waiver fixes and one-page assistant
+
+Owner requested fixing the acceptance feedback, testing only. Reviewed actual local
+Blanco PDFs and Janine archive/rent roll. No resident documents/names were added to
+the repo; diagnostics and rendered private pages are outside the canonical repo.
+
+Changes: lease template isolates resident caption columns, does not mask whitespace,
+gives ordinary underscores the same thin structural treatment as encoded rules,
+and masks at each glyph's actual baseline. No detection thresholds were lowered.
+Real typed/handwritten false negatives recovered; original unsigned control retains
+22 missing locations. Supported the actual one-page LeaseLock addendum, including
+integer $ amount, written-out date and separate signature/date captions, without
+borrowing subsequent certificate evidence. Agreement rows now distinguish the
+signed-form check from the already-existing charge-category match. Similar known
+waiver names classify together; equal amounts do not imply equivalence.
+
+Assistant: all questions on one review page, visible selection states, optional
+written explanation, batch preview/approval, and explicit continue-unchanged action
+when validation rejects a selection. Structure raw labels resolve only through a
+unique observed comparison label. Cable is offered with other package members.
+No new API/network payload, model provider, shared-rule write, or global property rule.
+
+Verification: 28/28 focused suites; names 21/21, waiver 27/27, ink 16/16; new review
+page browser test verifies multi-question batch, highlight, mobile width, approval
+and blocked-validator exit. Real Janine normal upload/Process/choices/approval flow
+completed offline for 102 units: 5 eligible cable, 14 washer/dryer, pet separate,
+results visible. First harness attempt used file origin (pilot disabled) and timed
+out; corrected to testing-origin mocked routing. Not evidence of live authentication.
+Dry-run testing deployment and root build parity pass.
+
+Unresolved: A114 requires a readable Garden Creek lease/export; discovered Downloads
+archive is empty (0 bytes). Do not assert that exact report resolved. Some local
+Blanco exports differ from the screenshots' resident/version; reviewed cases do
+not prove every screenshot row is fixed. Further manager acceptance remains needed.
+
+Release: testing deployed September 15 local time (2026-09-16 01:36 UTC), Worker
+version `53396760-4824-4638-a0e6-c6101b20461f`. Public build manifest matches local
+bytes: `3c714361f389babaaf85757a97913189416ddd837ca4856eaa882988dfb7d846`.
+Testing app 200/noindex/nofollow; unauthenticated tool 401. Production homepage
+SHA-256 unchanged: `cf22c309afccd6dab157a423feb7160aa34e693dd4e4f27f046a0e19fc485def`.
+Git release record is testing only. Owner is arranging the replacement source file;
+A114 remains unverified until that arrives. Main and backend were not changed.
+
 ## 2026-09-13 — Local-only storage migration
 
 Owner requested copying this application and its separate historical workspace

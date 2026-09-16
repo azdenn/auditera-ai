@@ -6,7 +6,7 @@ const root = __dirname;
 const tests = [
   'shared/test_build.cjs', 'shared/test_review_repairs.cjs',
   'shared/test_property_assistant.cjs', 'shared/test_assistant_browser.cjs',
-  'shared/test_assistant_memory.cjs',
+  'shared/test_assistant_memory.cjs', 'shared/test_assistant_review_page.cjs',
   'shared/test_property_rules.cjs', 'shared/test_property_guard.cjs',
   'shared/test_authorize_logic.cjs', 'homepage_assets/test_worker_gate.mjs',
   'shared/test_audit_gate.mjs', 'homepage_assets/test_gate_integration.mjs',

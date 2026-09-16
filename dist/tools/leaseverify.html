@@ -1384,6 +1384,16 @@ var PropertyAssistant = (function(){
     const raw=side==='lease'?row.leaseRaw:row.resmanRaw;
     return value!=null && ([row.label,...(raw||[])].some(x=>key(x)===key(label)));
   }
+  // A structure uses the rent roll's raw spelling, while comparisons may use
+  // a recognized category label. Bridge only an exact observed spelling to a
+  // unique displayed label; never guess equivalence from equal dollar amounts.
+  function comparisonLabel(label,entries){
+    const labels=new Set();
+    for(const e of entries||[])for(const r of e.rows||[]){
+      if([...(r.resmanRaw||[]),...(r.leaseRaw||[])].some(s=>key(s)===key(label)))labels.add(r.label);
+    }
+    return labels.size===1?[...labels][0]:label;
+  }
   function membershipEvidence(rule,entries){
     const compact=compactRule(rule);
     if(!compact || compact.type!=='includes')return {ok:false,error:'Unsupported grouped-charge rule.'};
@@ -1472,10 +1482,16 @@ var PropertyAssistant = (function(){
         message:'On '+g.units.size+' units, '+g.label+' is billed alongside unresolved lease charges. These may differ by unit. Confirm each amenity and its scope; no choice is assumed. Membership does not prove the total or resolve a price difference.'});
     }
     for(const s of structures){
-      const anchor=key(s.inside);
-      if(!s.unexplained || (s.bundledUnits||[]).length<questionThreshold || protectedTest(s.inside)||protectedTest(s.part)||anchors.has(anchor) || decided(rules,s.inside,s.part))continue;
+      const anchor=key(s.inside),part=comparisonLabel(s.part,entries);
+      if(!s.unexplained || (s.bundledUnits||[]).length<questionThreshold || protectedTest(s.inside)||protectedTest(part) || decided(rules,s.inside,part))continue;
+      const existing=out.find(q=>key(q.label)===anchor);
+      if(existing&&existing.members){
+        if(!sameFamily(part,s.inside)&&!existing.members.some(m=>key(m)===key(part)))existing.members.push(part);
+        continue;
+      }
+      if(anchors.has(anchor))continue;
       anchors.add(anchor);add({key:'structure::'+anchor,kind:'structure',label:s.inside,units:s.bundledUnits||[],
-        part:s.part,message:'The rent-roll pattern suggests '+s.part+' may be included in '+s.inside+' for some units at a different package price. Confirm the relationship below. A billing pattern is not signed lease evidence.'});
+        part,message:'The rent-roll pattern suggests '+part+' may be included in '+s.inside+' for some units at a different package price. Confirm the relationship below. A billing pattern is not signed lease evidence.'});
     }
     // Do not make a manager explain a generic repeated finding. Until a model
     // can ask and validate a specific follow-up, that is a dead-end prompt.
@@ -3403,9 +3419,14 @@ function extractSignatureFindings(pageRecords, expectedResidents){
       const n = Math.max(residentNames.length, 1);
       residentRowLines.slice(0, n).forEach((line, i) => {
         const section = findNearestHeading(pr, line.y);
-        const names = collectNamesNear(pr, line.y, {windowUp:30, windowDown:0, expected: residentNames});
-        const signer = residentNames[i] || ('Resident ' + (i+1));
         const nameCol = anchorItemXRange(line, 'Name');
+        // Baseline grouping can join a resident signature, both dates and the
+        // owner's signature. Read only the caption's column, just as we do for
+        // generic anchors. Never borrow the adjacent owner's signature.
+        const column = nameCol && nameCol.x0 >= halfW
+          ? {minX:halfW,maxX:pr.width} : {minX:0,maxX:halfW};
+        const names = collectNamesNear(pr, line.y, {windowUp:30, windowDown:0, expected: residentNames, ...column});
+        const signer = residentNames[i] || ('Resident ' + (i+1));
         const box = nameCol ? { page: pr.pageNum, x0: nameCol.x0 - INK_BOX_X_PAD, x1: nameCol.x1 + INK_BOX_X_PAD, y0: line.y - 10, y1: line.y + 45 } : null;
         findings.push({ page: pr.pageNum, section, signer, present: names.length>0, names, kind:'row-resident', box });
       });
@@ -3487,7 +3508,7 @@ function extractSignatureFindings(pageRecords, expectedResidents){
 // still needs to be masked out (see below for why), just not with the same
 // generous padding used for real text.
 function isLineDrawingGlyphRun(str){
-  return !!str && str.length >= 5 && /^(.)\1*$/.test(str) && /[\x00-\x1F\x7F]/.test(str[0]);
+  return !!str && ((/^_{3,}$/.test(str)) || (str.length >= 5 && /^(.)\1*$/.test(str) && /[\x00-\x1F\x7F]/.test(str[0])));
 }
 
 // Every text glyph pdf.js can see on a page, as PDF-point rectangles -- used
@@ -3512,9 +3533,15 @@ function pageGlyphRects(pr){
   const rects = [];
   for (const line of pr.lines){
     for (const it of line.items){
+      // PDF.js inserts layout spaces with widths far beyond the visible text.
+      // They draw no glyphs; masking them can erase a real handwritten mark.
+      if (!String(it.str || '').trim()) continue;
       const w = (it.width && it.width > 0) ? it.width : 6;
       const thin = isLineDrawingGlyphRun(it.str);
-      rects.push({ x0: it.x - 1.5, x1: it.x + w + 1.5, y0: line.y - (thin ? 1.5 : 3), y1: line.y + (thin ? 1.5 : 12) });
+      // Grouping can move the line baseline up to 3pt. Mask each glyph at its
+      // actual baseline, especially thin underscores below a handwritten mark.
+      const y=Number.isFinite(it.y)?it.y:line.y;
+      rects.push({ x0: it.x - 1.5, x1: it.x + w + 1.5, y0: y - (thin ? 1.5 : 3), y1: y + (thin ? 1.5 : 12) });
     }
   }
   return rects;
@@ -3830,7 +3857,9 @@ async function attachInkFallback(doc, findings, pageRecords){
 // Each field: the label that identifies its line, plus the boilerplate that
 // prints on that same line and must be stripped before deciding whether the
 // blank was filled. `key` is what the report shows.
-const DW_AGREEMENT_TITLE_RE = /Deposit\s+Waiver\s+Purchase\s+Agreement/i;
+// Recognize document titles, not incidental program names in fee lists or prose.
+// Title equivalence locates the form; it does NOT verify its amount/signature.
+const DW_AGREEMENT_TITLE_RE = /^(?:Deposit\s+Waiver(?:\s+Purchase)?\s+Agreement|Deposit\s+Waiver\s+Addendum\s*\(Lease\s*Lock\)|Lease\s*Lock(?:\s+Deposit\s+Waiver)?(?:\s+Purchase)?\s+(?:Agreement|Addendum))\s*[:.\-–—]?\s*$/i;
 const DW_SIGNATURE_LABEL_RE = /Resident\s+Signature\s*:/i;
 const DW_NAME_LABEL_RE = /Resident\s+Name\s*:/i;
 const DW_AMOUNT_LABEL_RE = /in\s+the\s+amount\s+of\s*\$/i;
@@ -3850,12 +3879,48 @@ function dwFilledRemainder(lineText, labelRe, boilerplate){
   return s;
 }
 
+// One-page LeaseLock addendum: labels sit BELOW signature/date blanks, the
+// amount may be an integer, and there is no separate printed-name field.
+// Never borrow evidence from the following e-sign certificate or another form.
+function extractLeaseLockAddendum(pr){
+  const find=re=>pr.lines.find(l=>re.test(l.text));
+  const amountLine=find(DW_AMOUNT_LABEL_RE);
+  const amountTail=amountLine?amountLine.text.slice(amountLine.text.search(DW_AMOUNT_LABEL_RE)).replace(DW_AMOUNT_LABEL_RE,''):'';
+  const amounts=amountTail.match(/\b\d[\d,]*(?:\.\d{1,2})?\b/g)||[];
+  const statedAmount=amounts.length===1?Number(amounts[0].replace(/,/g,'')):null;
+  const premisesLine=find(DW_PREMISES_LABEL_RE);
+  const premises=premisesLine?dwFilledRemainder(premisesLine.text,DW_PREMISES_LABEL_RE,[/\.$/]):'';
+  const datedLine=find(DW_DATED_LABEL_RE);
+  const dateRe=/\b(?:\d{1,2}\/\d{1,2}\/\d{2,4}|(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4})\b/i;
+  const agreementDate=datedLine?(datedLine.text.match(dateRe)||[])[0]||null:null;
+  const caption=pr.lines.filter(l=>/^Resident\s+Signature\s+Date\s*$/i.test(l.text)).sort((a,b)=>b.y-a.y)[0];
+  const signatureX=caption&&anchorItemXRange(caption,'Resident');
+  const dateX=caption&&anchorItemXRange(caption,'Date');
+  let signedBy=null,signedDate=null;
+  if(caption&&signatureX&&dateX){
+    const names=collectNamesNear(pr,caption.y,{windowUp:18,windowDown:0,minX:signatureX.x0,maxX:dateX.x0,expected:[]});
+    signedBy=names[0]||null;
+    const dates=pr.lines.filter(l=>l.y>caption.y&&l.y<=caption.y+18)
+      .flatMap(l=>l.items.filter(it=>it.x>=dateX.x0).map(it=>it.str)).join(' ');
+    signedDate=(dates.match(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/)||[])[0]||null;
+  }
+  const values=[['amount','Monthly waiver amount',statedAmount>0,statedAmount],
+    ['premises','Premises address',premises.replace(/[^A-Za-z0-9]/g,'').length>=6,premises],
+    ['leaseDate','Lease agreement date',!!agreementDate,agreementDate],
+    ['signature','Resident signature',!!signedBy,signedBy],
+    ['signatureDate','Signature date',!!signedDate,signedDate]];
+  return {page:pr.pageNum,format:'leaselock-addendum',statedAmount,premises,agreementDate,signedBy,signedDate,
+    fields:values.map(([key,label,filled,value])=>({key,label,filled,value,page:pr.pageNum}))};
+}
+
 /* Reads the Deposit Waiver Purchase Agreement out of a lease's page records.
    Returns null when the lease has no such agreement at all (which is the
    normal, correct state for a unit paying a traditional deposit). */
 function extractDepositWaiverAgreement(pageRecords){
   const startIdx = (pageRecords || []).findIndex(pr => pr.lines.some(l => DW_AGREEMENT_TITLE_RE.test(l.text)));
   if (startIdx === -1) return null;
+  if(pageRecords[startIdx].lines.some(l=>/^Deposit\s+Waiver\s+Addendum\s*\(Lease\s*Lock\)\s*$/i.test(l.text)))
+    return extractLeaseLockAddendum(pageRecords[startIdx]);
   // The agreement is two pages on the real form (terms, then the signature
   // block); allow a third for layout drift.
   const pages = pageRecords.slice(startIdx, startIdx + 3);
@@ -3937,10 +4002,10 @@ function buildDepositWaiverAgreementCheck(agreement, block){
   const billed = rrCharge.amount;
 
   if (!agreement){
-    return { key:'depositWaiverAgreement', label:'Deposit Waiver Agreement', status:'fail',
+    return { key:'depositWaiverAgreement', label:'Deposit Waiver / LeaseLock — agreement verification', status:'fail',
       rentRollValue: billed,
       note: 'The Rent Roll bills a Deposit Waiver / LeaseLock charge of ' + money(billed) +
-            '/mo, but no Deposit Waiver Purchase Agreement was found in this lease.' };
+            '/mo. A fee match does not verify the signed agreement. No supported Deposit Waiver / LeaseLock agreement was located in this lease packet; review the original agreement or supply the missing addendum.' };
   }
 
   const blanks = agreement.fields.filter(f => !f.filled);
@@ -3949,7 +4014,7 @@ function buildDepositWaiverAgreementCheck(agreement, block){
 
   const notes = [];
   if (blanks.length){
-    notes.push('Not filled in on the agreement (page ' + agreement.page + '): ' +
+    notes.push('Could not verify these fields on the agreement (page ' + agreement.page + '): ' +
                blanks.map(f => f.label.toLowerCase()).join(', ') + '.');
   }
   if (amountMismatch){
@@ -3961,7 +4026,7 @@ function buildDepositWaiverAgreementCheck(agreement, block){
     notes.push('Signed by ' + agreement.signedBy + (agreement.signedDate ? ' on ' + agreement.signedDate : '') +
                ' for ' + money(agreement.statedAmount) + '/mo.');
   }
-  return { key:'depositWaiverAgreement', label:'Deposit Waiver Agreement', status,
+  return { key:'depositWaiverAgreement', label:'Deposit Waiver / LeaseLock — agreement verification', status,
     leaseValue: agreement.statedAmount, rentRollValue: billed,
     agreement, blanks, note: notes.join(' ') };
 }
@@ -9423,7 +9488,8 @@ function paOnReconcile(){
   const qs=PropertyAssistant.questions({entries:unitEntries,proposals:RULE_PROPOSALS,
     structures:CHARGE_STRUCTURES,rules:[...PROPERTY_RULES,...PA.separations],loadError:AG_RULES_LOAD_ERROR||PA.storageError,
     protectedTest:label=>Object.values(PROTECTED_SUBJECTS).some(re=>{re.lastIndex=0;return re.test(String(label||''));})});
-  PA.current=qs.find(q=>!PA.answered.has(q.key))||null;
+  PA.questions=qs.filter(q=>!PA.answered.has(q.key));
+  PA.current=PA.questions[0]||null;
   PA.preview=null;
   PA.pending=!!PA.current;
   paRender(qs.filter(q=>!PA.answered.has(q.key)).length);
@@ -9450,54 +9516,60 @@ function paRender(remaining){
     return;
   }
   document.getElementById('results-card').classList.add('hidden');
-  paElement('p',remaining+' question(s) remain before results. You can decline; agreement is never required.',box);
-  const heading=paElement('h3',PA.current.label,box);heading.tabIndex=-1;
-  paElement('p',PA.current.message,box).style.lineHeight='1.6';
+  paElement('p','1. Choose below. 2. Review choices. 3. Confirm and view results. All '+remaining+' question(s) are on this page. Not sure keeps the original findings; agreement is never required.',box);
+  const heading=paElement('h3','Review your property’s billing conventions',box);heading.tabIndex=-1;
+  paElement('p','“Always included” means every unit billed the named package. “Only when not separately billed” leaves separate bills checked. Leave uncertain amenities as “Not sure”. These answers do not verify a package price or replace signed terms.',box).style.lineHeight='1.6';
   if(PA.storageError)paElement('p','Browser conventions could not be read. Nothing missing was treated as verified; remembering is disabled for this run.',box);
-  const controls=paElement('div',null,box);
-  if(PA.current.rule)paButton('Preview suggested convention',()=>paPreview(PA.current.rule),controls);
-  if(PA.current.kind==='structure' && PA.current.part){
-    const guided=paElement('fieldset',null,box);paElement('legend','Quick confirmation',guided);
-    paElement('p','Is '+PA.current.part+' included in '+PA.current.label+' on every affected unit?',guided);
-    paButton('Yes — preview this interpretation',()=>paPreview({type:'includes',rentRollLabel:PA.current.label,leaseLabels:[PA.current.part]}),guided);
-    paButton('Included only when not separately billed — preview',()=>paPreview({type:'includes',scope:'unitemised',rentRollLabel:PA.current.label,leaseLabels:[PA.current.part]}),guided);
-    paButton('Separate — keep checking this charge',()=>paPreview({type:'separate',rentRollLabel:PA.current.label,leaseLabels:[PA.current.part]}),guided);
-    paButton('I’m not sure — keep these findings',()=>paKeep(),guided);
-  }
-  if(PA.current.members){
-    const group=paElement('fieldset',null,box);paElement('legend','Confirm each amenity separately',group);
-    paElement('p','Do not guess the package contents. Leave anything uncertain as “Not sure”. Only confirmed included charges can change comparisons; separate and uncertain charges keep their findings.',group);
-    PA.current.members.forEach((name,i)=>{
+  const questions=PA.questions||[PA.current];
+  const choices=[];
+  for(const q of questions){
+    const group=paElement('fieldset',null,box);group.className='pa-question';
+    group.style.cssText='margin:16px 0;padding:16px;border:1px solid #424760;border-radius:10px;min-width:0';
+    paElement('legend',q.label,group);
+    paElement('p',q.kind==='includes'?'This package is billed on '+q.units.length+' units with unresolved individual charges. Which amenities does it include?':q.message,group).style.lineHeight='1.6';
+    const members=q.members||(q.part?[q.part]:[]);
+    const addChoice=(name,options,member)=>{
       const label=paElement('label',null,group);label.style.display='block';label.style.padding='6px';
       label.appendChild(document.createTextNode(name+' '));
-      const input=paElement('select',null,label);input.dataset.member=String(i);input.className='pa-member';
+      const input=paElement('select',null,label);input.className='pa-member';
       input.style.cssText='display:block;width:100%;max-width:100%;padding:8px;margin-top:6px;font:inherit;background:#1c2030;color:inherit;border:1px solid #424760;border-radius:6px';
-      for(const [value,text] of [['unknown','Not sure'],['included','Included on all grouped units'],['conditional','Included only when not separately billed'],['separate','Separate — keep checking']]){
+      for(const [value,text] of options){
         const option=paElement('option',text,input);option.value=value;
       }
-      input.addEventListener('change',()=>{PA.preview=null;document.getElementById('pa-preview').replaceChildren();});
-    });
-    paButton('Review amenity choices',()=>{
-      const choices=[...group.querySelectorAll('select')];
-      const members=choices.filter(i=>i.value==='included').map(i=>PA.current.members[Number(i.dataset.member)]);
-      const conditional=choices.filter(i=>i.value==='conditional').map(i=>PA.current.members[Number(i.dataset.member)]);
-      const separate=choices.filter(i=>i.value==='separate').map(i=>PA.current.members[Number(i.dataset.member)]);
-      if(!members.length&&!conditional.length&&!separate.length){
-        PA.preview=null;paNotice('No convention confirmed. Uncertain charges keep their original findings and no rule will be remembered.');
-        paButton('Confirm and keep original findings',()=>{
-          paKeep();
-        },document.getElementById('pa-preview'));return;
-      }
-      const rules=[];
-      if(members.length)rules.push({type:'includes',rentRollLabel:PA.current.label,leaseLabels:members});
-      if(conditional.length)rules.push({type:'includes',scope:'unitemised',rentRollLabel:PA.current.label,leaseLabels:conditional});
-      if(separate.length)rules.push({type:'separate',rentRollLabel:PA.current.label,leaseLabels:separate});
-      paPreview(rules);
-    },group);
+      const state=paElement('small','Not sure — findings will stay unchanged.',label);state.style.display='block';
+      input.addEventListener('change',()=>{
+        PA.preview=null;document.getElementById('pa-preview').replaceChildren();
+        const selected=input.value!=='unknown';input.dataset.selected=String(selected);
+        input.style.borderColor=selected?'#b1a2ff':'#424760';input.style.background=selected?'#332b56':'#1c2030';
+        state.textContent=selected?'Selected: '+input.selectedOptions[0].textContent+' — not applied yet.':'Not sure — findings will stay unchanged.';
+      });
+      choices.push({q,member,input});
+    };
+    for(const name of members)addChoice(name,[['unknown','Not sure — keep findings'],['included','Always included when '+q.label+' is billed'],['conditional','Included only when not separately billed'],['separate','Separate — keep checking']],name);
+    if(q.rule&&!members.length)addChoice('Does this suggested convention describe your property?', [['unknown','Not sure / no — keep findings'],['suggested','Yes — review this suggestion']],null);
   }
-  const label=paElement('label','Explain or correct the convention',box);label.htmlFor='pa-answer';
+  paButton('Review choices',()=>{
+    const rules=[];
+    for(const {q,member,input} of choices){
+      if(input.value==='unknown')continue;
+      if(input.value==='suggested'){rules.push(q.rule);continue;}
+      const type=input.value==='separate'?'separate':'includes',scope=input.value==='conditional'?'unitemised':undefined;
+      let rule=rules.find(r=>r.type===type&&r.rentRollLabel===q.label&&r.scope===scope);
+      if(!rule){rule={type,rentRollLabel:q.label,leaseLabels:[]};if(scope)rule.scope=scope;rules.push(rule);}
+      if(!rule.leaseLabels.includes(member))rule.leaseLabels.push(member);
+    }
+    if(!rules.length){
+      PA.preview=null;paNotice('No changes selected. Confirm to view results with the original findings; nothing will be remembered.');
+      paButton('Confirm and keep original findings',()=>paKeepAll(),document.getElementById('pa-preview'));return;
+    }
+    paPreview(rules,questions.map(q=>q.key));
+  },box);
+  paButton('Keep original findings',()=>paKeepAll(),box);
+  const details=paElement('details',null,box);details.style.marginTop='18px';
+  paElement('summary','Need to explain something different? (optional written answer)',details);
+  const label=paElement('label','Written explanation — reviewed separately from the choices above',details);label.htmlFor='pa-answer';
   label.style.display='block';label.style.marginTop='14px';
-  const input=paElement('textarea',null,box);input.id='pa-answer';input.rows=3;input.maxLength=2000;
+  const input=paElement('textarea',null,details);input.id='pa-answer';input.rows=3;input.maxLength=2000;
   input.style.cssText='width:100%;box-sizing:border-box;margin:8px 0;padding:10px;font:inherit';
   input.placeholder='Optional: add detail, or use the guided choices above. Say “no” to keep the findings.';
   input.addEventListener('input',()=>{
@@ -9506,7 +9578,7 @@ function paRender(remaining){
   paButton('Review my answer',()=>{
     PA.preview=null;document.getElementById('pa-preview').replaceChildren();
     const intent=PropertyAssistant.response(input.value);
-    if(intent==='keep'){paKeep();return;}
+    if(intent==='keep'){paKeepAll();return;}
     if(intent==='empty'){paNotice('Please explain the convention, or choose Keep original findings.');return;}
     const vocab=observedChargeVocabulary();
     const membership=paInterpretMembership(input.value,vocab);
@@ -9518,14 +9590,14 @@ function paRender(remaining){
       return;
     }
     paPreview(parsed.rule);
-  },box);
-  paButton('Keep original findings',()=>paKeep(),box);
+  },details);
   const preview=paElement('div',null,box);preview.id='pa-preview';preview.setAttribute('aria-live','polite');
   heading.focus();
 }
 function paNotice(message){
   const box=document.getElementById('pa-preview');box.replaceChildren();
   paElement('p',message,box).setAttribute('role','status');
+  box.scrollIntoView({block:'nearest'});
 }
 function paValidate(rule){
   const compact=PropertyAssistant.compactRule(rule);
@@ -9564,14 +9636,18 @@ function paDescribe(rule){
   if(rule.type==='separate')return rule.leaseLabels.join(', ')+' must stay separate from '+rule.rentRollLabel+'. Do not automatically bundle these charges together. Missing bills, missing lease terms and price mismatches remain checked.';
   return prDescribeRule(rule)+(rule.scope==='unitemised'?' Applies only on units with this grouped bill, a lease-side member, and no separate bill for that member. All other units retain their original findings.':'');
 }
-function paPreview(rule){
+function paPreview(rule,questionKeys){
   if(!paPending())return;
   PA.preview=null;
   const checked=paValidateBatch(Array.isArray(rule)?rule:[rule]);
-  if(checked.error){paNotice(checked.error);return;}
-  PA.preview={...checked,question:PA.current.key};
+  if(checked.error){
+    paNotice(checked.error+' Your selection was received, but nothing was applied or saved. Adjust the choices above, or continue without changes.');
+    paButton('Continue without changes',()=>paKeepAll(),document.getElementById('pa-preview'));return;
+  }
+  PA.preview={...checked,question:PA.current.key,questions:questionKeys||[PA.current.key]};
   const panel=document.getElementById('pa-preview');panel.replaceChildren();
   paElement('h3','Interpretation preview — not yet applied',panel);
+  paElement('p','Unselected or “Not sure” answers keep their original findings. Only the conventions listed below will be applied.',panel);
   for(const item of checked.items){
     paElement('p',paDescribe(item.rule),panel);
     if(item.rule.type==='separate')paElement('p','This records your instruction to keep checking these charges. It is not proof that the current bills are correct.',panel);
@@ -9584,6 +9660,7 @@ function paPreview(rule){
   label.appendChild(document.createTextNode(' Remember for this property and signed-in user, on this browser only (testing).'));
   if(remember.disabled)paElement('p','Browser memory is unavailable for this session. You may apply the convention for this run only.',panel);
   paButton('Approve and rerun checks',()=>paApprove(),panel);
+  panel.scrollIntoView({block:'nearest'});
 }
 function paApprove(){
   if(!paPending() || !PA.preview || PA.preview.question!==PA.current.key)return;
@@ -9597,7 +9674,8 @@ function paApprove(){
     if(!saved){PA.preview=null;paNotice('Could not remember this convention. Nothing was applied. Preview again and leave Remember unchecked to use it for this run only.');return;}
     PA.drafts.push(...rows);
   }
-  PA.answered.add(PA.current.key);PA.applied++;PA.preview=null;
+  for(const key of PA.preview.questions||[PA.current.key])PA.answered.add(key);
+  PA.applied+=checked.items.length;PA.preview=null;
   PA.separations.push(...rows.filter(r=>r.rule.type==='separate'));
   PROPERTY_RULES.push(...rows.filter(r=>r.rule.type!=='separate'));
   reconcileAll();
@@ -9606,6 +9684,14 @@ function paApprove(){
 function paKeep(){
   if(!paPending())return;
   PA.answered.add(PA.current.key);PA.kept++;PA.preview=null;
+  if(!paOnReconcile()){
+    renderHouseRules();syncMtmFeeFromLeases();renderDashboard();reportRunOutcome('completed');
+  }
+}
+function paKeepAll(){
+  if(!paPending())return;
+  for(const q of PA.questions||[PA.current]){PA.answered.add(q.key);PA.kept++;}
+  PA.preview=null;
   if(!paOnReconcile()){
     renderHouseRules();syncMtmFeeFromLeases();renderDashboard();reportRunOutcome('completed');
   }
