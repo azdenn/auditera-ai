@@ -40,7 +40,8 @@ version `53396760-4824-4638-a0e6-c6101b20461f`. Public build manifest matches lo
 bytes: `3c714361f389babaaf85757a97913189416ddd837ca4856eaa882988dfb7d846`.
 Testing app 200/noindex/nofollow; unauthenticated tool 401. Production homepage
 SHA-256 unchanged: `cf22c309afccd6dab157a423feb7160aa34e693dd4e4f27f046a0e19fc485def`.
-Git release record is testing only. Owner is arranging the replacement source file;
+Release commit `4ca3820b29f7051e58bfacf989c60ab96b3a766d` pushed to GitHub testing;
+`ls-remote` confirmed the exact SHA. Owner is arranging the replacement source file;
 A114 remains unverified until that arrives. Main and backend were not changed.
 
 ## 2026-09-13 — Local-only storage migration

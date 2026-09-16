@@ -43,7 +43,8 @@ bill exists and the member is not separately billed. Do not hard-code these glob
   public manifest exactly matches local build, SHA-256
   `3c714361f389babaaf85757a97913189416ddd837ca4856eaa882988dfb7d846`.
   Testing app responds 200 with noindex/nofollow; unauthenticated tool download 401.
-  Production homepage hash unchanged. Git release recording is on testing only.
+  Production homepage hash unchanged. Release commit `4ca3820` pushed to GitHub
+  testing and exact remote SHA verified; main untouched.
   Owner will supply the replacement document/export; continue A114 then, not before.
   No production changes or customer document commits.
 
