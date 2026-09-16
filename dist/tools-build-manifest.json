@@ -3,7 +3,7 @@
   "tools": {
     "leaseverify": {
       "inputs": {
-        "lease_tool/template.html": "fa9f71e4de6ed7680a8599d55d8b4c3adcdd16dd8bed714e26ae14c459fd192e",
+        "lease_tool/template.html": "bfd4fa97f18b94c4dc9ca348c9cfd450f80123bddf7033b9f041b8ce41ed2b15",
         "shared/build_tool.cjs": "12c3bb03b4d4efaebbd68f9684bab693e12dda8cb6810cc80722839f5cb9cf9e",
         "build.cjs": "a037b6225c7f2126756ab8528416f79bc73ffe72f76354c08936605e5adf643c",
         "lease_tool/package-lock.json": "7269db2b9d194bb0e85ab6d3c4eaeb2ba8aca4359dbabe7a7429e7752627cd3e",
@@ -17,7 +17,7 @@
         "shared/property_assistant.js": "dc173b641b8d6fd235b98f159cc7b55bab0be3fbe02a5b7b8a265fdd9f834e7c",
         "shared/property_assistant_ui.js": "65063bec4607de62df1d2e34d10a2054123eaf0add9d622a6cfd2d49b8761155"
       },
-      "sha256": "1975583af0aff126f0699e3601c1a7a7b53e8db8332043dad0e6df68e5352ba6"
+      "sha256": "ccf956d5d45fe8eab65018e85035caca64e1dc58a0f2bd14d961557c975251c2"
     },
     "concessionverify": {
       "inputs": {

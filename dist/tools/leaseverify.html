@@ -3909,8 +3909,25 @@ function extractLeaseLockAddendum(pr){
     ['leaseDate','Lease agreement date',!!agreementDate,agreementDate],
     ['signature','Resident signature',!!signedBy,signedBy],
     ['signatureDate','Signature date',!!signedDate,signedDate]];
-  return {page:pr.pageNum,format:'leaselock-addendum',statedAmount,premises,agreementDate,signedBy,signedDate,
+  const supportedLayout=!!(caption&&signatureX&&dateX&&dateX.x0>signatureX.x0+40&&datedLine);
+  const signatureBox=supportedLayout?{page:pr.pageNum,x0:signatureX.x0,x1:dateX.x0-12,y0:caption.y+4,y1:caption.y+35}:null;
+  return {page:pr.pageNum,format:'leaselock-addendum',unsupportedLayout:!supportedLayout,signatureBox,statedAmount,premises,agreementDate,signedBy,signedDate,
     fields:values.map(([key,label,filled,value])=>({key,label,filled,value,page:pr.pageNum}))};
+}
+
+// Same conservative ink detector as the main signature checks, limited to the
+// supported form's first resident slot. Dates, owner marks and certificates are
+// outside this box. A visible mark does not establish the signer's identity.
+async function attachDepositWaiverInkFallback(doc,agreement,pageRecords){
+  if(!agreement||agreement.format!=='leaselock-addendum'||agreement.unsupportedLayout||!agreement.signatureBox)return;
+  const signature=agreement.fields.find(f=>f.key==='signature');
+  if(!signature||signature.filled)return;
+  const finding={present:false,box:agreement.signatureBox};
+  await attachInkFallback(doc,[finding],pageRecords);
+  if(finding.present&&finding.detectedVia==='ink'){
+    signature.filled=true;signature.value='Handwritten signature mark detected';
+    agreement.signatureDetectedVia='ink';
+  }
 }
 
 /* Reads the Deposit Waiver Purchase Agreement out of a lease's page records.
@@ -4013,7 +4030,9 @@ function buildDepositWaiverAgreementCheck(agreement, block){
     && Math.abs(agreement.statedAmount - billed) >= 0.01;
 
   const notes = [];
-  if (blanks.length){
+  if (agreement.unsupportedLayout){
+    notes.push('Manual review required: this LeaseLock addendum (page ' + agreement.page + ') does not use the supported on-page signature/date layout. The form was found, but its execution could not be verified automatically. Review the addendum and any form-specific signing record; a fee match or a signature elsewhere in the packet does not verify this form.');
+  } else if (blanks.length){
     notes.push('Could not verify these fields on the agreement (page ' + agreement.page + '): ' +
                blanks.map(f => f.label.toLowerCase()).join(', ') + '.');
   }
@@ -4021,14 +4040,14 @@ function buildDepositWaiverAgreementCheck(agreement, block){
     notes.push('The agreement states ' + money(agreement.statedAmount) +
                '/mo but the Rent Roll bills ' + money(billed) + '/mo.');
   }
-  const status = (blanks.length || amountMismatch) ? 'fail' : 'pass';
+  const status = (agreement.unsupportedLayout || blanks.length || amountMismatch) ? 'fail' : 'pass';
   if (status === 'pass'){
-    notes.push('Signed by ' + agreement.signedBy + (agreement.signedDate ? ' on ' + agreement.signedDate : '') +
+    notes.push((agreement.signatureDetectedVia==='ink'?'Handwritten signature mark detected (signer identity not verified)':'Signed by ' + agreement.signedBy) + (agreement.signedDate ? ' on ' + agreement.signedDate : '') +
                ' for ' + money(agreement.statedAmount) + '/mo.');
   }
   return { key:'depositWaiverAgreement', label:'Deposit Waiver / LeaseLock — agreement verification', status,
     leaseValue: agreement.statedAmount, rentRollValue: billed,
-    agreement, blanks, note: notes.join(' ') };
+    agreement, blanks:agreement.unsupportedLayout?[]:blanks, manualReview:!!agreement.unsupportedLayout, note: notes.join(' ') };
 }
 
 /* ---------- Security Deposit / Lease Lock check ---------- */
@@ -4413,6 +4432,7 @@ async function parseLeasePdfFromBuffer(buf){
 
   // Deposit Waiver (LeaseLock) Purchase Agreement, when the lease carries one.
   const depositWaiverAgreement = extractDepositWaiverAgreement(pageRecords);
+  await attachDepositWaiverInkFallback(doc,depositWaiverAgreement,pageRecords);
 
   const verification = {
     unit, residentsRaw, ownerRaw, documentTextChars, depositWaiverAgreement,

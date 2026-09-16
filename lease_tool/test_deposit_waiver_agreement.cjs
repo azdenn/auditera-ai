@@ -29,7 +29,7 @@ const check = (name, cond) => { console.log((cond ? 'PASS' : 'FAIL') + ' -- ' + 
   await installGateStub(page);
   await page.goto('file://' + path.resolve('./lease_reconciler.html') + GATE_HASH);
 
-  const out = await page.evaluate(() => {
+  const out = await page.evaluate(async () => {
     const U = '_'.repeat(60);
     // Page records shaped exactly like the real ones: pdf.js merges the
     // typed value onto the same text line as the printed label and its rule.
@@ -91,7 +91,32 @@ const check = (name, cond) => { console.log((cond ? 'PASS' : 'FAIL') + ' -- ' + 
     const altSigned=extractDepositWaiverAgreement(alternate());
     const altBlank=alternate(false);
     altBlank.push({pageNum:36,width:612,height:792,lines:[line(700,'E-SIGNATURE CERTIFICATE'),line(600,'Taylor Example 11/13/2025')]});
+    // Exercise the real canvas ink fallback, not a mocked detector result.
+    const inkCase=async({mark=false,date=true,price=33,broken=false}={})=>{
+      const pages=alternate(false);
+      if(!date)pages[0].lines[4].items=pages[0].lines[4].items.filter(it=>it.x<396);
+      const agreement=extractDepositWaiverAgreement(pages),rendered=[];
+      const doc={getPage:async n=>{
+        rendered.push(n);if(broken)throw Error('Deliberate renderer failure');
+        return {getViewport:({scale})=>({width:612*scale,height:792*scale,convertToViewportPoint:(x,y)=>[x*scale,(792-y)*scale]}),
+          render:({canvasContext:ctx,viewport:v})=>({promise:Promise.resolve().then(()=>{
+            const s=v.width/612;ctx.fillStyle='white';ctx.fillRect(0,0,v.width,v.height);ctx.strokeStyle='black';ctx.lineWidth=1.2*s;
+            const stroke=(x,y,w)=>{ctx.beginPath();for(let t=0;t<w;t++){const yy=y+Math.sin(t/7)*8+t*0.03;t?ctx.lineTo((x+t)*s,(792-yy)*s):ctx.moveTo(x*s,(792-yy)*s);}ctx.stroke();};
+            // Blank printed resident rule plus owner and date-column marks.
+            ctx.beginPath();ctx.moveTo(72*s,(792-166)*s);ctx.lineTo(362*s,(792-166)*s);ctx.stroke();
+            stroke(79,34,100);stroke(430,170,100);
+            if(mark)stroke(90,174,110);
+          })})};
+      }};
+      await attachDepositWaiverInkFallback(doc,agreement,pages);
+      return {agreement,rendered,check:buildDepositWaiverAgreementCheck(agreement,{charges:[{description:'LeaseLock',amount:price}]})};
+    };
+    const handwritten=await inkCase({mark:true}),inkBlank=await inkCase(),inkUndated=await inkCase({mark:true,date:false}),inkWrongPrice=await inkCase({mark:true,price:42}),inkBroken=await inkCase({broken:true});
+    const otherLayout=alternate(false);otherLayout[0].lines=otherLayout[0].lines.filter(l=>!/^Resident Signature Date$/.test(l.text)&&!/^Agreement, dated/.test(l.text));
+    const unsupported=extractDepositWaiverAgreement(otherLayout);
+    await attachDepositWaiverInkFallback({getPage:()=>{throw Error('Unsupported form must not be rendered');}},unsupported,otherLayout);
     return {
+      handwritten,inkBlank,inkUndated,inkWrongPrice,inkBroken,unsupportedCheck:buildDepositWaiverAgreementCheck(unsupported,altBlock),
       altSigned,altCheck:buildDepositWaiverAgreementCheck(altSigned,altBlock),
       altBlankCheck:buildDepositWaiverAgreementCheck(extractDepositWaiverAgreement(altBlank),altBlock),
       altPriceCheck:buildDepositWaiverAgreementCheck(altSigned,{charges:[{description:'LeaseLock',amount:42}]}),
@@ -108,6 +133,13 @@ const check = (name, cond) => { console.log((cond ? 'PASS' : 'FAIL') + ' -- ' + 
     };
   });
 
+  check('Handwritten waiver mark passes through existing ink detector',out.handwritten.check.status==='pass'&&out.handwritten.agreement.signatureDetectedVia==='ink');
+  check('Ink evidence does not invent signer identity or render another page',out.handwritten.agreement.signedBy===null&&/identity not verified/.test(out.handwritten.check.note)&&JSON.stringify(out.handwritten.rendered)==='[35]');
+  check('Printed rule and owner/date-column marks cannot fill blank resident slot',out.inkBlank.check.status==='fail'&&out.inkBlank.check.blanks.some(f=>f.key==='signature'));
+  check('Handwritten signature does not supply a missing date',out.inkUndated.check.status==='fail'&&out.inkUndated.check.blanks.some(f=>f.key==='signatureDate'));
+  check('Handwritten signature does not hide amount mismatch',out.inkWrongPrice.check.status==='fail');
+  check('Renderer failure leaves signature unverified',out.inkBroken.check.status==='fail');
+  check('Unrecognized form layout remains counted manual review, not invented blank fields',out.unsupportedCheck.status==='fail'&&out.unsupportedCheck.manualReview&&out.unsupportedCheck.blanks.length===0&&/Manual review required/.test(out.unsupportedCheck.note));
   check('Supported alternative titles still require the full completed agreement',out.variants.every(c=>c.status==='pass'));
   check('One-page LeaseLock addendum recognizes integer amount and written-out date',out.altSigned.statedAmount===33&&out.altSigned.agreementDate==='November 11, 2025');
   check('One-page signature and date above their captions pass',out.altCheck.status==='pass');
