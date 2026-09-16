@@ -1,5 +1,28 @@
 # Auditera work log
 
+## 2026-09-15 — Replacement Garden Creek archive / A114 follow-up
+
+Owner supplied `GCA Resident_Documents_09-15-2026_10_41_50.zip` in the existing
+local real-estate document folder (1,079,931,398 bytes; readable, replacing the
+previously unusable August export for diagnostics). Inspected both A114-folder
+signed candidates and visually reviewed each LeaseLock addendum. Current deployed
+parser recognizes $33 and all five required fields on pages 33/32, with no missing
+signature findings in either packet. One candidate's document unit is different
+from its folder unit; never infer identity only from folder placement.
+
+Full original ZIP + available August 12 rent-roll upload completed locally with
+network-blocked test routing. The acceptance assertion that A114 was in results
+failed twice (first exact lookup, then normalized lookup). Investigation using
+the real application rent-roll parser confirmed A114 is vacant with no charges
+or lease dates in that older roll; normal reconciliation intentionally excludes it.
+This is a fixture-period mismatch, not evidence of a new reconciliation failure.
+Do not call the A114 end-to-end issue resolved yet. Owner asked for a current roll.
+
+Root build parity passes for all three tools and the public testing manifest
+still exactly matches the locally tested artifact. No product changes, deploy,
+backend changes or production changes in this follow-up. Only continuity docs
+updated; private PDFs, renders and diagnostic scripts remain outside canonical Git.
+
 ## 2026-09-15 — Real-document signature/waiver fixes and one-page assistant
 
 Owner requested fixing the acceptance feedback, testing only. Reviewed actual local

@@ -35,9 +35,15 @@ bill exists and the member is not separately billed. Do not hard-code these glob
   Real documents processed only locally under network-blocked/stubbed test context.
   The first file-origin harness run timed out because the pilot was disabled there;
   rerun used the testing origin with local HTML and mocked requests. Not a live-login test.
-- OPEN: A114-specific contradictory waiver report is not reproduced: the Garden
-  Creek export in Downloads is 0 bytes. Owner asked for a usable copy/path. Do not
-  call all reported cases fixed. Blanket matching by amount, arbitrary AI conversation,
+- A114 follow-up: replacement September 15 Garden Creek ZIP is readable. Both
+  signed candidates have a recognized $33 LeaseLock addendum (pages 33 and 32),
+  all required fields detected, and no missing signatures. Visually reviewed forms.
+  Full local ZIP run completes, but available August 12 rent roll marks A114 vacant
+  with no charges; the normal occupied-unit report correctly excludes it. The older
+  A114-folder candidate names a different unit in the lease, so folder location
+  alone is not evidence of unit identity. Current matching-period rent roll requested;
+  end-to-end A114 charge/contradiction acceptance remains OPEN. No product code changed.
+  Blanket matching by amount, arbitrary AI conversation,
   cross-device conventions and guarantees of signature authenticity remain unsupported.
 - Testing deployment verified: Worker version `53396760-4824-4638-a0e6-c6101b20461f`;
   public manifest exactly matches local build, SHA-256
@@ -45,7 +51,7 @@ bill exists and the member is not separately billed. Do not hard-code these glob
   Testing app responds 200 with noindex/nofollow; unauthenticated tool download 401.
   Production homepage hash unchanged. Release commit `4ca3820` pushed to GitHub
   testing and exact remote SHA verified; main untouched.
-  Owner will supply the replacement document/export; continue A114 then, not before.
+  Replacement ZIP received; await current Garden Creek rent roll to finish A114.
   No production changes or customer document commits.
 
 Older checkpoint sections below preserve history and may describe superseded state.
