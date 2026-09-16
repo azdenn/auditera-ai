@@ -1,5 +1,41 @@
 # Auditera work log
 
+## 2026-09-15 — Matching-period acceptance and handwritten waiver follow-up
+
+Received September 15 Garden Creek and Blanco rent rolls plus updated Blanco ZIP.
+Actual upload/Process/keep-original/results runs were performed offline with blocked
+network and mocked gate/rules, not live customer authentication. Garden Creek: 60
+reported units, zero parse failures; A114 exactly one $33 waiver charge match,
+agreement pass, signature pass. Verified again after follow-up code changes.
+This closes the original A114 contradiction for the supplied current documents.
+
+Blanco: 22 units, zero parse failures; all general signature checks pass. Unit 101
+still failed the waiver's text-only signature field; visual PDF inspection showed
+a handwritten mark. Added attachDepositWaiverInkFallback using the unchanged main
+ink detector, only the supported layout's first resident slot. Dates/owner area/
+other pages cannot supply that evidence. No name is invented for an ink signature.
+Full Blanco rerun confirms 101 agreement now passes, fee still matches.
+
+301/302 are a different addendum layout without on-page signature/date captions.
+Their execution is not automatically verified. They remain counted findings with
+explicit manual-review wording, instead of listing nonexistent fields as blank.
+No generic certificate signature was promoted to evidence for these forms.
+
+Synthetic waiver tests 34/34, including rendered ink, blank rule, owner/date-column
+marks, missing date, wrong amount and renderer failure; full focused suite 28/28.
+First full-suite invocation lacked NODE_PATH and could not load the browser runtime;
+configured existing lease_tool/node_modules and reran successfully. No dependency
+installation. Root build parity and testing dry run pass.
+
+Testing Worker version `9895a4bf-468c-4b6e-9c2f-10dd3d933616` deployed and verified:
+public manifest equals local bytes, SHA-256
+`c1426021b49684a1770e60998302557162188dc7259ed041bf602f749f447d2e`;
+app 200/noindex/nofollow, unauthenticated tool 401. Production homepage fingerprint
+unchanged (`cf22c309afccd6dab157a423feb7160aa34e693dd4e4f27f046a0e19fc485def`).
+Code commit `18142763bd3e1cd5b1163d32ed459dfc3eaf8787` records this tested artifact.
+Only testing code/Git; no main/backend changes, private document commits or uploads.
+Next: manager acceptance; 301/302 form-specific execution remains manual review.
+
 ## 2026-09-15 — Replacement Garden Creek archive / A114 follow-up
 
 Owner supplied `GCA Resident_Documents_09-15-2026_10_41_50.zip` in the existing

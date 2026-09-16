@@ -3,6 +3,16 @@
 Keep reusable lessons here, with evidence and the rule that prevents recurrence.
 Do not convert customer conventions into global assumptions without validation.
 
+## L27 — Agreement-specific signatures need the same evidence pipeline
+
+The general signature detector supported handwriting while the separate LeaseLock
+agreement reader was text-only. A lease could pass the former and falsely fail the
+latter. Reuse the conservative ink detector with layout-specific bounds and preserve
+independent date/amount checks. Unknown layouts stay counted manual review; a title
+match does not justify imposing another layout's fields or borrowing certificate ink.
+Pair current lease exports with the matching rent roll: a prior roll can legitimately
+mark a newly occupied unit vacant and exclude it from the report.
+
 ## L24 — Signature masks must describe glyphs, not grouped text rows
 
 September 15 original PDF reproduction: a resident and owner share a grouped text

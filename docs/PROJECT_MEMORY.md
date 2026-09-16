@@ -35,23 +35,28 @@ bill exists and the member is not separately billed. Do not hard-code these glob
   Real documents processed only locally under network-blocked/stubbed test context.
   The first file-origin harness run timed out because the pilot was disabled there;
   rerun used the testing origin with local HTML and mocked requests. Not a live-login test.
-- A114 follow-up: replacement September 15 Garden Creek ZIP is readable. Both
-  signed candidates have a recognized $33 LeaseLock addendum (pages 33 and 32),
-  all required fields detected, and no missing signatures. Visually reviewed forms.
-  Full local ZIP run completes, but available August 12 rent roll marks A114 vacant
-  with no charges; the normal occupied-unit report correctly excludes it. The older
-  A114-folder candidate names a different unit in the lease, so folder location
-  alone is not evidence of unit identity. Current matching-period rent roll requested;
-  end-to-end A114 charge/contradiction acceptance remains OPEN. No product code changed.
+- September 15 matching files received for Garden Creek and Blanco. Full local
+  Garden Creek run completes (60 reported units, no parse failures); A114 has one
+  $33/$33 waiver match, agreement pass, signature pass. The reported A114 contradiction
+  is now verified resolved with these supplied documents (before/after this follow-up).
+- Updated Blanco run completes (22 units, no parse failures). All general signature
+  checks pass. Found and fixed an additional text-only waiver check on unit 101:
+  a handwritten resident mark now uses the existing conservative ink detector,
+  with bounded resident-column geometry and no threshold change or invented identity.
+  Waiver tests now 34/34; focused suite 28/28. Blank/date/amount/render-failure controls pass.
+- OPEN: Blanco 301/302 use an older LeaseLock layout without on-page signature/date
+  captions. The form is found, but execution remains explicitly MANUAL REVIEW,
+  still counted; do not call it unsigned or claim automatic verification. Do not
+  borrow signatures from other forms or a generic certificate. These require
+  manager review of the specific form/signing record before any supported handling.
   Blanket matching by amount, arbitrary AI conversation,
   cross-device conventions and guarantees of signature authenticity remain unsupported.
-- Testing deployment verified: Worker version `53396760-4824-4638-a0e6-c6101b20461f`;
+- Testing deployment verified: Worker version `9895a4bf-468c-4b6e-9c2f-10dd3d933616`;
   public manifest exactly matches local build, SHA-256
-  `3c714361f389babaaf85757a97913189416ddd837ca4856eaa882988dfb7d846`.
+  `c1426021b49684a1770e60998302557162188dc7259ed041bf602f749f447d2e`.
   Testing app responds 200 with noindex/nofollow; unauthenticated tool download 401.
-  Production homepage hash unchanged. Release commit `4ca3820` pushed to GitHub
-  testing and exact remote SHA verified; main untouched.
-  Replacement ZIP received; await current Garden Creek rent roll to finish A114.
+  Production homepage hash unchanged; code commit `1814276` on testing, main untouched.
+  Next: manager acceptance of the updated test output, including the two manual reviews.
   No production changes or customer document commits.
 
 Older checkpoint sections below preserve history and may describe superseded state.
