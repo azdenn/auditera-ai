@@ -1,15 +1,16 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {chromium}=require('playwright');
 const {installGateStub}=require('./test_gate_stub.cjs');
+const origin=process.env.AUDITERA_ASSISTANT_TEST_ORIGIN||'https://testing.auditera.net';
 (async()=>{
  const browser=await chromium.launch({headless:true});try{
   const page=await browser.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
-  await page.route('https://testing.auditera.net/review-page',r=>r.fulfill({contentType:'text/html',body:fs.readFileSync(path.join(__dirname,'../dist/tools/leaseverify.html'),'utf8')}));
+  await page.route(origin+'/review-page',r=>r.fulfill({contentType:'text/html',body:fs.readFileSync(path.join(__dirname,'../dist/tools/leaseverify.html'),'utf8')}));
   await installGateStub(page,{allowed:true,verdict:'allowed',property:{id:'synthetic-review'}});
   await page.route('**/rest/v1/property_rules*',r=>r.fulfill({contentType:'application/json',body:'[]'}));
   const token='x.'+Buffer.from(JSON.stringify({sub:'review-user'})).toString('base64url')+'.x';
-  await page.goto('https://testing.auditera.net/review-page#tk='+token);
+  await page.goto(origin+'/review-page#tk='+token);
   const before=await page.evaluate(async()=>{
    await agAuthorizeAudit('leaseverify','Synthetic Property','');PROPERTY_ID=AG_PROPERTY.id;
    PROPERTY_RULES=[];AG_RULES_LOAD_ERROR=false;allUnitBlocks=new Map();rawSuccessByUnit=new Map();rawFailedFiles=[];

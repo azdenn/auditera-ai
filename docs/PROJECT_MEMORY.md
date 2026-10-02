@@ -1,9 +1,34 @@
 # Auditera project memory
 
-Owner direction and local technical snapshot verified: 2026-09-15 (America/Chicago).
-This is the compact current checkpoint. First repairs and the browser-local
-LeaseVerify property-assistant pilot are deployed to TESTING ONLY.
+Owner direction and release preparation verified: 2026-10-02 (America/Chicago).
+Current release source is the isolated `release-20261002` worktree, based on the
+verified deployed-testing commit d96ecd8. The canonical `repo` worktree retains
+unfinished ResMan and billing work and must NOT be deployed wholesale.
 It is maintained external memory for development, not a model-training system.
+
+## Current release — October 2
+
+- Owner authorized promoting the tested website to production and explicitly
+  approved existing document-security safeguards. No ResMan automation, billing
+  migration/Edge Function, paid AI or hosting purchase is included.
+- Included PDF eval mitigation on all four intake paths, official SheetJS0.20.3,
+  formula-safe CSV export and failed-property-lookup handling. Enabled the existing
+  browser-local assistant on the exact production origins; shared settings remain
+  read-only in that interface, and local memory stays origin/user/property scoped.
+- Verified 29/29 focused suites, build parity and production-origin review/memory
+  tests (13 memory checks). Real signature crop was absent/skipped; private-document
+  suites were not run. PDF.js remains3.11.174 with the maintainer-documented
+  isEvalSupported:false mitigation; npm still flags the version. No zero-risk claim.
+- Requested independent complimentary account and nine free property licenses
+  created/verified in the existing backend. Authenticated checks verify isolation,
+  entitlement, three production tool downloads and all three property matches.
+  No password, customer identifiers or resident documents are stored here.
+- Deployment and Git publication still pending; record verified completion below
+  before treating this candidate as live. Main rollback version:
+  1fbe1f7d-94f9-421e-b6fb-169f08f404b2; testing rollback:
+  9895a4bf-468c-4b6e-9c2f-10dd3d933616.
+
+Earlier testing-only milestones below are historical, not current release policy.
 
 ## Current checkpoint — September 15 acceptance repairs
 

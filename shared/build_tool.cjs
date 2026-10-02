@@ -19,6 +19,7 @@ function compose(tool) {
     XLSX_LIB: 'lease_tool/node_modules/xlsx/dist/xlsx.full.min.js',
     ...(tool === 'deposit' ? {} : { FFLATE_LIB: 'lease_tool/node_modules/fflate/umd/index.js' }),
     AUDIT_GATE: 'shared/audit_gate.js', RR_PROPERTY_NAME: 'shared/rentroll_property_name.js',
+    CSV_EXPORT: 'shared/csv_export.js',
     ...(tool === 'lease' ? { PROPERTY_RULES: 'shared/property_rules.js',
       PROPERTY_ASSISTANT: 'shared/property_assistant.js', PROPERTY_ASSISTANT_UI: 'shared/property_assistant_ui.js' } : {}),
   };

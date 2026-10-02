@@ -601,3 +601,28 @@ separate privacy/data contract and budget; broader launch risks remain in the re
 - Verified completion: application commit e889d9e5cc4f9ca69e9e58e6e9e568684ef3d0c4
   pushed to origin/testing; git ls-remote returned that exact SHA. No main push.
   This documentation-only follow-up records the successful release action.
+
+## 2026-10-02 — Production promotion preparation and complimentary licensing
+
+- Verified live testing manifest exactly matches d96ecd8, rather than the dirty
+  canonical dist. Created isolated release worktree from that commit and preserved
+  unrelated ResMan/billing changes. Owner separately approved document safeguards.
+- Copied only reviewed document security and account-load/error-state repairs.
+  Enabled local assistant on auditera.net/www.auditera.net; unapproved origins stay
+  denied, and testing/live/user/property local storage remains separate. Existing
+  account/tool/property authorization is unchanged. No hosted AI or connector.
+- Build parity and29/29 focused suites pass. Additional production-origin review
+  and13/13 memory checks pass, including no backend writes. Real signature crop
+  skipped because absent; no private documents tested. PDF.js warning remains
+  version-based; every intake disables eval using Mozilla's documented workaround:
+  https://github.com/mozilla/pdf.js/security/advisories/GHSA-wgrm-67xf-hhpq
+  SheetJS uses official0.20.3 distribution; CSV guards do not guarantee safety after
+  external spreadsheet re-saving. No package audit claim beyond these findings.
+- Created requested independent account through normal Auth signup with public
+  key only; no service-role key or direct auth-table writes. Nine active $0 property
+  licenses inserted atomically after exact account/duplicate checks. No expiry or
+  Stripe subscription created. Authenticated reads see only the new account's three
+  properties; all3 tool downloads/property gates pass without developer bypass.
+  Verification login was ended. Initial terminal shutdown asserted after signup;
+  database readback and a fresh successful sign-in confirmed creation; no retry signup.
+- Dry-run deploy passes. Actual deployment/Git completion still pending.

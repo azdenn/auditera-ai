@@ -446,6 +446,10 @@ body{background:var(--bg);}
         </p>
       </div>
 
+    <div class="signin-card hidden" id="account-load-state" role="status" aria-live="polite">
+      <p id="account-load-message"></p>
+      <button class="btn-primary hidden" id="account-load-retry" type="button">Retry loading properties</button>
+    </div>
     <div class="signedin-panel hidden" id="signedin-panel">
       <div class="signedin-top">
         <div>Signed in as <b id="signedin-email"></b></div>
@@ -1562,18 +1566,38 @@ async function startCheckout(btn){
   window.location.href = payload.url;
 }
 
-// Decide which of the three states this account is in: needs onboarding,
-// or ready to work. Called after any sign-in and on page load.
+// A failed lookup is not an empty account. Do not offer onboarding or use stale
+// licences until a successful read establishes the current property state.
+let accountLoadRevision = 0;
 async function refreshAccountState(){
   const onboarding = document.getElementById('onboarding-card');
   const panel = document.getElementById('signedin-panel');
   if (!sb || !isSignedIn) return;
+  const revision = ++accountLoadRevision;
+  const loadState = document.getElementById('account-load-state');
+  const loadMessage = document.getElementById('account-load-message');
+  const retry = document.getElementById('account-load-retry');
+  licensedProperties = [];
+  onboarding.classList.add('hidden');
+  panel.classList.add('hidden');
+  signedoutView.classList.add('hidden');
+  loadState.classList.remove('hidden');
+  loadMessage.textContent = 'Loading your properties…';
+  retry.classList.add('hidden');
 
-  let props = [];
+  let props;
   try {
     const { data, error } = await sb.from('properties').select('name, address, status, trial_ends_at');
-    if (!error && Array.isArray(data)) props = data;
-  } catch(e){ /* treated as "none", which shows onboarding rather than a dead dashboard */ }
+    if (error || !Array.isArray(data)) throw new Error('Property lookup unavailable');
+    props = data;
+  } catch(e){
+    if (revision !== accountLoadRevision || !isSignedIn) return;
+    loadMessage.textContent = 'We could not load your properties. This does not mean your account is empty. Please try again.';
+    retry.classList.remove('hidden');
+    return;
+  }
+  if (revision !== accountLoadRevision || !isSignedIn) return;
+  loadState.classList.add('hidden');
 
   licensedProperties = props
     .filter(function(p){ return p.status === 'active' || p.status === 'trialing'; })
@@ -1591,6 +1615,7 @@ async function refreshAccountState(){
     renderDashboard(props);
   }
 }
+document.getElementById('account-load-retry').addEventListener('click', refreshAccountState);
 
 const onboardingForm = document.getElementById('onboarding-form');
 if (onboardingForm){
@@ -1644,6 +1669,8 @@ showSignedIn = function(username, property){
 };
 const _origShowSignedOut = showSignedOut;
 showSignedOut = function(){
+  ++accountLoadRevision;
+  document.getElementById('account-load-state').classList.add('hidden');
   _origShowSignedOut();
   const onboarding = document.getElementById('onboarding-card');
   if (onboarding) onboarding.classList.add('hidden');
@@ -1668,7 +1695,7 @@ if (/[?&]start=trial\b/.test(location.search) && !inPasswordRecovery && !AUTH_UR
     note.classList.remove('hidden');
     if (outcome === 'success'){
       note.className = 'checkout-note ok';
-      note.textContent = 'Payment received. Your properties are switching over to active now — this can take a few seconds to show below.';
+      note.textContent = 'Checkout completed. Your billing status is being confirmed — this can take a few seconds. If a trial applies, billing starts at its agreed end.';
     } else {
       note.className = 'checkout-note info';
       note.textContent = 'Checkout was cancelled. Nothing was charged and nothing changed.';

@@ -12,6 +12,9 @@
   "dependencies": {
     "fflate": "^0.8.3",
     "pdfjs-dist": "^3.11.174",
-    "xlsx": "^0.18.5"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
   }
 }

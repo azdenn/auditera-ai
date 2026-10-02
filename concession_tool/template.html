@@ -393,6 +393,7 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
 
 <!--RR_PROPERTY_NAME-->
 <!--AUDIT_GATE-->
+<!--CSV_EXPORT-->
 <script>
 /* =========================================================================
    PDF.js worker note: pdf.worker.min.js is loaded above as a plain executing
@@ -770,7 +771,7 @@ async function parseLeasePdf(file){
   return parseLeasePdfFromBuffer(new Uint8Array(buf));
 }
 async function parseLeasePdfFromBuffer(bytes){
-  const doc = await pdfjsLib.getDocument({data: bytes}).promise;
+  const doc = await pdfjsLib.getDocument({data: bytes, isEvalSupported: false}).promise;
   let targetText = null;
   // The whole document is kept as well as the charges page: a move-in
   // concession is usually written into a special-provisions or addendum
@@ -1508,7 +1509,7 @@ function ledgerPdfNum(s){
 // column detection possible). Pages are concatenated in order so a table
 // that continues onto page 4 is just more lines.
 async function ledgerPdfLines(bytes){
-  const doc = await pdfjsLib.getDocument({data: bytes}).promise;
+  const doc = await pdfjsLib.getDocument({data: bytes, isEvalSupported: false}).promise;
   const out = [];
   for (let p = 1; p <= doc.numPages; p++){
     const page = await doc.getPage(p);
@@ -3611,7 +3612,7 @@ function buildExportRows(){
 document.getElementById('export-csv-btn').addEventListener('click', () => {
   const rows = buildExportRows();
   const header = ['Unit','Resident','Status','Problem'];
-  const csv = [header.join(',')].concat(rows.map(r => header.map(h => '"' + String(r[h]).replace(/"/g,'""') + '"').join(','))).join('\n');
+  const csv = [header.map(AuditCSV.escapeCell).join(',')].concat(rows.map(r => header.map(h => AuditCSV.escapeCell(r[h])).join(','))).join('\n');
   const blob = new Blob([csv], {type:'text/csv'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'concession_mismatches.csv'; a.click();
 });

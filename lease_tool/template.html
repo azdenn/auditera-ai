@@ -557,6 +557,7 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
 <!--PROPERTY_ASSISTANT-->
 <!--RR_PROPERTY_NAME-->
 <!--AUDIT_GATE-->
+<!--CSV_EXPORT-->
 <script>
 /* =========================================================================
    PDF.js worker note: pdf.worker.min.js is loaded above as a plain executing
@@ -2807,7 +2808,7 @@ function looksLikeNotOurLeaseFormat(errMsg){
 }
 
 async function parseLeasePdfFromBuffer(buf){
-  const doc = await pdfjsLib.getDocument({data: new Uint8Array(buf)}).promise;
+  const doc = await pdfjsLib.getDocument({data: new Uint8Array(buf), isEvalSupported: false}).promise;
   let targetText = null;
   const allLines = []; // accumulated across every page, in document order
   const pageRecords = []; // {pageNum, width, height, lines:[{y,text,items}]} -- used by verification checks below
@@ -7874,8 +7875,8 @@ document.getElementById('export-csv-btn').addEventListener('click', () => {
   const rows = buildExportRows();
   if (!rows.length){ alert('No mismatches to export.'); return; }
   const headers = Object.keys(rows[0]);
-  const csvEscape = v => { const s = (v===null||v===undefined) ? '' : String(v); return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; };
-  const csv = [headers.join(',')].concat(rows.map(r => headers.map(h=>csvEscape(r[h])).join(','))).join('\n');
+  const csvEscape = AuditCSV.escapeCell;
+  const csv = [headers.map(csvEscape).join(',')].concat(rows.map(r => headers.map(h=>csvEscape(r[h])).join(','))).join('\n');
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);

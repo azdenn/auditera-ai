@@ -100,7 +100,7 @@ function paRender(remaining){
   const box=document.getElementById('property-assistant');box.replaceChildren();
   box.classList.remove('hidden');
   paElement('h2','Property assistant · local preview',box);
-  const intro=paElement('p','Testing pilot: guided questions and a limited local interpreter—not a hosted AI chatbot. Documents and explanations stay in this browser. Only approved conventions can be remembered here.',box);
+  const intro=paElement('p','Local preview: guided questions and a limited local interpreter—not a hosted AI chatbot. Documents and explanations stay in this browser. Only approved conventions can be remembered here.',box);
   intro.style.lineHeight='1.6';
   if(!PA.pending){
     PA.finished=true;
@@ -250,7 +250,7 @@ function paPreview(rule,questionKeys){
   const label=paElement('label',null,panel);label.style.display='block';
   const remember=paElement('input',null,label);remember.type='checkbox';remember.id='pa-remember';
   remember.disabled=!PA.storageKey||PA.storageError;
-  label.appendChild(document.createTextNode(' Remember for this property and signed-in user, on this browser only (testing).'));
+  label.appendChild(document.createTextNode(' Remember for this property and signed-in user, on this browser only.'));
   if(remember.disabled)paElement('p','Browser memory is unavailable for this session. You may apply the convention for this run only.',panel);
   paButton('Approve and rerun checks',()=>paApprove(),panel);
   panel.scrollIntoView({block:'nearest'});
@@ -302,10 +302,10 @@ function paForgetRule(id){
   PA.finished=true;PA.preview=null;reconcileAll();
 }
 function paRenderReadOnlyRules(wrap){
-  if(!PropertyAssistant.isTesting(location.origin))return false;
+  if(!PropertyAssistant.canPilot(location.origin))return false;
   wrap.classList.remove('hidden');
-  paElement('h3','Property conventions · testing',wrap);
-  paElement('p','Shared live conventions are read-only here. Local pilot conventions never change production or another user’s settings.',wrap);
+  paElement('h3','Property conventions · local preview',wrap);
+  paElement('p','Shared conventions are read-only here. Browser conventions apply only to this signed-in user and property on this site; they do not change shared settings or another user’s settings.',wrap);
   if(AG_RULES_LOAD_ERROR)paElement('p','Shared saved conventions could not be loaded; unavailable conventions were not applied.',wrap).setAttribute('role','alert');
   if(PA && PA.skippedDrafts)paElement('p',PA.skippedDrafts+' browser convention(s) were not applied because another saved convention already uses the same charge labels. Forget the local pilot conventions before replacing them.',wrap).setAttribute('role','alert');
   for(const row of PROPERTY_RULES){

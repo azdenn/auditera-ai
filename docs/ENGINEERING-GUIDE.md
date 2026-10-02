@@ -41,7 +41,7 @@ printed-line rejection and regression tests for unsigned documents.
 
 ## Local assistant memory
 
-The pilot runs on testing/local origins, not production. It stores compact approved
+The owner-approved local preview runs on production, testing and local origins. It stores compact approved
 alias, includes and separate conventions by origin, signed-in user and property.
 Separate is a local constraint, not a shared/backend schema extension. Unknown
 answers create no persistent rule. No raw conversation or document evidence is stored.

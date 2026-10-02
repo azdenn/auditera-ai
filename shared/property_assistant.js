@@ -9,7 +9,10 @@ var PropertyAssistant = (function(){
   };
   const hosts = new Set(['https://testing.auditera.net','https://auditera-testing.azden-kumar.workers.dev']);
   function isTesting(origin){ return hosts.has(origin); }
-  function canPilot(origin){ return isTesting(origin) || origin === 'null' || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin); }
+  // Owner-approved production rollout. This enables only the local interpreter;
+  // authentication and property licensing still run through the existing gate.
+  const liveHosts = new Set(['https://auditera.net','https://www.auditera.net']);
+  function canPilot(origin){ return liveHosts.has(origin) || isTesting(origin) || origin === 'null' || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin); }
   function ruleLabels(r){
     return r ? [r.target,r.subject,r.rentRollLabel,...(Array.isArray(r.spellings)?r.spellings:[]),
       ...(Array.isArray(r.leaseLabels)?r.leaseLabels:[])].filter(x=>typeof x==='string') : [];

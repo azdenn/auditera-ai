@@ -4,6 +4,7 @@ const {spawnSync} = require('node:child_process');
 const path = require('node:path');
 const root = __dirname;
 const tests = [
+  'shared/test_document_security.cjs',
   'shared/test_build.cjs', 'shared/test_review_repairs.cjs',
   'shared/test_property_assistant.cjs', 'shared/test_assistant_browser.cjs',
   'shared/test_assistant_memory.cjs', 'shared/test_assistant_review_page.cjs',

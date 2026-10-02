@@ -9,11 +9,12 @@ const check=(name,fn)=>{fn();console.log('PASS '+name);n++;};
   try{
     const page=await browser.newPage(),errors=[],writes=[];
     page.on('pageerror',e=>errors.push(e.message));
-    await page.route('https://testing.auditera.net/memory-test',r=>r.fulfill({contentType:'text/html',body:fs.readFileSync(path.join(__dirname,'../dist/tools/leaseverify.html'),'utf8')}));
+    const origin=process.env.AUDITERA_ASSISTANT_TEST_ORIGIN||'https://testing.auditera.net';
+    await page.route(origin+'/memory-test',r=>r.fulfill({contentType:'text/html',body:fs.readFileSync(path.join(__dirname,'../dist/tools/leaseverify.html'),'utf8')}));
     await installGateStub(page,{allowed:true,verdict:'allowed',property:{id:'synthetic-memory'}});
     await page.route('**/rest/v1/property_rules*',r=>{if(r.request().method()!=='GET')writes.push(r.request().method());return r.fulfill({contentType:'application/json',body:'[]'});});
     const token='x.'+Buffer.from(JSON.stringify({sub:'synthetic-user'})).toString('base64url')+'.x';
-    await page.goto('https://testing.auditera.net/memory-test#tk='+token);
+    await page.goto(origin+'/memory-test#tk='+token);
     async function seed(allSeparate=false){
       return page.evaluate(async allSeparate=>{
         await agAuthorizeAudit('leaseverify','Synthetic Memory Property','');
