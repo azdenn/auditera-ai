@@ -625,4 +625,12 @@ separate privacy/data contract and budget; broader launch risks remain in the re
   properties; all3 tool downloads/property gates pass without developer bypass.
   Verification login was ended. Initial terminal shutdown asserted after signup;
   database readback and a fresh successful sign-in confirmed creation; no retry signup.
-- Dry-run deploy passes. Actual deployment/Git completion still pending.
+- Dry-run deploy passes. Deployed testing f47e40b8-3276-44e4-927d-8466b11b0412,
+  verified exact manifest/dashboard, noindex and unauthenticated401. Then deployed
+  production e69a461f-a6f2-4639-9945-5c13fb831bf0. Production manifest/dashboard/home
+  match source bytes; all3 unauthenticated tool gates return401; connector asset404.
+  Repeated real account sign-in: exact bytes for all3 licensed production downloads,
+  isolated3 properties and all3 property-authorizations pass; test session ended.
+- Atomic nonforced Git push published application commit d6314be to main/testing;
+  git ls-remote confirmed both exact refs. This documentation-only follow-up preserves
+  evidence without requiring a second deployment. Canonical dirty work remains intact.

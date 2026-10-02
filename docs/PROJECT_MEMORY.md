@@ -23,10 +23,16 @@ It is maintained external memory for development, not a model-training system.
   created/verified in the existing backend. Authenticated checks verify isolation,
   entitlement, three production tool downloads and all three property matches.
   No password, customer identifiers or resident documents are stored here.
-- Deployment and Git publication still pending; record verified completion below
-  before treating this candidate as live. Main rollback version:
+- DEPLOYED and verified October2: main Worker e69a461f-a6f2-4639-9945-5c13fb831bf0;
+  testing Worker f47e40b8-3276-44e4-927d-8466b11b0412. Both remote Git branches
+  verified at application commit d6314be before this documentation-only follow-up.
+  Live manifest/dashboard/home bytes match; authenticated downloads match all three
+  built tools; anonymous downloads denied. Testing noindex retained; production
+  not noindexed; unfinished connector asset returns404. Main rollback version:
   1fbe1f7d-94f9-421e-b6fb-169f08f404b2; testing rollback:
   9895a4bf-468c-4b6e-9c2f-10dd3d933616.
+- Next: owner/customer acceptance. Keep canonical dirty local automation and billing
+  work separate; reconcile it against this release before any later deployment.
 
 Earlier testing-only milestones below are historical, not current release policy.
 
