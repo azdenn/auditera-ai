@@ -5,7 +5,7 @@ const ROOT=path.resolve(__dirname,'..'), ORIGIN='https://testing.auditera.net', 
 const uid='10000000-0000-0000-0000-000000000001',account='20000000-0000-0000-0000-000000000001',property='30000000-0000-0000-0000-000000000001',propertyB='30000000-0000-0000-0000-000000000002';
 const activeSid='40000000-0000-0000-0000-000000000001',requests=[];
 const sdk=fs.readFileSync(path.join(ROOT,'lease_tool/node_modules/@supabase/supabase-js/dist/umd/supabase.js'),'utf8');
-let revoked=false;
+let revoked=false, auditDecision={allowed:true,verdict:'allowed',property:{id:property,name:'Example Apartments'}};
 function session(userId=uid){const now=Math.floor(Date.now()/1000),user={id:userId,email:'invented@example.invalid',aud:'authenticated',role:'authenticated',created_at:'2026-01-01T00:00:00Z',app_metadata:{},user_metadata:{}};return {access_token:'e30.'+Buffer.from(JSON.stringify({sub:userId,session_id:activeSid,exp:now+3600,iat:now,role:'authenticated'})).toString('base64url')+'.synthetic',refresh_token:'synthetic-refresh-token',expires_at:now+3600,expires_in:3600,token_type:'bearer',user};}
 async function routes(context){
  await context.route('**/*',async route=>{
@@ -22,7 +22,7 @@ async function routes(context){
   if(u.pathname==='/rest/v1/rpc/has_active_licence')return answer(true);
   if(u.pathname==='/rest/v1/login_events')return answer({});
   if(u.pathname==='/rest/v1/property_rules')return answer([]);
-  if(u.pathname==='/functions/v1/authorize-audit')return answer({allowed:true,verdict:'allowed',property:{id:property,name:'Example Apartments'}});
+  if(u.pathname==='/functions/v1/authorize-audit')return answer(auditDecision);
   if(u.pathname==='/functions/v1/record-run-outcome')return answer({ok:true});
   throw new Error('Unexpected synthetic network endpoint '+u.pathname);
  });
@@ -87,11 +87,70 @@ async function routes(context){
     console.log('PASS '+name+' live dashboard launch, save, open, unit details and reload (mocked provider).');
     await page.close();
   }
+  // Exercise the normal upload and Process path. The gate can legitimately
+  // allow a developer audit without returning a property id.
+  const XLSX=require('../lease_tool/node_modules/xlsx');
+  const [run]=await Promise.all([context.waitForEvent('page'),dashboard.locator('button[onclick="launchTool(\'deposit\')"]').click()]);
+  await run.waitForURL('blob:**');
+  function roll(building,occupied){
+    const rows=[[building],['Rent Roll'],['Unit','Description','Amount','Residents','Status','Deposits'],
+      ['101','Rent',900,occupied?'Synthetic Tester':'Vacant',occupied?'Current':'Vacant',500]];
+    const book=XLSX.utils.book_new();XLSX.utils.book_append_sheet(book,XLSX.utils.aoa_to_sheet(rows),'Rent Roll');
+    return {name:'rent.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:XLSX.write(book,{type:'buffer',bookType:'xlsx'})};
+  }
+  await run.setInputFiles('#invoice-file',{name:'invoice.csv',mimeType:'text/csv',buffer:Buffer.from('Unit,Amount\n101,20\n')});
+  auditDecision={allowed:true,verdict:'dev',property:null};
+  await run.setInputFiles('#rentroll-file',roll('Example Apartments',true));
+  await run.locator('#process-btn').click();await run.locator('#results-card').waitFor();
+  await run.getByLabel('Report name').fill('Completed upload');await run.getByRole('button',{name:'Save report',exact:true}).click();
+  await run.getByRole('button',{name:'Saved',exact:true}).waitFor({timeout:3000}).catch(async()=>{throw Error('Completed upload: '+await run.locator('.save-report-bar [role=status]').innerText())});
+  await dashboard.reload();await dashboard.getByRole('button',{name:'Open report: Completed upload',exact:true}).click();
+  await dashboard.frameLocator('.saved-reader iframe').getByText('101 · Synthetic Tester',{exact:true}).waitFor();
+  await dashboard.getByRole('button',{name:'Back to dashboard'}).click();
+  // A completed, vacant-only rent roll is a valid zero-unit snapshot.
+  auditDecision={allowed:true,verdict:'allowed',property:{id:property,name:'Example Apartments'}};
+  await run.setInputFiles('#invoice-file',{name:'empty.csv',mimeType:'text/csv',buffer:Buffer.from('Unit,Amount\n')});
+  await run.setInputFiles('#rentroll-file',roll('Example Apartments',false));
+  await run.locator('#process-btn').click();await run.locator('#results-card').waitFor();
+  assert.equal(await run.evaluate(()=>unitEntries.length),0);
+  await run.getByLabel('Report name').fill('Empty completed audit');await run.getByRole('button',{name:'Save report',exact:true}).click();
+  await run.getByRole('button',{name:'Saved',exact:true}).waitFor();
+
+  // An unrelated building must never be filed under an existing licence.
+  auditDecision={allowed:true,verdict:'dev',property:null};
+  await run.setInputFiles('#rentroll-file',roll('Other Synthetic Building',true));
+  await run.locator('#process-btn').click();await run.locator('#results-card').waitFor();
+  await run.getByRole('button',{name:'Save report',exact:true}).click();
+  const pending=run.waitForEvent('download');
+  await run.getByRole('button',{name:'Download report copy'}).click();
+  const downloaded=await pending;
+  const downloadBody=fs.readFileSync(await downloaded.path(),'utf8');
+  assert(downloadBody.includes('Synthetic Tester'));assert(downloadBody.includes('Content-Security-Policy'));
+  assert(!/<script\b/i.test(downloadBody));
+  await dashboard.reload();assert.equal(await dashboard.locator('#saved-reports .saved-row').filter({hasText:'Other Synthetic Building'}).count(),0);
+  await run.close();
+  const documentPage=await context.newPage();
+  await documentPage.setContent('<h1>Example Apartments</h1><p>Unit: 101</p><p>Resident: Synthetic Tester</p><p>Monthly rent $900.00</p>');
+  const documentBytes=await documentPage.pdf();await documentPage.close();
+  for(const [key,input] of [['reconciler','#lease-files'],['concession','#ledger-files']]){
+    const [toolPage]=await Promise.all([context.waitForEvent('page'),dashboard.locator('button[onclick="launchTool(\''+key+'\')"]').click()]);
+    await toolPage.waitForURL('blob:**');
+    await toolPage.setInputFiles(input,{name:'101 Synthetic.pdf',mimeType:'application/pdf',buffer:documentBytes});
+    await toolPage.setInputFiles('#rentroll-file',roll('Example Apartments',true));
+    await toolPage.locator('#process-btn').click();
+    await toolPage.locator('#results-card').waitFor({timeout:10000}).catch(async()=>{throw Error(key+': '+await toolPage.locator('#parse-status').textContent())});
+    await toolPage.getByLabel('Report name').fill(key+' processed');
+    await toolPage.getByRole('button',{name:'Save report',exact:true}).click();
+    await toolPage.getByRole('button',{name:'Saved',exact:true}).waitFor({timeout:3000});
+    await dashboard.reload();await dashboard.getByRole('button',{name:'Open report: '+key+' processed',exact:true}).click();
+    await dashboard.frameLocator('.saved-reader iframe').getByRole('heading',{name:'Unit details'}).waitFor();
+    await dashboard.getByRole('button',{name:'Back to dashboard'}).click();await toolPage.close();
+  }
   await dashboard.goto(ORIGIN+'/');await dashboard.goBack();await dashboard.locator('#saved-reports .saved-row').first().waitFor();
-  assert.equal(await dashboard.locator('#saved-reports .saved-row').count(),15);
+  assert.equal(await dashboard.locator('#saved-reports .saved-row').count(),19);
   await dashboard.evaluate(()=>{for(const k of Object.keys(localStorage))if(k.startsWith('auditera.activity.v1:'))localStorage.setItem(k,JSON.stringify({last:Date.now()-21600001}));});
   await dashboard.reload();await dashboard.locator('#login-form').waitFor();assert.equal(await dashboard.locator('#saved-reports').count(),0);
   assert.deepEqual(errors,[]);assert(!requests.some(r=>r.body.includes('Sample resident')||r.body.includes('Review the monthly charge')));
-  console.log('PASS Back, fifteen saved snapshots, idle lock, local-only report contents and no page errors.');
+  console.log('PASS Back, nineteen saved snapshots, idle lock, local-only report contents and no page errors.');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

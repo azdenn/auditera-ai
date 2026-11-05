@@ -354,7 +354,7 @@ async function agAuthorizeAudit(tool, detectedName, detectedAddress){
        that just vanishes in that case looks broken. */
     AG_VERDICT = payload.verdict || null;
     AG_OPEN_RUN = tool;
-    if (typeof SavedReports !== 'undefined') SavedReports.authorized(AG_PROPERTY, AG_TOKEN);
+    if (typeof SavedReports !== 'undefined') SavedReports.authorized(AG_PROPERTY, AG_TOKEN, detectedName);
     return true;
   }
 

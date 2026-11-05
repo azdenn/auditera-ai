@@ -1992,7 +1992,7 @@ async function agAuthorizeAudit(tool, detectedName, detectedAddress){
        that just vanishes in that case looks broken. */
     AG_VERDICT = payload.verdict || null;
     AG_OPEN_RUN = tool;
-    if (typeof SavedReports !== 'undefined') SavedReports.authorized(AG_PROPERTY, AG_TOKEN);
+    if (typeof SavedReports !== 'undefined') SavedReports.authorized(AG_PROPERTY, AG_TOKEN, detectedName);
     return true;
   }
 
@@ -2218,10 +2218,17 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   function active(p) {
     return p.status === 'active' || (p.status === 'trialing' && Date.parse(p.trial_ends_at) > Date.now());
   }
+  // A local index for filing already-authorized snapshots. Only the server
+  // grants audit access, and opening a report still checks its property live.
+  const filingIndex='auditera.report-filing.v1';
+  const nameKey=value=>String(value || '').trim().replace(/\s+/g,' ').toLowerCase();
+  function belongs(row,p) {
+    return active(p) && p.id===row.propertyId && (!row.filingName || nameKey(p.name)===row.filingName);
+  }
   function dismiss() {
     if (dialog) { dialog.close(); dialog.remove(); dialog = null; }
   }
-  api.closeDashboard = () => { ++dashboardVersion; dismiss(); host?.remove(); host = null; };
+  api.closeDashboard = () => { ++dashboardVersion; try {localStorage.removeItem(filingIndex);} catch {} dismiss(); host?.remove(); host = null; };
   function message(node, text) { node.textContent = text; }
   function date(ms) {
     return new Date(ms).toLocaleString(undefined,{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
@@ -2324,6 +2331,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const version = ++dashboardVersion;
     const identity = await session.check().catch(() => null);
     if (version !== dashboardVersion || !identity || !isSignedIn) return;
+    try {
+      localStorage.setItem(filingIndex,JSON.stringify({
+        owner:identity.user.id,sid:AuditSession.sessionId(identity.accessToken),
+        properties:properties.filter(active).map(p=>({id:p.id,name:p.name}))
+      }));
+    } catch {} // A restricted browser can still save a server-bound report.
     if (!host) {
       host = el('section'); host.className = 'saved-reports'; host.id = 'saved-reports';
       document.querySelector('#signedin-panel .signedin-top').after(host);
@@ -2339,7 +2352,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if (!list) return message(note,'Your browser could not open saved reports. Reload this page to try again.');
     const ids = new Set(properties.filter(active).map(p=>p.id));
     if (dialog && !ids.has(dialog.dataset.propertyId)) dismiss();
-    const rows = list.filter(r=>ids.has(r.propertyId)).sort((a,b)=>b.when-a.when);
+    const rows = list.filter(r=>properties.some(p=>belongs(r,p))).sort((a,b)=>b.when-a.when);
     message(note,rows.length ? 'Saved in this browser. Open a report to view it.' : 'After an audit, choose Save report. You’ll find it here in this browser.');
     for (const row of rows) {
       const line = el('div','',panel); line.className = 'saved-row';
@@ -2350,8 +2363,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         try {
           const user = await session.check();
           if (!stillHere() || user?.user.id !== row.owner) return;
-          const {data,error} = await client.from('properties').select('id,status,trial_ends_at').eq('id',row.propertyId);
-          if (error || !data?.some(p => p.id === row.propertyId && active(p))) throw Error('Access to this property could not be confirmed. Reload and try again.');
+          const {data,error} = await client.from('properties').select('id,name,status,trial_ends_at').eq('id',row.propertyId);
+          if (error || !data?.some(p=>belongs(row,p))) throw Error('Access to this property could not be confirmed. Reload and try again.');
           const report = await transaction('readonly',(_,reports)=>reports.get(row.id));
           if (!stillHere()) return;
           if (!report || report.owner !== row.owner || report.propertyId !== row.propertyId) throw Error('This report is unavailable. Reload and try again.');
@@ -2368,8 +2381,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     }
     if(location.hash==='#saved-reports') panel.scrollIntoView({block:'center'});
   };
-  api.authorized = (property,token) => {
-    binding=property?.id && token ? {property,sid:AuditSession.sessionId(token)} : null;
+  api.authorized = (property,token,detectedName) => {
+    binding=token ? {property,detectedName,sid:AuditSession.sessionId(token)} : null;
     saveState?.reset();
   };
   api.tool = function(tool, makeReport, entries, detail) {
@@ -2391,17 +2404,36 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const scopeField=el('label','What to save',panel), scope=el('select','',scopeField);
     for (const [key,label] of Object.entries(scopes)) el('option',label,scope).value=key;
 
+    function propertyFor(run,owner) {
+      if(run.property?.id) return run.property;
+      const detected=nameKey(run.detectedName);
+      if(!detected) return null;
+      let cached;
+      try {cached=JSON.parse(localStorage.getItem(filingIndex));} catch {return null;}
+      if(cached?.owner!==owner || cached.sid!==run.sid || !Array.isArray(cached.properties)) return null;
+      const matches=cached.properties.filter(p=>p.id && nameKey(p.name)===detected);
+      return matches.length===1 ? matches[0] : null;
+    }
     const save=action('Save report',panel,async()=>{
       const run=binding;
-      if (!run || !entries()?.length || card.classList.contains('hidden') || (typeof paPending==='function' && paPending())) return message(note,'Finish this audit before saving.');
+      if (card.classList.contains('hidden') || (typeof paPending==='function' && paPending())) return message(note,'Save is available when results are displayed.');
+      if (!run) return message(note,'The sign-in for these results could not be verified. Open the tool from your dashboard and run the audit again.');
       save.disabled=true; scope.disabled=true; name.disabled=true;
       try {
         const identity=await policy.check();
         if (!identity || !run.sid || run.sid!==launchId || AuditSession.sessionId(identity.accessToken)!==launchId || binding!==run) throw Error('Reopen this tool from your dashboard to save.');
-        const html=snapshot(scope.value,tool,run.property.name,card,entries(),detail,makeReport);
-        const when=Date.now(), id=crypto.randomUUID(), owner=identity.user.id, propertyId=run.property.id;
+        const property=propertyFor(run,identity.user.id);
+        if(binding!==run || policy.state().locked) return;
+        if(!property){
+          download.hidden=false;
+          message(note,'Your report is ready. Its property could not be linked to one licence. Download a copy to reopen on this device.');
+          save.disabled=false;
+          return;
+        }
+        const html=snapshot(scope.value,tool,property.name,card,entries(),detail,makeReport);
+        const when=Date.now(), id=crypto.randomUUID(), owner=identity.user.id, propertyId=property.id;
         const title=name.value.trim() || defaultName();
-        const meta={id,owner,propertyId,property:run.property.name||'Property',name:title,tool,when,scope:scope.value};
+        const meta={id,owner,propertyId,property:property.name||'Property',name:title,tool,when,scope:scope.value,filingName:run.property?.id ? null : nameKey(run.detectedName)};
         await transaction('readwrite',(titles,reports)=>{titles.add(meta);reports.add({owner,propertyId,html},id);});
         if(binding!==run)return;
         save.textContent='Saved'; message(note,'Saved. Find it under Saved reports on your dashboard.'); link.hidden=false;
@@ -2410,8 +2442,23 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     });
     const note=el('span','',panel); note.setAttribute('role','status');
     const link=el('a','View saved reports',panel);link.href=location.origin+'/app#saved-reports';link.hidden=true;
+    const download=action('Download report copy',panel,async()=>{
+      const run=binding;
+      if(!run || card.classList.contains('hidden') || (typeof paPending==='function' && paPending())) return;
+      download.disabled=true;
+      try {
+        const identity=await policy.check();
+        if(binding!==run || !identity || !launchId || run.sid!==launchId || AuditSession.sessionId(identity.accessToken)!==launchId) throw Error('Reopen this tool from your dashboard.');
+        const html=snapshot(scope.value,tool,run.detectedName||'Property',card,entries(),detail,makeReport);
+        const url=URL.createObjectURL(new Blob([viewer(html)],{type:'text/html'}));
+        const anchor=el('a'); anchor.href=url; anchor.download=(name.value.trim() || tool)+'.html'; anchor.click();
+        setTimeout(()=>URL.revokeObjectURL(url),60000);
+        message(note,'Open the downloaded HTML file to view your report.');
+      } catch(error) { message(note,error.message); }
+      finally {download.disabled=false;}
+    });
     function defaultName(){return tool+' · '+new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});}
-    function ready(){save.disabled=false;save.textContent='Save report';link.hidden=true;message(note,'Save now or keep reviewing and save later.');}
+    function ready(){download.hidden=true;save.disabled=false;save.textContent='Save report';link.hidden=true;message(note,'Save now or keep reviewing and save later.');}
     scope.addEventListener('change',ready); name.addEventListener('input',ready);
     const changes=new MutationObserver(()=>{
       if(scope.value==='view' && link.hidden===false) ready();
@@ -2419,7 +2466,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     for(const shell of card.querySelectorAll('.results-shell')) changes.observe(shell,{attributes:true,childList:true,subtree:true});
     saveState={reset(){scope.value='all';name.value=defaultName();ready();}};
     saveState.reset();
-    document.getElementById('process-btn').addEventListener('click',()=>{binding=null;saveState.reset();},{capture:true});
+    document.getElementById('process-btn').addEventListener('click',()=>{binding=null;card.classList.add('hidden');saveState.reset();},{capture:true});
   };
 })();
 

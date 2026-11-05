@@ -1662,8 +1662,9 @@ function wireDropZone(dropEl, inputEl){
 wireDropZone(document.getElementById('drop-invoice'), document.getElementById('invoice-file'));
 wireDropZone(document.getElementById('drop-rentroll'), document.getElementById('rentroll-file'));
 
+let processingDeposit=false;
 function updateProcessBtn(){
-  document.getElementById('process-btn').disabled = !(invoiceFile && rentRollFile);
+  document.getElementById('process-btn').disabled = processingDeposit || !(invoiceFile && rentRollFile);
 }
 document.getElementById('invoice-file').addEventListener('change', e => {
   invoiceFile = e.target.files[0] || null;
@@ -1679,6 +1680,8 @@ document.getElementById('rentroll-file').addEventListener('change', e => {
 });
 
 document.getElementById('process-btn').addEventListener('click', async () => {
+  processingDeposit=true;
+  updateProcessBtn();
   const status = document.getElementById('parse-status');
   status.className = 'status-msg';
   status.textContent = 'Reading files…';
@@ -1705,6 +1708,9 @@ document.getElementById('process-btn').addEventListener('click', async () => {
   }catch(err){
     status.className = 'status-msg err';
     status.textContent = err && err.message ? err.message : String(err);
+  } finally {
+    processingDeposit=false;
+    updateProcessBtn();
   }
 });
 
