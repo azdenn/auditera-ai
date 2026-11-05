@@ -50,6 +50,31 @@ async function routes(context){
     if(preview&&key==='reconciler')await page.locator('.save-report-bar').screenshot({path:path.join(preview,'1-save.png')});
     await page.getByRole('button',{name:'Save report',exact:true}).click();
     try{await page.getByRole('button',{name:'Saved',exact:true}).waitFor({timeout:5000});}catch(e){throw Error(name+': '+await page.locator('.save-report-bar [role=status]').textContent()+' '+errors.join(' '));}
+    // One unit can contain a match, a discrepancy and an unresolved comparison.
+    await page.evaluate(name=>{
+      const entry=unitEntries[0];
+      entry.category=name==='LeaseVerify'?'mismatch':name==='DepositVerify'?'discrepancy':'issue';
+      if(name==='LeaseVerify') entry.rows=['match','mismatch','probable'].map((status,i)=>({status,label:'Scope sample '+i,leaseVal:10,resmanVal:10+i}));
+      if(name==='ConcessionVerify') entry.concession={hasConcession:true,issues:[],rows:['match','mismatch','review'].map((status,i)=>({status,item:'Scope sample '+i,expected:'10',actual:'12'}))};
+      if(name==='DepositVerify') entry.findings=['soft','flag','flag'].map((severity,i)=>({severity,label:'Scope sample '+i,note:'',facts:{},hiddenByFilter:i===2}));
+      document.querySelector('#results-body').innerHTML='<tr><td>Visible table result</td></tr>';
+    },name);
+    for(const [index,scope] of ['match','mismatch','review','view'].entries()){
+      await page.getByLabel('What to save').selectOption(scope);
+      await page.getByLabel('Report name').fill(key+' '+scope);
+      await page.getByRole('button',{name:'Save report',exact:true}).click();
+      await page.getByRole('button',{name:'Saved',exact:true}).waitFor();
+      await dashboard.reload();
+      await dashboard.getByRole('button',{name:'Open report: '+key+' '+scope,exact:true}).click();
+      const body=dashboard.frameLocator('.saved-reader iframe').locator('body');
+      if(scope==='view') await body.getByText('Visible table result',{exact:true}).waitFor();
+      else if(key==='deposit' && scope==='review') await body.getByText('No results in this category.').waitFor();
+      else await body.getByText('Scope sample '+index,{exact:false}).last().waitFor();
+      const output=await body.innerText();
+      for(let i=0;i<3;i++) if(i!==index) assert(!output.includes('Scope sample '+i),name+' leaked a different status into '+scope);
+      assert(!output.includes('Review the monthly charge'));
+      await dashboard.getByRole('button',{name:'Back to dashboard'}).click();
+    }
     await page.getByRole('link',{name:'View saved reports'}).click();await page.locator('#saved-reports .saved-row').first().waitFor();
     const open=page.getByRole('button',{name:'Open report: '+name,exact:false});
     if(preview&&key==='reconciler')await page.locator('#saved-reports').screenshot({path:path.join(preview,'2-history.png')});
@@ -63,10 +88,10 @@ async function routes(context){
     await page.close();
   }
   await dashboard.goto(ORIGIN+'/');await dashboard.goBack();await dashboard.locator('#saved-reports .saved-row').first().waitFor();
-  assert.equal(await dashboard.locator('#saved-reports .saved-row').count(),3);
+  assert.equal(await dashboard.locator('#saved-reports .saved-row').count(),15);
   await dashboard.evaluate(()=>{for(const k of Object.keys(localStorage))if(k.startsWith('auditera.activity.v1:'))localStorage.setItem(k,JSON.stringify({last:Date.now()-21600001}));});
   await dashboard.reload();await dashboard.locator('#login-form').waitFor();assert.equal(await dashboard.locator('#saved-reports').count(),0);
   assert.deepEqual(errors,[]);assert(!requests.some(r=>r.body.includes('Sample resident')||r.body.includes('Review the monthly charge')));
-  console.log('PASS Back, three saved runs, idle lock, local-only report contents and no page errors.');
+  console.log('PASS Back, fifteen saved snapshots, idle lock, local-only report contents and no page errors.');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

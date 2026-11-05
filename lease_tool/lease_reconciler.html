@@ -1345,10 +1345,7 @@ var PropertyAssistant = (function(){
   };
   const hosts = new Set(['https://testing.auditera.net','https://auditera-testing.azden-kumar.workers.dev']);
   function isTesting(origin){ return hosts.has(origin); }
-  // Owner-approved production rollout. This enables only the local interpreter;
-  // authentication and property licensing still run through the existing gate.
-  const liveHosts = new Set(['https://auditera.net','https://www.auditera.net']);
-  function canPilot(origin){ return liveHosts.has(origin) || isTesting(origin) || origin === 'null' || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin); }
+  function canPilot(origin){ return isTesting(origin) || origin === 'null' || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin); }
   function ruleLabels(r){
     return r ? [r.target,r.subject,r.rentRollLabel,...(Array.isArray(r.spellings)?r.spellings:[]),
       ...(Array.isArray(r.leaseLabels)?r.leaseLabels:[])].filter(x=>typeof x==='string') : [];
@@ -2173,7 +2170,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 .saved-row{justify-content:space-between;border-top:1px solid var(--line,#42465b);padding:12px 0}
 .saved-row strong,.saved-row small{display:block;overflow-wrap:anywhere}.saved-row small{font-size:14px;color:var(--ink-soft,#c5c9df)}
 .saved-row button,.save-report-bar button,.saved-reader button{min-height:44px;padding:9px 18px;font:600 16px/1.3 "Segoe UI",sans-serif;background:#abaaff;border:0;border-radius:9px;color:#141426;cursor:pointer}
-.save-report-bar input{display:block;font:inherit;color:inherit;background:var(--bg,#10121d);border:1px solid var(--line,#666);border-radius:7px;padding:8px;max-width:100%;min-width:0;width:245px}
+.save-report-bar select,.save-report-bar input{display:block;font:inherit;color:inherit;background:var(--bg,#10121d);border:1px solid var(--line,#666);border-radius:7px;padding:8px;max-width:100%;min-width:0;width:245px}
 .save-report-bar label{font-size:14px;font-weight:600;max-width:100%}.save-report-bar span{font-size:15px}.save-report-bar a{color:var(--ink,#eee);text-decoration:underline}.save-report-bar button:disabled{opacity:.8}
 .saved-reader{background:#fff;border:0;border-radius:12px;padding:0;width:min(960px,96vw);max-width:96vw;color:#181824}.saved-reader::backdrop{background:#141522bc}
 .saved-reader header{justify-content:space-between;padding:12px 18px;background:#202135;color:white}.saved-reader iframe{display:block;width:100%;height:75vh;border:0;background:white}
@@ -2248,7 +2245,79 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   function viewer(html) {
     // Sandbox, deny network access, and sanitize again at the storage boundary.
     return '<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'; form-action \'none\'; base-uri \'none\'"><meta name="viewport" content="width=device-width,initial-scale=1">'+
-      passive(html)+'<style>body{padding:clamp(12px,3vw,32px);overflow-wrap:anywhere}details{padding:9px 0}summary{cursor:pointer;font-weight:600}table{max-width:100%}</style>';
+      passive(html)+'<style>body{padding:clamp(12px,3vw,32px);overflow-wrap:anywhere}details{padding:9px 0}summary{cursor:pointer;font-weight:600}table{max-width:100%;border-collapse:collapse}th,td{padding:6px 9px;text-align:left;border-bottom:1px solid #ddd}body{font:15px/1.5 system-ui;color:#202334}h2{margin-top:1.4em}.details-btn{display:none}</style>';
+  }
+  const scopes = {all:'Whole report', view:'Current table view', match:'Matches only', mismatch:'Mismatches only', review:'Needs review only'};
+  const unresolved = new Set(['missing','missing_ledger','new-tenant','unmatched','error','needs-review']);
+  function detailNode(entry, detail) {
+    const node = detail(entry, true);
+    if (typeof node !== 'string') return node;
+    const template = document.createElement('template');
+    template.innerHTML = node;
+    return template.content;
+  }
+  function focusedDetail(entry, detail, scope) {
+    const section = el('section');
+    if (entry.category === 'vacant') return section;
+    if (unresolved.has(entry.category)) {
+      if (scope === 'review') el('p',entry.note || 'This unit needs a manual review.',section);
+      return section;
+    }
+    const root = detailNode(entry,detail);
+    const statuses = {Match:'match',Mismatch:'mismatch',Review:'review','Unable to verify':'review'};
+    // Reuse the audit's displayed decisions and the evidence on the same row.
+    // Supporting tables (raw charges, candidates, etc.) have no result status.
+    for (const table of root.querySelectorAll('.verify-card table.results')) {
+      const selected = Array.from(table.tBodies[0]?.rows || []).filter(row =>
+        statuses[row.cells[row.cells.length-1]?.querySelector('.badge')?.textContent.trim()] === scope);
+      if (!selected.length) continue;
+      const copy = el('table','',section);
+      if (table.tHead) copy.append(table.tHead.cloneNode(true));
+      copy.createTBody().append(...selected);
+    }
+    for (const item of root.querySelectorAll('.verify-item,.finding')) {
+      const status = item.dataset.snapshotStatus || statuses[item.querySelector('.badge')?.textContent.trim()];
+      if (status === scope) section.append(item);
+    }
+    for (const issue of entry.concession?.issues || []) {
+      if ((issue.severity === 'bad' ? 'mismatch' : issue.severity === 'warn' ? 'review' : '') === scope &&
+          issue.text && !section.textContent.includes(issue.text)) el('p',issue.text,section);
+    }
+    return section;
+  }
+  function snapshot(scope,tool,property,card,entries,detail,makeReport) {
+    const section=el('section');
+    if (scope === 'all') {
+      el('h2','Unit details',section);
+      for (const entry of entries) {
+        const group=el('details','',section);
+        el('summary',[entry.unit,entry.residents].filter(Boolean).join(' · '),group);
+        group.append(detailNode(entry,detail));
+      }
+      return passive(makeReport()+section.outerHTML);
+    }
+    el('h1',scopes[scope],section);
+    el('p',[property,tool,date(Date.now())].join(' · '),section);
+    if (scope === 'view') {
+      const shell=card.querySelector('.results-shell:not(.hidden)');
+      if (!shell) throw Error('Open the results table before saving this view.');
+      const activeFilter=card.querySelector('#filter-tabs .active')?.firstChild?.textContent.trim();
+      if (shell.id === 'flat-view-shell') el('p','Mismatching lines across units',section);
+      else if (activeFilter) el('p','Filter: '+activeFilter,section);
+      const copy=shell.cloneNode(true);
+      for (const control of copy.querySelectorAll('.hidden,[hidden],.details-btn,.help-tip,button')) control.remove();
+      section.append(copy);
+    } else {
+      let count=0;
+      for (const entry of entries) {
+        const part=focusedDetail(entry,detail,scope);
+        if (!part.childElementCount) continue;
+        el('h2',[entry.unit,entry.residents].filter(Boolean).join(' · '),section);
+        section.append(part); count++;
+      }
+      if (!count) el('p','No results in this category.',section);
+    }
+    return passive(section.outerHTML);
   }
   api.dashboard = async function(client, session, properties) {
     if (!client || !session) return;
@@ -2275,7 +2344,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     for (const row of rows) {
       const line = el('div','',panel); line.className = 'saved-row';
       const label = el('div','',line); el('strong',row.name,label);
-      el('small',[row.property,row.tool,date(row.when)].join(' · '),label);
+      el('small',[row.property,row.tool,scopes[row.scope] || scopes.all,date(row.when)].join(' · '),label);
       const open = action('Open report',line,async () => {
         open.disabled = true;
         try {
@@ -2287,7 +2356,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           if (!stillHere()) return;
           if (!report || report.owner !== row.owner || report.propertyId !== row.propertyId) throw Error('This report is unavailable. Reload and try again.');
           dismiss(); dialog = el('dialog','',document.body); dialog.className='saved-reader'; dialog.dataset.propertyId=row.propertyId;
-          const bar=el('header','',dialog); el('strong',row.name,bar);
+          const bar=el('header','',dialog); el('strong',row.name+' · '+(scopes[row.scope] || scopes.all),bar);
           action('Back to dashboard',bar,dismiss);
           const frame=el('iframe','',dialog); frame.title=row.name; frame.setAttribute('sandbox',''); frame.srcdoc=viewer(report.html);
           dialog.addEventListener('cancel',event=>{event.preventDefault();dismiss();});
@@ -2319,33 +2388,36 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const panel=el('section'); panel.className='save-report-bar'; card.prepend(panel);
     const field=el('label','Report name',panel), name=el('input','',field);
     name.maxLength=120;
+    const scopeField=el('label','What to save',panel), scope=el('select','',scopeField);
+    for (const [key,label] of Object.entries(scopes)) el('option',label,scope).value=key;
+
     const save=action('Save report',panel,async()=>{
       const run=binding;
       if (!run || !entries()?.length || card.classList.contains('hidden') || (typeof paPending==='function' && paPending())) return message(note,'Finish this audit before saving.');
-      save.disabled=true;
+      save.disabled=true; scope.disabled=true; name.disabled=true;
       try {
         const identity=await policy.check();
         if (!identity || !run.sid || run.sid!==launchId || AuditSession.sessionId(identity.accessToken)!==launchId || binding!==run) throw Error('Reopen this tool from your dashboard to save.');
-        const report=makeReport(); if (!report) throw Error('Finish this audit before saving.');
-        const section=el('section'); el('h2','Unit details',section);
-        for(const entry of entries()){
-          const group=el('details','',section); el('summary',[entry.unit,entry.residents].filter(Boolean).join(' · '),group);
-          const part=detail(entry);
-          if(typeof part==='string') group.insertAdjacentHTML('beforeend',passive(part)); else if(part) group.append(part);
-        }
+        const html=snapshot(scope.value,tool,run.property.name,card,entries(),detail,makeReport);
         const when=Date.now(), id=crypto.randomUUID(), owner=identity.user.id, propertyId=run.property.id;
         const title=name.value.trim() || defaultName();
-        const meta={id,owner,propertyId,property:run.property.name||'Property',name:title,tool,when};
-        const html=passive(report+section.outerHTML);
+        const meta={id,owner,propertyId,property:run.property.name||'Property',name:title,tool,when,scope:scope.value};
         await transaction('readwrite',(titles,reports)=>{titles.add(meta);reports.add({owner,propertyId,html},id);});
         if(binding!==run)return;
         save.textContent='Saved'; message(note,'Saved. Find it under Saved reports on your dashboard.'); link.hidden=false;
       } catch(error) { message(note,error.name==='QuotaExceededError'?'Browser storage is full. Free space and try again.':error.message); save.disabled=false; }
+      finally { scope.disabled=false; name.disabled=false; }
     });
     const note=el('span','',panel); note.setAttribute('role','status');
     const link=el('a','View saved reports',panel);link.href=location.origin+'/app#saved-reports';link.hidden=true;
     function defaultName(){return tool+' · '+new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});}
-    saveState={reset(){name.value=defaultName();save.disabled=false;save.textContent='Save report';link.hidden=true;message(note,'Use this browser to reopen your report.');}};
+    function ready(){save.disabled=false;save.textContent='Save report';link.hidden=true;message(note,'Save now or keep reviewing and save later.');}
+    scope.addEventListener('change',ready); name.addEventListener('input',ready);
+    const changes=new MutationObserver(()=>{
+      if(scope.value==='view' && link.hidden===false) ready();
+    });
+    for(const shell of card.querySelectorAll('.results-shell')) changes.observe(shell,{attributes:true,childList:true,subtree:true});
+    saveState={reset(){scope.value='all';name.value=defaultName();ready();}};
     saveState.reset();
     document.getElementById('process-btn').addEventListener('click',()=>{binding=null;saveState.reset();},{capture:true});
   };
@@ -8825,7 +8897,7 @@ function renderTable(){
   }
 }
 
-function buildDetail(e){
+function buildDetail(e, snapshot = false){
   const wrap = document.createElement('div');
   wrap.className = 'detail-inner';
 
@@ -8877,7 +8949,7 @@ function buildDetail(e){
   // and the charge-by-charge comparison are shown together in one unified
   // section/table rather than two separate ones.
   if (e.verify || e.rows.length){
-    wrap.appendChild(buildVerifySection(e));
+    wrap.appendChild(buildVerifySection(e, snapshot));
   }
 
   if (e.excluded && e.excluded.length){
@@ -9022,7 +9094,7 @@ function chargeNote(r){
 }
 const CHARGE_ROW_ORDER = {mismatch:0, leaseonly:1, resmanonly:2, probable:3, mtm:4, match:5};
 
-function buildVerifySection(e){
+function buildVerifySection(e, snapshot = false){
   const v = e.verify;
   const chargeRows = e.rows || [];
   const card = document.createElement('div');
@@ -9062,7 +9134,7 @@ function buildVerifySection(e){
   if (sigCheck){
     const list = document.createElement('div');
     list.className = 'verify-list';
-    list.appendChild(buildVerifyItem(e, sigCheck));
+    list.appendChild(buildVerifyItem(e, sigCheck, snapshot));
     card.appendChild(list);
   }
 
@@ -9118,7 +9190,7 @@ function buildVerifySection(e){
   return card;
 }
 
-function buildVerifyItem(e, c){
+function buildVerifyItem(e, c, snapshot = false){
   const wrap = document.createElement('div');
   // Only ever called for the Signatures check now (every other check is
   // rendered in the table in buildVerifySection) -- always expandable so
@@ -9134,7 +9206,8 @@ function buildVerifyItem(e, c){
   wrap.className = 'verify-item ' + displayStatus + (expandable ? ' expandable' : '');
 
   const key = e.unitKey + '::' + c.key;
-  const isOpen = expandedVerify.has(key);
+  const isOpen = snapshot || expandedVerify.has(key);
+  wrap.dataset.snapshotStatus = hiddenFail ? '' : ({pass:'match',fail:'mismatch',unable:'review'}[c.status] || '');
   const icon = displayStatus==='pass' ? '&#10003;' : (displayStatus==='fail' ? '&#10007;' : '&#9888;');
   const title = verifyCheckTitle(c) + (hiddenFail ? ' — Hidden by Filter' : '');
 

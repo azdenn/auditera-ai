@@ -7013,7 +7013,7 @@ function renderTable(){
   }
 }
 
-function buildDetail(e){
+function buildDetail(e, snapshot = false){
   const wrap = document.createElement('div');
   wrap.className = 'detail-inner';
 
@@ -7065,7 +7065,7 @@ function buildDetail(e){
   // and the charge-by-charge comparison are shown together in one unified
   // section/table rather than two separate ones.
   if (e.verify || e.rows.length){
-    wrap.appendChild(buildVerifySection(e));
+    wrap.appendChild(buildVerifySection(e, snapshot));
   }
 
   if (e.excluded && e.excluded.length){
@@ -7210,7 +7210,7 @@ function chargeNote(r){
 }
 const CHARGE_ROW_ORDER = {mismatch:0, leaseonly:1, resmanonly:2, probable:3, mtm:4, match:5};
 
-function buildVerifySection(e){
+function buildVerifySection(e, snapshot = false){
   const v = e.verify;
   const chargeRows = e.rows || [];
   const card = document.createElement('div');
@@ -7250,7 +7250,7 @@ function buildVerifySection(e){
   if (sigCheck){
     const list = document.createElement('div');
     list.className = 'verify-list';
-    list.appendChild(buildVerifyItem(e, sigCheck));
+    list.appendChild(buildVerifyItem(e, sigCheck, snapshot));
     card.appendChild(list);
   }
 
@@ -7306,7 +7306,7 @@ function buildVerifySection(e){
   return card;
 }
 
-function buildVerifyItem(e, c){
+function buildVerifyItem(e, c, snapshot = false){
   const wrap = document.createElement('div');
   // Only ever called for the Signatures check now (every other check is
   // rendered in the table in buildVerifySection) -- always expandable so
@@ -7322,7 +7322,8 @@ function buildVerifyItem(e, c){
   wrap.className = 'verify-item ' + displayStatus + (expandable ? ' expandable' : '');
 
   const key = e.unitKey + '::' + c.key;
-  const isOpen = expandedVerify.has(key);
+  const isOpen = snapshot || expandedVerify.has(key);
+  wrap.dataset.snapshotStatus = hiddenFail ? '' : ({pass:'match',fail:'mismatch',unable:'review'}[c.status] || '');
   const icon = displayStatus==='pass' ? '&#10003;' : (displayStatus==='fail' ? '&#10007;' : '&#9888;');
   const title = verifyCheckTitle(c) + (hiddenFail ? ' — Hidden by Filter' : '');
 

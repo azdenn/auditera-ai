@@ -26,17 +26,8 @@ check('Small split-price clusters go directly to findings',()=>{
   assert.deepEqual(qs,[]);
 });
 check('No and uncertainty retain original findings',()=>{for(const text of ['No.','No thanks','Keep original findings',"I don't know","Don't change anything"]){assert.equal(A.response(text),'keep');}});
-check('Approved production origins enable isolated local memory',()=>{
-  for(const origin of ['https://auditera.net','https://www.auditera.net']){
-    assert.equal(A.canPilot(origin),true);
-    assert.notEqual(A.storageKey(origin,'user','property'),null);
-    assert.equal(A.isTesting(origin),false);
-    assert.equal(A.canPilot(new URL('blob:'+origin+'/example').origin),true);
-  }
-  assert.notEqual(A.storageKey('https://auditera.net','user','property'),A.storageKey('https://testing.auditera.net','user','property'));
-});
 check('Unapproved origins cannot enable local memory',()=>{
-  for(const origin of ['https://auditera.net.evil.example','http://auditera.net','https://unapproved.auditera.net']){
+  for(const origin of ['https://auditera.net','https://www.auditera.net','https://auditera.net.evil.example','http://auditera.net','https://unapproved.auditera.net']){
     assert.equal(A.canPilot(origin),false);assert.equal(A.storageKey(origin,'user','property'),null);
   }
 });

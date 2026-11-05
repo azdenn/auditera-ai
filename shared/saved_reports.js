@@ -66,7 +66,79 @@
   function viewer(html) {
     // Sandbox, deny network access, and sanitize again at the storage boundary.
     return '<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'; form-action \'none\'; base-uri \'none\'"><meta name="viewport" content="width=device-width,initial-scale=1">'+
-      passive(html)+'<style>body{padding:clamp(12px,3vw,32px);overflow-wrap:anywhere}details{padding:9px 0}summary{cursor:pointer;font-weight:600}table{max-width:100%}</style>';
+      passive(html)+'<style>body{padding:clamp(12px,3vw,32px);overflow-wrap:anywhere}details{padding:9px 0}summary{cursor:pointer;font-weight:600}table{max-width:100%;border-collapse:collapse}th,td{padding:6px 9px;text-align:left;border-bottom:1px solid #ddd}body{font:15px/1.5 system-ui;color:#202334}h2{margin-top:1.4em}.details-btn{display:none}</style>';
+  }
+  const scopes = {all:'Whole report', view:'Current table view', match:'Matches only', mismatch:'Mismatches only', review:'Needs review only'};
+  const unresolved = new Set(['missing','missing_ledger','new-tenant','unmatched','error','needs-review']);
+  function detailNode(entry, detail) {
+    const node = detail(entry, true);
+    if (typeof node !== 'string') return node;
+    const template = document.createElement('template');
+    template.innerHTML = node;
+    return template.content;
+  }
+  function focusedDetail(entry, detail, scope) {
+    const section = el('section');
+    if (entry.category === 'vacant') return section;
+    if (unresolved.has(entry.category)) {
+      if (scope === 'review') el('p',entry.note || 'This unit needs a manual review.',section);
+      return section;
+    }
+    const root = detailNode(entry,detail);
+    const statuses = {Match:'match',Mismatch:'mismatch',Review:'review','Unable to verify':'review'};
+    // Reuse the audit's displayed decisions and the evidence on the same row.
+    // Supporting tables (raw charges, candidates, etc.) have no result status.
+    for (const table of root.querySelectorAll('.verify-card table.results')) {
+      const selected = Array.from(table.tBodies[0]?.rows || []).filter(row =>
+        statuses[row.cells[row.cells.length-1]?.querySelector('.badge')?.textContent.trim()] === scope);
+      if (!selected.length) continue;
+      const copy = el('table','',section);
+      if (table.tHead) copy.append(table.tHead.cloneNode(true));
+      copy.createTBody().append(...selected);
+    }
+    for (const item of root.querySelectorAll('.verify-item,.finding')) {
+      const status = item.dataset.snapshotStatus || statuses[item.querySelector('.badge')?.textContent.trim()];
+      if (status === scope) section.append(item);
+    }
+    for (const issue of entry.concession?.issues || []) {
+      if ((issue.severity === 'bad' ? 'mismatch' : issue.severity === 'warn' ? 'review' : '') === scope &&
+          issue.text && !section.textContent.includes(issue.text)) el('p',issue.text,section);
+    }
+    return section;
+  }
+  function snapshot(scope,tool,property,card,entries,detail,makeReport) {
+    const section=el('section');
+    if (scope === 'all') {
+      el('h2','Unit details',section);
+      for (const entry of entries) {
+        const group=el('details','',section);
+        el('summary',[entry.unit,entry.residents].filter(Boolean).join(' · '),group);
+        group.append(detailNode(entry,detail));
+      }
+      return passive(makeReport()+section.outerHTML);
+    }
+    el('h1',scopes[scope],section);
+    el('p',[property,tool,date(Date.now())].join(' · '),section);
+    if (scope === 'view') {
+      const shell=card.querySelector('.results-shell:not(.hidden)');
+      if (!shell) throw Error('Open the results table before saving this view.');
+      const activeFilter=card.querySelector('#filter-tabs .active')?.firstChild?.textContent.trim();
+      if (shell.id === 'flat-view-shell') el('p','Mismatching lines across units',section);
+      else if (activeFilter) el('p','Filter: '+activeFilter,section);
+      const copy=shell.cloneNode(true);
+      for (const control of copy.querySelectorAll('.hidden,[hidden],.details-btn,.help-tip,button')) control.remove();
+      section.append(copy);
+    } else {
+      let count=0;
+      for (const entry of entries) {
+        const part=focusedDetail(entry,detail,scope);
+        if (!part.childElementCount) continue;
+        el('h2',[entry.unit,entry.residents].filter(Boolean).join(' · '),section);
+        section.append(part); count++;
+      }
+      if (!count) el('p','No results in this category.',section);
+    }
+    return passive(section.outerHTML);
   }
   api.dashboard = async function(client, session, properties) {
     if (!client || !session) return;
@@ -93,7 +165,7 @@
     for (const row of rows) {
       const line = el('div','',panel); line.className = 'saved-row';
       const label = el('div','',line); el('strong',row.name,label);
-      el('small',[row.property,row.tool,date(row.when)].join(' · '),label);
+      el('small',[row.property,row.tool,scopes[row.scope] || scopes.all,date(row.when)].join(' · '),label);
       const open = action('Open report',line,async () => {
         open.disabled = true;
         try {
@@ -105,7 +177,7 @@
           if (!stillHere()) return;
           if (!report || report.owner !== row.owner || report.propertyId !== row.propertyId) throw Error('This report is unavailable. Reload and try again.');
           dismiss(); dialog = el('dialog','',document.body); dialog.className='saved-reader'; dialog.dataset.propertyId=row.propertyId;
-          const bar=el('header','',dialog); el('strong',row.name,bar);
+          const bar=el('header','',dialog); el('strong',row.name+' · '+(scopes[row.scope] || scopes.all),bar);
           action('Back to dashboard',bar,dismiss);
           const frame=el('iframe','',dialog); frame.title=row.name; frame.setAttribute('sandbox',''); frame.srcdoc=viewer(report.html);
           dialog.addEventListener('cancel',event=>{event.preventDefault();dismiss();});
@@ -137,33 +209,36 @@
     const panel=el('section'); panel.className='save-report-bar'; card.prepend(panel);
     const field=el('label','Report name',panel), name=el('input','',field);
     name.maxLength=120;
+    const scopeField=el('label','What to save',panel), scope=el('select','',scopeField);
+    for (const [key,label] of Object.entries(scopes)) el('option',label,scope).value=key;
+
     const save=action('Save report',panel,async()=>{
       const run=binding;
       if (!run || !entries()?.length || card.classList.contains('hidden') || (typeof paPending==='function' && paPending())) return message(note,'Finish this audit before saving.');
-      save.disabled=true;
+      save.disabled=true; scope.disabled=true; name.disabled=true;
       try {
         const identity=await policy.check();
         if (!identity || !run.sid || run.sid!==launchId || AuditSession.sessionId(identity.accessToken)!==launchId || binding!==run) throw Error('Reopen this tool from your dashboard to save.');
-        const report=makeReport(); if (!report) throw Error('Finish this audit before saving.');
-        const section=el('section'); el('h2','Unit details',section);
-        for(const entry of entries()){
-          const group=el('details','',section); el('summary',[entry.unit,entry.residents].filter(Boolean).join(' · '),group);
-          const part=detail(entry);
-          if(typeof part==='string') group.insertAdjacentHTML('beforeend',passive(part)); else if(part) group.append(part);
-        }
+        const html=snapshot(scope.value,tool,run.property.name,card,entries(),detail,makeReport);
         const when=Date.now(), id=crypto.randomUUID(), owner=identity.user.id, propertyId=run.property.id;
         const title=name.value.trim() || defaultName();
-        const meta={id,owner,propertyId,property:run.property.name||'Property',name:title,tool,when};
-        const html=passive(report+section.outerHTML);
+        const meta={id,owner,propertyId,property:run.property.name||'Property',name:title,tool,when,scope:scope.value};
         await transaction('readwrite',(titles,reports)=>{titles.add(meta);reports.add({owner,propertyId,html},id);});
         if(binding!==run)return;
         save.textContent='Saved'; message(note,'Saved. Find it under Saved reports on your dashboard.'); link.hidden=false;
       } catch(error) { message(note,error.name==='QuotaExceededError'?'Browser storage is full. Free space and try again.':error.message); save.disabled=false; }
+      finally { scope.disabled=false; name.disabled=false; }
     });
     const note=el('span','',panel); note.setAttribute('role','status');
     const link=el('a','View saved reports',panel);link.href=location.origin+'/app#saved-reports';link.hidden=true;
     function defaultName(){return tool+' · '+new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});}
-    saveState={reset(){name.value=defaultName();save.disabled=false;save.textContent='Save report';link.hidden=true;message(note,'Use this browser to reopen your report.');}};
+    function ready(){save.disabled=false;save.textContent='Save report';link.hidden=true;message(note,'Save now or keep reviewing and save later.');}
+    scope.addEventListener('change',ready); name.addEventListener('input',ready);
+    const changes=new MutationObserver(()=>{
+      if(scope.value==='view' && link.hidden===false) ready();
+    });
+    for(const shell of card.querySelectorAll('.results-shell')) changes.observe(shell,{attributes:true,childList:true,subtree:true});
+    saveState={reset(){scope.value='all';name.value=defaultName();ready();}};
     saveState.reset();
     document.getElementById('process-btn').addEventListener('click',()=>{binding=null;saveState.reset();},{capture:true});
   };

@@ -3,7 +3,7 @@
   "tools": {
     "leaseverify": {
       "inputs": {
-        "lease_tool/template.html": "98b6570d897a6463ac022e227e3ae5ce6a2291450f3f1f1e4c31ea8da6f07fb9",
+        "lease_tool/template.html": "7b7ae11c75b90782002d47fcfcfae667b351076f47757a340e45579cfcf33fbf",
         "shared/build_tool.cjs": "db4d1e3105bd440d3701f12819174b3edba0b7ef05990cc603e8dcb7a350524b",
         "build.cjs": "dd25fd2b261d29d5632181773fb6dd27b33e27c3744aefed829909a12b8f88ec",
         "lease_tool/package-lock.json": "a004aeb9ccd4aebedf4de4cb239acb81ac6f0b0a31089662f0a2497bd6edfe5a",
@@ -13,16 +13,16 @@
         "lease_tool/node_modules/fflate/umd/index.js": "462ef8041fc970e3615a20a9dd2b2e3047a073b2da729ef4f02b634bba8b7b83",
         "shared/session_policy.js": "0f9922f76fdb88ce30e745f1d3aa62aba939a6f2b2268ca91cba28815713ab15",
         "lease_tool/node_modules/@supabase/supabase-js/dist/umd/supabase.js": "ee3be8de192b97cb1d73d1e95d6b82bb1f6b658c0f97c4ef757fc331996ed3d3",
-        "shared/saved_reports.js": "9df5970f70b09ff46c746b51bf52a03e4e790981fd22e8c8e8304279ce6e109f",
-        "shared/saved_reports.css": "38c57cdb3f8473048ed1c1a7c6028a00d910237b0c5a724b703acf4134cc6f18",
+        "shared/saved_reports.js": "3e4942c38cfbdd3ffc16b9067c423217c784cb728bb807b87f534247afdd0e20",
+        "shared/saved_reports.css": "205564704fd1e18e5199ede86c1ed14990da3d86f465477dd2265850656bdfbc",
         "shared/audit_gate.js": "d4da21f6ad761a1f218a05b47c0c059a59c1709f99e1bf96f866ca1d097e9c8c",
         "shared/rentroll_property_name.js": "190373f3eaca7fa0232760f09ae37822d0c3949b9993312701e287431aa76e07",
         "shared/csv_export.js": "fad83e2933664bbe139d38b73e95ca6936c4dba26b3de5581d269deac9eafee1",
         "shared/property_rules.js": "828cb990b16098452d47d92b3b7f5b7771c08c7dce940d8f331d728b0786ba54",
-        "shared/property_assistant.js": "d46c2bf81a217897c7d0a610be01e9c8271c63142b6e354073e14cb36804300d",
+        "shared/property_assistant.js": "dc173b641b8d6fd235b98f159cc7b55bab0be3fbe02a5b7b8a265fdd9f834e7c",
         "shared/property_assistant_ui.js": "58fa455d1c0c4970d0fdb3eb644baf31c85ddcad85206560a4cabd2e747a15fd"
       },
-      "sha256": "54104f590b7464cfb416c72460645e6a35bf52681e34f57142d9100759c171c2"
+      "sha256": "6ced79c1e0cd8530340b8f7ffdb34b46b6190261c4519873607758fd0fc5287c"
     },
     "concessionverify": {
       "inputs": {
@@ -36,13 +36,13 @@
         "lease_tool/node_modules/fflate/umd/index.js": "462ef8041fc970e3615a20a9dd2b2e3047a073b2da729ef4f02b634bba8b7b83",
         "shared/session_policy.js": "0f9922f76fdb88ce30e745f1d3aa62aba939a6f2b2268ca91cba28815713ab15",
         "lease_tool/node_modules/@supabase/supabase-js/dist/umd/supabase.js": "ee3be8de192b97cb1d73d1e95d6b82bb1f6b658c0f97c4ef757fc331996ed3d3",
-        "shared/saved_reports.js": "9df5970f70b09ff46c746b51bf52a03e4e790981fd22e8c8e8304279ce6e109f",
-        "shared/saved_reports.css": "38c57cdb3f8473048ed1c1a7c6028a00d910237b0c5a724b703acf4134cc6f18",
+        "shared/saved_reports.js": "3e4942c38cfbdd3ffc16b9067c423217c784cb728bb807b87f534247afdd0e20",
+        "shared/saved_reports.css": "205564704fd1e18e5199ede86c1ed14990da3d86f465477dd2265850656bdfbc",
         "shared/audit_gate.js": "d4da21f6ad761a1f218a05b47c0c059a59c1709f99e1bf96f866ca1d097e9c8c",
         "shared/rentroll_property_name.js": "190373f3eaca7fa0232760f09ae37822d0c3949b9993312701e287431aa76e07",
         "shared/csv_export.js": "fad83e2933664bbe139d38b73e95ca6936c4dba26b3de5581d269deac9eafee1"
       },
-      "sha256": "2e1391ea03652fa931e5d2c11aa7bcf86943f411383b3e99990de7fd199c41e7"
+      "sha256": "9713d734624aa442757a4de46cdf4e5fa50f0c059b1243ffb757fef36c149df0"
     },
     "depositverify": {
       "inputs": {
@@ -55,13 +55,13 @@
         "lease_tool/node_modules/xlsx/dist/xlsx.full.min.js": "cc015130aa8521e7f088f88898eba949ccdcbfb38df0bd129b44b7273c3a6f41",
         "shared/session_policy.js": "0f9922f76fdb88ce30e745f1d3aa62aba939a6f2b2268ca91cba28815713ab15",
         "lease_tool/node_modules/@supabase/supabase-js/dist/umd/supabase.js": "ee3be8de192b97cb1d73d1e95d6b82bb1f6b658c0f97c4ef757fc331996ed3d3",
-        "shared/saved_reports.js": "9df5970f70b09ff46c746b51bf52a03e4e790981fd22e8c8e8304279ce6e109f",
-        "shared/saved_reports.css": "38c57cdb3f8473048ed1c1a7c6028a00d910237b0c5a724b703acf4134cc6f18",
+        "shared/saved_reports.js": "3e4942c38cfbdd3ffc16b9067c423217c784cb728bb807b87f534247afdd0e20",
+        "shared/saved_reports.css": "205564704fd1e18e5199ede86c1ed14990da3d86f465477dd2265850656bdfbc",
         "shared/audit_gate.js": "d4da21f6ad761a1f218a05b47c0c059a59c1709f99e1bf96f866ca1d097e9c8c",
         "shared/rentroll_property_name.js": "190373f3eaca7fa0232760f09ae37822d0c3949b9993312701e287431aa76e07",
         "shared/csv_export.js": "fad83e2933664bbe139d38b73e95ca6936c4dba26b3de5581d269deac9eafee1"
       },
-      "sha256": "99d2e6f995bfe1dd509aa9d0c6c3a9cd0e7f50ab862718443296afa77691aad2"
+      "sha256": "0feda3e058b7512061738bbbc41b03c9501583f8ea8a148305803c47e9cd7b2b"
     }
   },
   "app": {
@@ -71,10 +71,10 @@
       "homepage_assets/_shared_styles.html": "e8ec1ffef2d8867cd537077cd4dd80149a7881790cf73bfed6c3079b2ee21047",
       "homepage_assets/_shared_footer.html": "d2198174a0ec29e5cd26282030e74e8bb7db27fcdbc80dca147ce098efcc1cab",
       "shared/session_policy.js": "0f9922f76fdb88ce30e745f1d3aa62aba939a6f2b2268ca91cba28815713ab15",
-      "shared/saved_reports.css": "38c57cdb3f8473048ed1c1a7c6028a00d910237b0c5a724b703acf4134cc6f18",
-      "shared/saved_reports.js": "9df5970f70b09ff46c746b51bf52a03e4e790981fd22e8c8e8304279ce6e109f",
+      "shared/saved_reports.css": "205564704fd1e18e5199ede86c1ed14990da3d86f465477dd2265850656bdfbc",
+      "shared/saved_reports.js": "3e4942c38cfbdd3ffc16b9067c423217c784cb728bb807b87f534247afdd0e20",
       "homepage_assets/build_app.cjs": "5a082780dc6ac04a522bce386f08bb8a044bab0fd58cb67e99ee1fe2414a84b3"
     },
-    "sha256": "dbdb8271d1c8acf7a78e05def04a69dd4d1e604d868e19b989670f552f5fdb17"
+    "sha256": "f0234e0a08c8940b5d8247e46298f918d7b00fa752672e22763f097ff2bab683"
   }
 }
