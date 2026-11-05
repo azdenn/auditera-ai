@@ -1,0 +1,72 @@
+// Real dashboard, blob tools and IndexedDB. All accounts, records and HTTP are synthetic.
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const {chromium}=require('../lease_tool/node_modules/playwright');
+const ROOT=path.resolve(__dirname,'..'), ORIGIN='https://testing.auditera.net', BACKEND='https://kyfvrkghqohkhwidqwst.supabase.co';
+const uid='10000000-0000-0000-0000-000000000001',account='20000000-0000-0000-0000-000000000001',property='30000000-0000-0000-0000-000000000001',propertyB='30000000-0000-0000-0000-000000000002';
+const activeSid='40000000-0000-0000-0000-000000000001',requests=[];
+const sdk=fs.readFileSync(path.join(ROOT,'lease_tool/node_modules/@supabase/supabase-js/dist/umd/supabase.js'),'utf8');
+let revoked=false;
+function session(userId=uid){const now=Math.floor(Date.now()/1000),user={id:userId,email:'invented@example.invalid',aud:'authenticated',role:'authenticated',created_at:'2026-01-01T00:00:00Z',app_metadata:{},user_metadata:{}};return {access_token:'e30.'+Buffer.from(JSON.stringify({sub:userId,session_id:activeSid,exp:now+3600,iat:now,role:'authenticated'})).toString('base64url')+'.synthetic',refresh_token:'synthetic-refresh-token',expires_at:now+3600,expires_in:3600,token_type:'bearer',user};}
+async function routes(context){
+ await context.route('**/*',async route=>{
+  const req=route.request(),u=new URL(req.url());requests.push({url:u.href,body:req.postData()||''});
+  if(u.origin===ORIGIN){const rel=u.pathname==='/app'?'app.html':u.pathname==='/'?'index.html':u.pathname.slice(1);if(!/^(?:app\.html|index\.html|resman-setup\.js|tools\/(?:lease|concession|deposit)verify\.html)$/.test(rel))return route.abort();const file=path.join(ROOT,'dist',rel);if(!fs.existsSync(file))return route.fulfill({status:404,body:'missing synthetic asset'});return route.fulfill({contentType:rel.endsWith('.js')?'text/javascript':'text/html',body:fs.readFileSync(file)});}
+  if(u.hostname==='cdn.jsdelivr.net'&&u.pathname.includes('/@supabase/supabase-js@'))return route.fulfill({contentType:'text/javascript',body:sdk});
+  if(u.origin!==BACKEND)return route.abort();
+  const answer=(data,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
+  if(u.pathname==='/auth/v1/user')return answer(revoked?{message:'Synthetic revoked session',code:'bad_jwt'}:session().user,revoked?401:200);
+  if(u.pathname==='/auth/v1/token')return answer(session());
+  if(u.pathname==='/auth/v1/logout')return answer({});
+  if(u.pathname==='/rest/v1/subscriptions')return answer({user_id:uid,account_id:account,username:'invented',property_name:'Example Apartments',role:'admin'});
+  if(u.pathname==='/rest/v1/properties')return answer([{id:property,account_id:account,name:'Example Apartments',address:'123 Invented Road',status:'active',trial_ends_at:null},{id:propertyB,account_id:account,name:'Example Annex',status:'active',trial_ends_at:null}]);
+  if(u.pathname==='/rest/v1/rpc/has_active_licence')return answer(true);
+  if(u.pathname==='/rest/v1/login_events')return answer({});
+  if(u.pathname==='/rest/v1/property_rules')return answer([]);
+  if(u.pathname==='/functions/v1/authorize-audit')return answer({allowed:true,verdict:'allowed',property:{id:property,name:'Example Apartments'}});
+  if(u.pathname==='/functions/v1/record-run-outcome')return answer({ok:true});
+  throw new Error('Unexpected synthetic network endpoint '+u.pathname);
+ });
+}
+(async()=>{
+ const browser=await chromium.launch({headless:true});
+ try{
+  const context=await browser.newContext({viewport:{width:1180,height:850}});await routes(context);
+  const dashboard=await context.newPage(),errors=[];
+  context.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));dashboard.on('pageerror',e=>errors.push(e.message));
+  await dashboard.goto(ORIGIN+'/app');
+  await dashboard.locator('#login-username').fill('invented@example.invalid');await dashboard.locator('#login-password').fill('synthetic-example');
+  await dashboard.locator('#login-form button[type=submit]').click();await dashboard.locator('#saved-reports').waitFor();
+  const preview=process.env.AUDITERA_PREVIEW_DIR;
+  for(const [key,name] of Object.entries({reconciler:'LeaseVerify',concession:'ConcessionVerify',deposit:'DepositVerify'})){
+    const [page]=await Promise.all([context.waitForEvent('page'),dashboard.locator('button[onclick="launchTool(\''+key+'\')"]').click()]);
+    await page.waitForURL('blob:**');await page.locator('.save-report-bar').waitFor({state:'attached'});
+    const granted=await page.evaluate(async name=>await agAuthorizeAudit(name.toLowerCase(),'Example Apartments','123 Invented Road'),name);assert.equal(granted,true);
+    await page.evaluate(name=>{
+      const entry={unit:'101',unitKey:'101',category:'needs-review',residents:'Sample resident',filenames:[],rows:[],rawLease:[],rawResman:[],issueCount:0,note:'Review the monthly charge for this unit.',findings:[],concession:{hasConcession:false,issues:[]},coverageLabel:'Traditional Security Deposit',hiddenCount:0,cov:{onDeposit:true,depositAmount:500}};
+      unitEntries=[entry];
+      if(name==='ConcessionVerify')PROPERTY_NAME='Example Apartments';else detectedPropertyName='Example Apartments';
+      document.getElementById('results-card').classList.remove('hidden');
+    },name);
+    if(preview&&key==='reconciler')await page.locator('.save-report-bar').screenshot({path:path.join(preview,'1-save.png')});
+    await page.getByRole('button',{name:'Save report',exact:true}).click();
+    try{await page.getByRole('button',{name:'Saved',exact:true}).waitFor({timeout:5000});}catch(e){throw Error(name+': '+await page.locator('.save-report-bar [role=status]').textContent()+' '+errors.join(' '));}
+    await page.getByRole('link',{name:'View saved reports'}).click();await page.locator('#saved-reports .saved-row').first().waitFor();
+    const open=page.getByRole('button',{name:'Open report: '+name,exact:false});
+    if(preview&&key==='reconciler')await page.locator('#saved-reports').screenshot({path:path.join(preview,'2-history.png')});
+    await open.click();const frame=page.frameLocator('.saved-reader iframe');
+    await frame.getByRole('heading',{name:'Unit details'}).waitFor();await frame.getByText('101 · Sample resident',{exact:true}).click();
+    if(key==='deposit') await frame.locator('details[open]').getByText('Deposits:',{exact:false}).waitFor();
+    else await frame.getByText('Review the monthly charge for this unit.',{exact:false}).last().waitFor();
+    if(preview&&key==='reconciler')await page.locator('.saved-reader').screenshot({path:path.join(preview,'3-view.png')});
+    await page.getByRole('button',{name:'Back to dashboard'}).click();await page.reload();await open.waitFor();
+    console.log('PASS '+name+' live dashboard launch, save, open, unit details and reload (mocked provider).');
+    await page.close();
+  }
+  await dashboard.goto(ORIGIN+'/');await dashboard.goBack();await dashboard.locator('#saved-reports .saved-row').first().waitFor();
+  assert.equal(await dashboard.locator('#saved-reports .saved-row').count(),3);
+  await dashboard.evaluate(()=>{for(const k of Object.keys(localStorage))if(k.startsWith('auditera.activity.v1:'))localStorage.setItem(k,JSON.stringify({last:Date.now()-21600001}));});
+  await dashboard.reload();await dashboard.locator('#login-form').waitFor();assert.equal(await dashboard.locator('#saved-reports').count(),0);
+  assert.deepEqual(errors,[]);assert(!requests.some(r=>r.body.includes('Sample resident')||r.body.includes('Review the monthly charge')));
+  console.log('PASS Back, three saved runs, idle lock, local-only report contents and no page errors.');
+ }finally{await browser.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});

@@ -300,6 +300,9 @@ function agBlockScreen(message, verdict, accountEmail){
 /* Ask the server whether this audit may proceed.
    Resolves to true only on an explicit yes. */
 async function agAuthorizeAudit(tool, detectedName, detectedAddress){
+  if (typeof SavedReports !== 'undefined' && SavedReports.toolSession) {
+    AG_TOKEN = await SavedReports.toolSession.token().catch(() => null);
+  }
   if (!AG_TOKEN){
     agBlockScreen(
       'This tool was not opened from your dashboard, or the link it was opened with has already '
@@ -351,6 +354,7 @@ async function agAuthorizeAudit(tool, detectedName, detectedAddress){
        that just vanishes in that case looks broken. */
     AG_VERDICT = payload.verdict || null;
     AG_OPEN_RUN = tool;
+    if (typeof SavedReports !== 'undefined') SavedReports.authorized(AG_PROPERTY, AG_TOKEN);
     return true;
   }
 

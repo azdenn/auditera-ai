@@ -62,6 +62,8 @@ async function answerAuthorize(route){
 }
 await page.route(AUTH_ROUTE, answerAuthorize);
 
+const {sessionToken,installBrowserSession}=require('./test_gate_stub.cjs');
+const defaultToken=sessionToken();await installBrowserSession(page,defaultToken);
 let loadSeq = 0;
 async function loadTool(name, hash){
   CALLS.length = 0;
@@ -71,7 +73,7 @@ async function loadTool(name, hash){
   // does not reload and the gate's load-time code never re-runs, which had
   // this suite reporting a stripping bug that did not exist.
   const q = '?n=' + (++loadSeq);
-  await page.goto(ORIGIN + '/' + name + q + (hash === null ? '' : '#tk=' + (hash ?? 'valid-session-token')));
+  await page.goto(ORIGIN + '/' + name + q + (hash === null ? '' : '#tk=' + (hash ?? defaultToken)));
   await page.waitForTimeout(500);
 }
 
@@ -102,7 +104,7 @@ let ok = await runGate('leaseverify', 'Blanco Oaks Apartments');
 check('A licensed property is allowed', ok === true);
 check('...and no block screen appears', (await page.$('#ag-block')) === null);
 check('...the call carried the session token',
-  CALLS[0] && CALLS[0].headers.authorization === 'Bearer valid-session-token');
+  CALLS[0] && CALLS[0].headers.authorization === 'Bearer '+defaultToken);
 check('...and named the tool', CALLS[0] && CALLS[0].body.tool === 'leaseverify');
 check('...and sent the detected property name',
   CALLS[0] && CALLS[0].body.detected_name === 'Blanco Oaks Apartments');
@@ -224,7 +226,7 @@ for (const tool of ['leaseverify', 'concessionverify', 'depositverify']){
 function fakeJwt(claims){
   const seg = (o) => Buffer.from(JSON.stringify(o)).toString('base64')
     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  return seg({alg:'HS256', typ:'JWT'}) + '.' + seg(claims) + '.' + 'not-a-real-signature';
+  return seg({alg:'HS256', typ:'JWT'}) + '.' + seg({session_id:'fixture-session',exp:Math.floor(Date.now()/1000)+3600,...claims}) + '.' + 'not-a-real-signature';
 }
 const JANINE = 'janine.luz@texcelproperties.com';
 const JANINE_JWT = fakeJwt({ sub: '5ccb0fa5', email: JANINE, role: 'authenticated' });

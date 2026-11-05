@@ -91,7 +91,7 @@ console.log('Wrote', dist, '- homepage', (Buffer.byteLength(out)/1024).toFixed(0
 // than by copy-paste, so a palette or nav change lands everywhere at once
 // instead of silently drifting on the pages nobody remembered to update.
 
-for (const page of ['pricing', 'signin', 'app', 'contact', 'client_results']) {
+for (const page of ['pricing', 'signin', 'contact', 'client_results']) {
   const tpl = path.join(dir, page + '_template.html');
   if (!fs.existsSync(tpl)) continue;
   let out = fs.readFileSync(tpl, 'utf8')
@@ -104,6 +104,7 @@ for (const page of ['pricing', 'signin', 'app', 'contact', 'client_results']) {
   fs.writeFileSync(path.join(dist, page + '.html'), out);
   console.log('  ' + page + '.html -', (Buffer.byteLength(out)/1024).toFixed(0), 'KB');
 }
+require('./build_app.cjs').writeApp();
 
 // Client Results is built by the shared-partial loop above, like every other
 // page. It used to be assembled here into homepage_assets/ and never copied

@@ -18,6 +18,8 @@ function compose(tool) {
     PDF_WORKER_SRC: 'lease_tool/node_modules/pdfjs-dist/build/pdf.worker.min.js',
     XLSX_LIB: 'lease_tool/node_modules/xlsx/dist/xlsx.full.min.js',
     ...(tool === 'deposit' ? {} : { FFLATE_LIB: 'lease_tool/node_modules/fflate/umd/index.js' }),
+    SESSION_POLICY: 'shared/session_policy.js', SESSION_SDK: 'lease_tool/node_modules/@supabase/supabase-js/dist/umd/supabase.js',
+    SAVED_REPORTS: 'shared/saved_reports.js', SAVED_REPORTS_STYLE: 'shared/saved_reports.css',
     AUDIT_GATE: 'shared/audit_gate.js', RR_PROPERTY_NAME: 'shared/rentroll_property_name.js',
     CSV_EXPORT: 'shared/csv_export.js',
     ...(tool === 'lease' ? { PROPERTY_RULES: 'shared/property_rules.js',
@@ -27,7 +29,7 @@ function compose(tool) {
     const marker = '<!--' + name + '-->';
     if (html.split(marker).length !== 2) throw new Error('Expected exactly one ' + marker);
     const code = read(source);
-    html = html.replace(marker, () => '<script>\n' + code + '\n</script>');
+    html = html.replace(marker, () => name.endsWith('_STYLE') ? '<style>\n'+code+'\n</style>' : '<script>\n' + code + '\n</script>');
   }
   return { html, inputs, sha256: hash(html) };
 }
@@ -37,4 +39,4 @@ function write(tool) {
   if (tool === 'lease') fs.writeFileSync(path.join(ROOT, 'lease_tool/lease-resman-reconciler.html'), result.html);
   return result;
 }
-module.exports = { ROOT, TOOLS, compose, write, hash };
+module.exports = { ROOT, TOOLS, compose, write, hash, ...require('../homepage_assets/build_app.cjs') };

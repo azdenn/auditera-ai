@@ -24,7 +24,8 @@ const MIME = {'.html':'text/html; charset=utf-8', '.js':'text/javascript', '.css
 
 // Whether the stubbed account currently holds a licence. Flipped mid-test.
 let LICENSED = true;
-let VALID_TOKEN = 'good-token';
+const {sessionToken,installBrowserSession}=require('../shared/test_gate_stub.cjs');
+let VALID_TOKEN=sessionToken('u1');
 
 const ASSETS = {
   async fetch(request){
@@ -85,12 +86,12 @@ r = await fetch(ORIGIN + '/tools/leaseverify.html', {headers:{Authorization:'Bea
 check('A bad token is refused', r.status === 401);
 
 LICENSED = false;
-r = await fetch(ORIGIN + '/tools/leaseverify.html', {headers:{Authorization:'Bearer good-token'}});
+r = await fetch(ORIGIN + '/tools/leaseverify.html', {headers:{Authorization:'Bearer '+VALID_TOKEN}});
 check('A valid session with no licence is refused', r.status === 403);
 check('...and the response body is not the tool', !(await r.text()).includes('<title>'));
 
 LICENSED = true;
-r = await fetch(ORIGIN + '/tools/leaseverify.html', {headers:{Authorization:'Bearer good-token'}});
+r = await fetch(ORIGIN + '/tools/leaseverify.html', {headers:{Authorization:'Bearer '+VALID_TOKEN}});
 const toolHtml = await r.text();
 check('A licensed session gets the real tool file', r.status === 200 && toolHtml.includes('process-btn'));
 check('...and it is the LeaseVerify build specifically', /LeaseVerify/.test(toolHtml));
@@ -112,18 +113,19 @@ page.on('pageerror', e => errs.push(e.message));
 // replaced afterwards. The supabase-js library itself is intercepted instead:
 // the page then builds its real client from this stub and every code path it
 // takes -- including launchTool's getSession() -- is the production one.
-await page.route('**/supabase-js@2/**', route => route.fulfill({
+await page.route('**/supabase-js@2*/**', route => route.fulfill({
   status: 200,
   contentType: 'text/javascript',
   body: `window.supabase = {
     createClient: function(){
       return {
         auth: {
-          getSession: async () => ({data:{session:{access_token:'good-token', user:{id:'u1', email:'tester@leaseproof-login.test'}}}}),
+          getSession: async () => ({data:{session:{access_token:'${VALID_TOKEN}', user:{id:'u1', email:'tester@leaseproof-login.test'}}}}),
+          getUser:async()=>({data:{user:{id:'u1'}}}),
           signOut: async () => ({}),
           onAuthStateChange: function(){ return {data:{subscription:{unsubscribe(){}}}}; },
-          signInWithPassword: async () => ({data:{user:{id:'u1'},session:{access_token:'good-token'}}, error:null}),
-          signUp: async () => ({data:{user:{id:'u1'},session:{access_token:'good-token'}}, error:null}),
+          signInWithPassword: async () => ({data:{user:{id:'u1'},session:{access_token:'${VALID_TOKEN}'}}, error:null}),
+          signUp: async () => ({data:{user:{id:'u1'},session:{access_token:'${VALID_TOKEN}'}}, error:null}),
         },
         from: function(){
           const q = {
@@ -138,6 +140,7 @@ await page.route('**/supabase-js@2/**', route => route.fulfill({
   };`,
 }));
 // The tool launcher moved to the app page; the homepage is marketing only.
+await installBrowserSession(context,VALID_TOKEN);
 await page.goto(ORIGIN + '/app.html');
 await page.waitForTimeout(400);
 await page.evaluate(() => { isSignedIn = true; currentProperty = 'Blanco Oaks Apartments'; });

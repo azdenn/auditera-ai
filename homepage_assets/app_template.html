@@ -153,6 +153,10 @@ __SHARED_NAV__
         </p>
       </div>
 
+    <div class="signin-card hidden" id="account-load-state" role="status" aria-live="polite">
+      <p id="account-load-message"></p>
+      <button class="btn-primary hidden" id="account-load-retry" type="button">Retry loading properties</button>
+    </div>
     <div class="signedin-panel hidden" id="signedin-panel">
       <div class="signedin-top">
         <div>Signed in as <b id="signedin-email"></b></div>
@@ -222,7 +226,7 @@ __SHARED_NAV__
           <span class="tut-head"><b>How to use these tools</b><span>A short walkthrough &mdash; start here if it&rsquo;s your first run</span></span>
         </summary>
         <div class="tut-body">
-          <p class="tut-lede">Everything runs inside your own browser. Your leases, ledgers and rent rolls are never uploaded anywhere &mdash; close the tab and they&rsquo;re gone.</p>
+          <p class="tut-lede">Everything runs inside your own browser. Your leases, ledgers and rent rolls are never uploaded. A report you explicitly save stays in this browser until you delete it or clear browser storage.</p>
 
           <div class="tut-step">
             <div class="tut-num">1</div>
@@ -279,7 +283,10 @@ __SHARED_NAV__
 
 __SHARED_FOOTER__
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<!--SESSION_POLICY-->
+<!--SAVED_REPORTS_STYLE-->
+<!--SAVED_REPORTS-->
 
 <script>
 // Mobile nav toggle
@@ -427,8 +434,8 @@ async function launchTool(key){
   }
   let token = null;
   try {
-    const {data} = await sb.auth.getSession();
-    token = data && data.session ? data.session.access_token : null;
+    if(AUDITERA_SESSION)token=await AUDITERA_SESSION.token();
+    else {const {data}=await sb.auth.getSession();token=data?.session?.access_token||null;}
   } catch(e){ token = null; }
   if (!token){
     if (tab) tab.close();
@@ -575,7 +582,8 @@ function isBackendReady(){
     && SUPABASE_URL && !SUPABASE_URL.startsWith('YOUR_')
     && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.startsWith('YOUR_');
 }
-const sb = isBackendReady() ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+const sb = isBackendReady() ? window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true}}) : null;
+var AUDITERA_SESSION = typeof AuditSession!=='undefined'&&AuditSession.enabled(location.origin)&&sb ? AuditSession.create({client:sb,onLock:message=>{showSignedOut();window.dispatchEvent(new CustomEvent('auditera-session-locked',{detail:message}));}}) : null;
 if (!sb) console.warn('[Auditera AI] Running in local demo sign-in mode -- see SUPABASE_SETUP.md to turn on real accounts.');
 
 // ---- Local-only demo fallback (used only when the real backend isn't configured) ----
@@ -787,7 +795,9 @@ function enterPasswordRecovery(){
 if (sb && sb.auth && typeof sb.auth.onAuthStateChange === 'function'){
   try {
     sb.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') enterPasswordRecovery();
+      if(event==='PASSWORD_RECOVERY')enterPasswordRecovery();
+      else if(event==='SIGNED_OUT')queueMicrotask(()=>showSignedOut());
+      else if(['SIGNED_IN','TOKEN_REFRESHED'].includes(event))queueMicrotask(()=>void restoreSession());
     });
   } catch (_e){ /* URL flag still covers the recovery case */ }
 }
@@ -1040,6 +1050,12 @@ loginForm.addEventListener('submit', async (e) => {
       const { data, error } = await sb.auth.signInWithPassword({ email: loginEmail, password });
       if (error){ loginError.textContent = 'Email or password not recognized.'; loginError.classList.remove('hidden'); return; }
       const sub = await ensureSubscriptionForSession(data.user.id, username);
+      // The account is looked up here rather than threaded through
+      // ensureSubscriptionForSession, which has one job and does not need a
+      // second. A null account is fine -- the row still says who signed in and
+      // when, which is the whole point.
+      recordLogin(data.user.id);
+      if(AUDITERA_SESSION && !await AUDITERA_SESSION.signedIn()) return;
       showSignedIn(sub.username, sub.property);
     } finally { setFormBusy(loginForm, false); }
     return;
@@ -1057,6 +1073,34 @@ loginForm.addEventListener('submit', async (e) => {
   showSignedIn(username, acct.property);
 });
 
+/* One row per successful sign-in.
+   ---------------------------------------------------------------------------
+   WHAT TRAVELS: a user id, an account id and the time. Nothing else, ever.
+
+   HONEST ABOUT WHAT THIS IS. Unlike audit_runs -- which the licence gate
+   writes server-side with the service role, so the person being recorded
+   cannot suppress it -- this row is written by the browser after Supabase
+   accepts the password. Someone determined could block it. That makes it good
+   enough for "are my customers actually showing up" and NOT something to build
+   an accusation of password-sharing on; audit_runs stays the honest record for
+   that, because it is the one the audited party cannot edit.
+
+   Never awaited and never surfaced. A sign-in that worked must not show an
+   error because a statistic did not save, and nobody should wait on it to get
+   into the app. */
+async function recordLogin(userId){
+  try {
+    if (!sb || !userId) return;
+    let accountId = null;
+    try {
+      const { data } = await sb.from('subscriptions')
+        .select('account_id').eq('user_id', userId).maybeSingle();
+      accountId = (data && data.account_id) || null;
+    } catch (_e){ /* a login row without an account is still a login row */ }
+    await sb.from('login_events').insert({ user_id: userId, account_id: accountId });
+  } catch (_e){ /* never let a metric break a sign-in */ }
+}
+
 document.getElementById('logout-link').addEventListener('click', async (e) => {
   e.preventDefault();
   if (sb) await sb.auth.signOut();
@@ -1065,7 +1109,12 @@ document.getElementById('logout-link').addEventListener('click', async (e) => {
 });
 
 // Restore session on page load, if any.
-(async function restoreSession(){
+let restoreInFlight=null;
+async function restoreSession(){
+  if(restoreInFlight)return restoreInFlight;
+  restoreInFlight=restoreSessionWork().finally(()=>restoreInFlight=null);return restoreInFlight;
+}
+async function restoreSessionWork(){
   // A recovery link signs you in before you have chosen a password, so a
   // session existing here does NOT mean "show them the dashboard". Bailing out
   // is the whole reason the URL was captured up top: without this, the reset
@@ -1073,8 +1122,11 @@ document.getElementById('logout-link').addEventListener('click', async (e) => {
   if (AUTH_URL_STATE.isRecovery || AUTH_URL_STATE.error || inPasswordRecovery) return;
 
   if (sb){
-    const { data: { session } } = await sb.auth.getSession();
-    if (!session) return;
+    let session;
+    try{if(AUDITERA_SESSION){const verified=await AUDITERA_SESSION.check();if(!verified){showSignedOut();return;}}
+      const response=await sb.auth.getSession();session=response.data?.session;
+    }catch(e){showSignedOut();return;}
+    if(!session){showSignedOut();return;}
     // Defensive: a session without a readable user would otherwise throw here,
     // on the path that runs on every single page load, leaving the page half
     // initialised with no visible error.
@@ -1089,7 +1141,9 @@ document.getElementById('logout-link').addEventListener('click', async (e) => {
   const accounts = loadDemoAccounts();
   if (accounts[username]) showSignedIn(username, accounts[username].property);
   else sessionStorage.removeItem(SESSION_KEY);
-})();
+}
+void restoreSession();
+window.addEventListener('pageshow',()=>void restoreSession());
 
 /* ==========================================================================
    Onboarding and the licence dashboard
@@ -1181,8 +1235,8 @@ async function startCheckout(btn){
   }
   let token = null;
   try {
-    const {data} = await sb.auth.getSession();
-    token = data && data.session ? data.session.access_token : null;
+    if(AUDITERA_SESSION)token=await AUDITERA_SESSION.token();
+    else {const {data}=await sb.auth.getSession();token=data?.session?.access_token||null;}
   } catch(e){ token = null; }
   if (!token){
     alert('Your session has expired. Please sign in again.');
@@ -1222,18 +1276,38 @@ async function startCheckout(btn){
   window.location.href = payload.url;
 }
 
-// Decide which of the three states this account is in: needs onboarding,
-// or ready to work. Called after any sign-in and on page load.
+// A failed lookup is not an empty account. Do not offer onboarding or use stale
+// licences until a successful read establishes the current property state.
+let accountLoadRevision = 0;
 async function refreshAccountState(){
   const onboarding = document.getElementById('onboarding-card');
   const panel = document.getElementById('signedin-panel');
   if (!sb || !isSignedIn) return;
+  const revision = ++accountLoadRevision;
+  const loadState = document.getElementById('account-load-state');
+  const loadMessage = document.getElementById('account-load-message');
+  const retry = document.getElementById('account-load-retry');
+  licensedProperties = [];
+  onboarding.classList.add('hidden');
+  panel.classList.add('hidden');
+  signedoutView.classList.add('hidden');
+  loadState.classList.remove('hidden');
+  loadMessage.textContent = 'Loading your properties…';
+  retry.classList.add('hidden');
 
-  let props = [];
+  let props;
   try {
-    const { data, error } = await sb.from('properties').select('name, address, status, trial_ends_at');
-    if (!error && Array.isArray(data)) props = data;
-  } catch(e){ /* treated as "none", which shows onboarding rather than a dead dashboard */ }
+    const { data, error } = await sb.from('properties').select('id, name, address, status, trial_ends_at');
+    if (error || !Array.isArray(data)) throw new Error('Property lookup unavailable');
+    props = data;
+  } catch(e){
+    if (revision !== accountLoadRevision || !isSignedIn) return;
+    loadMessage.textContent = 'We could not load your properties. This does not mean your account is empty. Please try again.';
+    retry.classList.remove('hidden');
+    return;
+  }
+  if (revision !== accountLoadRevision || !isSignedIn) return;
+  loadState.classList.add('hidden');
 
   licensedProperties = props
     .filter(function(p){ return p.status === 'active' || p.status === 'trialing'; })
@@ -1249,8 +1323,10 @@ async function refreshAccountState(){
     if (onboarding) onboarding.classList.add('hidden');
     if (panel) panel.classList.remove('hidden');
     renderDashboard(props);
+    void SavedReports.dashboard(sb, AUDITERA_SESSION, props);
   }
 }
+document.getElementById('account-load-retry').addEventListener('click', refreshAccountState);
 
 const onboardingForm = document.getElementById('onboarding-form');
 if (onboardingForm){
@@ -1304,6 +1380,9 @@ showSignedIn = function(username, property){
 };
 const _origShowSignedOut = showSignedOut;
 showSignedOut = function(){
+  SavedReports.closeDashboard();
+  ++accountLoadRevision;
+  document.getElementById('account-load-state').classList.add('hidden');
   _origShowSignedOut();
   const onboarding = document.getElementById('onboarding-card');
   if (onboarding) onboarding.classList.add('hidden');
@@ -1328,7 +1407,7 @@ if (/[?&]start=trial\b/.test(location.search) && !inPasswordRecovery && !AUTH_UR
     note.classList.remove('hidden');
     if (outcome === 'success'){
       note.className = 'checkout-note ok';
-      note.textContent = 'Payment received. Your properties are switching over to active now — this can take a few seconds to show below.';
+      note.textContent = 'Checkout completed. Your billing status is being confirmed — this can take a few seconds. If a trial applies, billing starts at its agreed end.';
     } else {
       note.className = 'checkout-note info';
       note.textContent = 'Checkout was cancelled. Nothing was charged and nothing changed.';

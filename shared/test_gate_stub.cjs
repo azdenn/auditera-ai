@@ -85,4 +85,18 @@ function gateAnswerWithProperty(id, name){
   return { allowed: true, verdict: 'allowed', property: { id: id, name: name || 'Test Property' } };
 }
 
-module.exports = { installGateStub, installRulesStub, gateAnswerWithProperty, GATE_HASH };
+// Synthetic provider session, matching the same token that the dashboard passes in the URL.
+function sessionToken(user='synthetic-user', claims={}) {
+  return 'e30.'+Buffer.from(JSON.stringify({sub:user,session_id:'fixture-session',exp:Math.floor(Date.now()/1000)+3600,...claims})).toString('base64url')+'.synthetic';
+}
+async function installBrowserSession(page, token) {
+  await page.addInitScript(fallback=>{
+    const value=new URLSearchParams(location.hash.slice(1)).get('tk')||fallback;
+    let claims;try{claims=JSON.parse(atob(value.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));}catch{return;}
+    if(!claims.session_id)return;
+    localStorage.setItem('sb-kyfvrkghqohkhwidqwst-auth-token',JSON.stringify({
+      access_token:value,refresh_token:'fixture-only',expires_at:claims.exp,expires_in:3600,token_type:'bearer',user:{id:claims.sub,email:claims.email||'fixture@example.invalid'}
+    }));
+  },token);
+}
+module.exports = { sessionToken,installBrowserSession,installGateStub, installRulesStub, gateAnswerWithProperty, GATE_HASH };

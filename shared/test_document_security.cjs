@@ -85,7 +85,7 @@ async function main() {
       await page.close();
     }
     const page = await context.newPage();
-    await page.route('**/supabase-js@2/**', route => route.fulfill({contentType:'text/javascript',body:
+    await page.route('**/supabase-js@2*/**', route => route.fulfill({contentType:'text/javascript',body:
       'window.supabase={createClient:()=>({auth:{getSession:async()=>({data:{session:null}}),onAuthStateChange:()=>({})}})};'}));
     await page.goto('https://testing.auditera.net/app.html');
     const result = await page.evaluate(async () => {

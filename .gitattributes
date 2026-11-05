@@ -6,3 +6,5 @@
 /build.cjs text eol=lf
 /lease_tool/package-lock.json text eol=lf
 /dist/tools-build-manifest.json text eol=lf
+/homepage_assets/build_app.cjs text eol=lf
+/shared/saved_reports.css text eol=lf

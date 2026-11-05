@@ -519,7 +519,7 @@ body{background:var(--bg);}
           <span class="tut-head"><b>How to use these tools</b><span>A short walkthrough &mdash; start here if it&rsquo;s your first run</span></span>
         </summary>
         <div class="tut-body">
-          <p class="tut-lede">Everything runs inside your own browser. Your leases, ledgers and rent rolls are never uploaded anywhere &mdash; close the tab and they&rsquo;re gone.</p>
+          <p class="tut-lede">Everything runs inside your own browser. Your leases, ledgers and rent rolls are never uploaded. A report you explicitly save stays in this browser until you delete it or clear browser storage.</p>
 
           <div class="tut-step">
             <div class="tut-num">1</div>
@@ -590,7 +590,252 @@ body{background:var(--bg);}
   </div>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script>
+/* Six hours of genuine foreground user inactivity. Metadata only; Supabase owns tokens. */
+(function(root){
+  'use strict';
+  const IDLE_MS=6*60*60*1000;
+  const enabled=o=>['https://auditera.net','https://www.auditera.net','https://testing.auditera.net','https://auditera-testing.azden-kumar.workers.dev'].includes(o)||/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(o);
+  function sessionId(token){try{let p=token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');while(p.length%4)p+='=';const c=JSON.parse(root.atob?root.atob(p):Buffer.from(p,'base64').toString());return typeof c.session_id==='string'?c.session_id:null;}catch{return null;}}
+  function create({client,storage=root.localStorage,target=root,now=Date.now,onLock=()=>{},onChange=()=>{},verifyIdentity=true}){
+    if(!client?.auth)throw new Error('An existing Supabase client is required.');
+    let key=null,user=null,current=null,checking=null,locked=false,timer=null,disposed=false;
+    const PREFIX='auditera.activity.v1:';
+    function read(){if(!key)return null;try{const r=JSON.parse(storage.getItem(key)||'null');return r&&Number.isFinite(r.last)&&r.last<=now()+60000?r:null;}catch{return null;}}
+    function expired(r){return !r||r.loggedOut===true||now()-r.last>=IDLE_MS;}
+    function schedule(){clearTimeout(timer);if(disposed||!key)return;const r=read();if(expired(r)){void lock('Your session ended after six hours without activity. Sign in again.');return;}timer=setTimeout(()=>void enforce(),Math.min(60000,Math.max(1,r.last+IDLE_MS-now())));timer?.unref?.();}
+    async function lock(reason){if(locked)return;locked=true;current=null;try{if(key)storage.setItem(key,JSON.stringify({last:0,loggedOut:true}));}catch{}onLock(reason);onChange(null);try{await client.auth.signOut({scope:'local'});}catch{}clearTimeout(timer);}
+    async function enforce(){if(disposed)return false;if(key&&expired(read())){await lock('Your session ended after six hours without activity. Sign in again.');return false;}schedule();return !locked;}
+    async function runCheck(){
+      if(disposed||locked)return null;
+      if(key&&!await enforce())return null;
+      const {data,error}=await client.auth.getSession();const s=data?.session;
+      if(error||!s?.access_token||!s.user?.id){if(key)await lock('Please sign in again.');return null;}
+      const sid=sessionId(s.access_token);if(!sid)throw new Error('The session identity could not be verified. Reopen the dashboard.');
+      const next=PREFIX+JSON.stringify([s.user.id,sid]);
+      // Existing tombstones/idle records are checked BEFORE refresh/user lookup can revive UI.
+      if(next!==key){key=next;locked=false;let r=read();if(!r){try{storage.setItem(key,JSON.stringify({last:now(),loggedOut:false}));}catch{throw new Error('Session activity storage is unavailable. Sign in with browser storage enabled.');}}}
+      if(!await enforce())return null;
+      // Tools verify this token through their existing server-side audit gate.
+      const verified=verifyIdentity ? await client.auth.getUser(s.access_token) : {data:{user:s.user}};
+      if(verified.error){if([400,401,403].includes(verified.error.status)){await lock('Your sign-in could not be verified. Sign in again.');return null;}throw new Error('Sign-in verification is unavailable. Reconnect and try again.');}
+      if(verified.data?.user?.id!==s.user.id){await lock('Your sign-in could not be verified. Sign in again.');return null;}
+      if(!await enforce())return null;
+      user=verified.data.user;current={user,accessToken:s.access_token};onChange(current);schedule();return current;
+    }
+    async function check(){if(checking)return checking;checking=runCheck().finally(()=>checking=null);return checking;}
+    function activity(event){
+      if(!current||locked||disposed||!event?.isTrusted)return false;
+      if(target.document&&(target.document.visibilityState!=='visible'||(typeof target.document.hasFocus==='function'&&!target.document.hasFocus())))return false;
+      const r=read();if(expired(r)){void lock('Your session ended after six hours without activity. Sign in again.');return false;}
+      try{storage.setItem(key,JSON.stringify({last:now(),loggedOut:false}));}catch{void lock('Session activity could not be saved. Sign in again.');return false;}schedule();return true;
+    }
+    function crossTab(event){if(event.key===key)void enforce();}
+    function resume(){void check().catch(()=>onLock('Sign-in could not be checked. Reconnect and try again.'));}
+    for(const name of ['pointerdown','keydown','touchstart','wheel'])target.addEventListener?.(name,activity,{passive:true,capture:true});
+    target.addEventListener?.('storage',crossTab);target.addEventListener?.('pageshow',resume);
+    target.document?.addEventListener?.('visibilitychange',()=>{if(target.document.visibilityState==='visible')resume();});
+    const subscription=client.auth.onAuthStateChange?.((event)=>{
+      // Never await another Supabase auth method inside its callback/lock.
+      if(event==='SIGNED_OUT'){locked=true;current=null;try{if(key)storage.setItem(key,JSON.stringify({last:0,loggedOut:true}));}catch{}onLock('You are signed out. Sign in to view saved reports.');onChange(null);}
+      else if(['SIGNED_IN','TOKEN_REFRESHED'].includes(event))queueMicrotask(()=>{if(!disposed&&!locked)resume();});
+    });
+    return {check,token:async()=>(await check())?.accessToken||null,activity,enforce,lock,
+      async signedIn(){locked=false;key=null;return check();},
+      state:()=>({userId:user?.id||null,locked,lastActivity:read()?.last||null,idleMs:IDLE_MS}),
+      dispose(){disposed=true;clearTimeout(timer);subscription?.data?.subscription?.unsubscribe?.();for(const name of ['pointerdown','keydown','touchstart','wheel'])target.removeEventListener?.(name,activity,{capture:true});target.removeEventListener?.('storage',crossTab);target.removeEventListener?.('pageshow',resume);}};
+  }
+  const api={IDLE_MS,enabled,sessionId,create};if(typeof module==='object'&&module.exports)module.exports=api;else root.AuditSession=api;
+})(typeof globalThis!=='undefined'?globalThis:this);
+
+</script>
+<style>
+.saved-reports,.save-report-bar{border:1px solid var(--line,#42465b);background:var(--card,#191c2b);border-radius:14px;padding:18px;margin:18px 0;color:var(--ink,#f5f6fc);font:16px/1.5 "Segoe UI",sans-serif}
+.saved-reports h3{margin:0;font-size:1.2rem}.saved-reports p{margin:5px 0 10px;color:var(--ink-soft,#c5c9df)}
+.saved-row,.save-report-bar,.saved-reader header{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.saved-row{justify-content:space-between;border-top:1px solid var(--line,#42465b);padding:12px 0}
+.saved-row strong,.saved-row small{display:block;overflow-wrap:anywhere}.saved-row small{font-size:14px;color:var(--ink-soft,#c5c9df)}
+.saved-row button,.save-report-bar button,.saved-reader button{min-height:44px;padding:9px 18px;font:600 16px/1.3 "Segoe UI",sans-serif;background:#abaaff;border:0;border-radius:9px;color:#141426;cursor:pointer}
+.save-report-bar input{display:block;font:inherit;color:inherit;background:var(--bg,#10121d);border:1px solid var(--line,#666);border-radius:7px;padding:8px;max-width:100%;min-width:0;width:245px}
+.save-report-bar label{font-size:14px;font-weight:600;max-width:100%}.save-report-bar span{font-size:15px}.save-report-bar a{color:var(--ink,#eee);text-decoration:underline}.save-report-bar button:disabled{opacity:.8}
+.saved-reader{background:#fff;border:0;border-radius:12px;padding:0;width:min(960px,96vw);max-width:96vw;color:#181824}.saved-reader::backdrop{background:#141522bc}
+.saved-reader header{justify-content:space-between;padding:12px 18px;background:#202135;color:white}.saved-reader iframe{display:block;width:100%;height:75vh;border:0;background:white}
+
+</style>
+<script>
+/* Read-only report snapshots. IndexedDB is private to this browser origin. */
+(function () {
+  'use strict';
+  const api = window.SavedReports = {};
+  let database, host, dialog, dashboardVersion = 0, binding, saveState;
+  function el(tag, text, parent) {
+    const node = document.createElement(tag);
+    if (text) node.textContent = text;
+    parent?.append(node);
+    return node;
+  }
+  function action(label, parent, fn) {
+    const button = el('button', label, parent);
+    button.type = 'button';
+    button.addEventListener('click', fn);
+    return button;
+  }
+  function db() {
+    if (!database) database = new Promise((resolve, reject) => {
+      const request = indexedDB.open('auditera.saved-reports.v1', 1);
+      request.onupgradeneeded = () => {
+        request.result.createObjectStore('titles', {keyPath:'id'}).createIndex('owner','owner');
+        request.result.createObjectStore('reports');
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    }).catch(error => { database = null; throw error; });
+    return database;
+  }
+  async function transaction(mode, work) {
+    const database = await db();
+    return new Promise((resolve, reject) => {
+      const tx = database.transaction(['reports','titles'], mode);
+      const result = work(tx.objectStore('titles'),tx.objectStore('reports'));
+      tx.oncomplete = () => resolve(result?.result);
+      tx.onabort = tx.onerror = () => reject(tx.error || Error('Browser storage is unavailable.'));
+    });
+  }
+  function active(p) {
+    return p.status === 'active' || (p.status === 'trialing' && Date.parse(p.trial_ends_at) > Date.now());
+  }
+  function dismiss() {
+    if (dialog) { dialog.close(); dialog.remove(); dialog = null; }
+  }
+  api.closeDashboard = () => { ++dashboardVersion; dismiss(); host?.remove(); host = null; };
+  function message(node, text) { node.textContent = text; }
+  function date(ms) {
+    return new Date(ms).toLocaleString(undefined,{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
+  }
+  // Use the tool's own printable summary and its per-unit detail renderer.
+  // Keep only passive markup. Never retain original files, scripts or URLs.
+  function passive(html) {
+    const template = document.createElement('template');
+    template.innerHTML = html;
+    const allowed = new Set('STYLE MAIN SECTION HEADER FOOTER ARTICLE H1 H2 H3 H4 DIV P SPAN B STRONG EM SMALL TABLE THEAD TBODY TFOOT TR TH TD BR HR UL OL LI DETAILS SUMMARY PRE'.split(' '));
+    for (const node of template.content.querySelectorAll('*')) {
+      if (!allowed.has(node.tagName)) {
+        if (['SCRIPT','IFRAME','OBJECT','TEMPLATE','LINK','META','IMG','SVG','BUTTON','TITLE'].includes(node.tagName.toUpperCase())) node.remove();
+        else node.replaceWith(...node.childNodes);
+      } else for (const attr of [...node.attributes]) {
+        if (!['class','colspan','rowspan','open','style'].includes(attr.name)) node.removeAttribute(attr.name);
+      }
+    }
+    return template.innerHTML;
+  }
+  function viewer(html) {
+    // Sandbox, deny network access, and sanitize again at the storage boundary.
+    return '<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'; form-action \'none\'; base-uri \'none\'"><meta name="viewport" content="width=device-width,initial-scale=1">'+
+      passive(html)+'<style>body{padding:clamp(12px,3vw,32px);overflow-wrap:anywhere}details{padding:9px 0}summary{cursor:pointer;font-weight:600}table{max-width:100%}</style>';
+  }
+  api.dashboard = async function(client, session, properties) {
+    if (!client || !session) return;
+    const version = ++dashboardVersion;
+    const identity = await session.check().catch(() => null);
+    if (version !== dashboardVersion || !identity || !isSignedIn) return;
+    if (!host) {
+      host = el('section'); host.className = 'saved-reports'; host.id = 'saved-reports';
+      document.querySelector('#signedin-panel .signedin-top').after(host);
+    }
+    const panel = host;
+    const stillHere = () => version === dashboardVersion && panel === host && isSignedIn && !session.state().locked && session.state().userId === identity.user.id;
+    const list = await transaction('readonly', titles => titles.index('owner').getAll(identity.user.id)).catch(() => null);
+    if (!stillHere()) return;
+    panel.replaceChildren();
+    el('h3','Saved reports',panel);
+    const note = el('p','',panel);
+    note.setAttribute('role','status');
+    if (!list) return message(note,'Your browser could not open saved reports. Reload this page to try again.');
+    const ids = new Set(properties.filter(active).map(p=>p.id));
+    if (dialog && !ids.has(dialog.dataset.propertyId)) dismiss();
+    const rows = list.filter(r=>ids.has(r.propertyId)).sort((a,b)=>b.when-a.when);
+    message(note,rows.length ? 'Saved in this browser. Open a report to view it.' : 'After an audit, choose Save report. You’ll find it here in this browser.');
+    for (const row of rows) {
+      const line = el('div','',panel); line.className = 'saved-row';
+      const label = el('div','',line); el('strong',row.name,label);
+      el('small',[row.property,row.tool,date(row.when)].join(' · '),label);
+      const open = action('Open report',line,async () => {
+        open.disabled = true;
+        try {
+          const user = await session.check();
+          if (!stillHere() || user?.user.id !== row.owner) return;
+          const {data,error} = await client.from('properties').select('id,status,trial_ends_at').eq('id',row.propertyId);
+          if (error || !data?.some(p => p.id === row.propertyId && active(p))) throw Error('Access to this property could not be confirmed. Reload and try again.');
+          const report = await transaction('readonly',(_,reports)=>reports.get(row.id));
+          if (!stillHere()) return;
+          if (!report || report.owner !== row.owner || report.propertyId !== row.propertyId) throw Error('This report is unavailable. Reload and try again.');
+          dismiss(); dialog = el('dialog','',document.body); dialog.className='saved-reader'; dialog.dataset.propertyId=row.propertyId;
+          const bar=el('header','',dialog); el('strong',row.name,bar);
+          action('Back to dashboard',bar,dismiss);
+          const frame=el('iframe','',dialog); frame.title=row.name; frame.setAttribute('sandbox',''); frame.srcdoc=viewer(report.html);
+          dialog.addEventListener('cancel',event=>{event.preventDefault();dismiss();});
+          dialog.showModal();
+        } catch(error) { if(stillHere()) message(note,error.message); }
+        finally { open.disabled=false; }
+      });
+      open.setAttribute('aria-label','Open report: '+row.name);
+    }
+    if(location.hash==='#saved-reports') panel.scrollIntoView({block:'center'});
+  };
+  api.authorized = (property,token) => {
+    binding=property?.id && token ? {property,sid:AuditSession.sessionId(token)} : null;
+    saveState?.reset();
+  };
+  api.tool = function(tool, makeReport, entries, detail) {
+    if (!AuditSession.enabled(location.origin)) return;
+    const back=document.querySelector('.tool-back'); if(back) back.href=location.origin+'/app';
+    const launchId=AG_TOKEN && AuditSession.sessionId(AG_TOKEN);
+    const client=window.supabase.createClient(AG_SUPABASE_URL,AG_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+    function leave() { binding=null; location.replace(location.origin+'/app'); }
+    const policy=AuditSession.create({client,onLock:leave,verifyIdentity:false});
+    api.toolSession={async token(){
+      const token=await policy.token();
+      return token && launchId && AuditSession.sessionId(token)===launchId ? token : null;
+    }};
+    if (launchId) void policy.check().then(user=>{if(!user || AuditSession.sessionId(user.accessToken)!==launchId) leave();}).catch(()=>{});
+    const card=document.getElementById('results-card');
+    const panel=el('section'); panel.className='save-report-bar'; card.prepend(panel);
+    const field=el('label','Report name',panel), name=el('input','',field);
+    name.maxLength=120;
+    const save=action('Save report',panel,async()=>{
+      const run=binding;
+      if (!run || !entries()?.length || card.classList.contains('hidden') || (typeof paPending==='function' && paPending())) return message(note,'Finish this audit before saving.');
+      save.disabled=true;
+      try {
+        const identity=await policy.check();
+        if (!identity || !run.sid || run.sid!==launchId || AuditSession.sessionId(identity.accessToken)!==launchId || binding!==run) throw Error('Reopen this tool from your dashboard to save.');
+        const report=makeReport(); if (!report) throw Error('Finish this audit before saving.');
+        const section=el('section'); el('h2','Unit details',section);
+        for(const entry of entries()){
+          const group=el('details','',section); el('summary',[entry.unit,entry.residents].filter(Boolean).join(' · '),group);
+          const part=detail(entry);
+          if(typeof part==='string') group.insertAdjacentHTML('beforeend',passive(part)); else if(part) group.append(part);
+        }
+        const when=Date.now(), id=crypto.randomUUID(), owner=identity.user.id, propertyId=run.property.id;
+        const title=name.value.trim() || defaultName();
+        const meta={id,owner,propertyId,property:run.property.name||'Property',name:title,tool,when};
+        const html=passive(report+section.outerHTML);
+        await transaction('readwrite',(titles,reports)=>{titles.add(meta);reports.add({owner,propertyId,html},id);});
+        if(binding!==run)return;
+        save.textContent='Saved'; message(note,'Saved. Find it under Saved reports on your dashboard.'); link.hidden=false;
+      } catch(error) { message(note,error.name==='QuotaExceededError'?'Browser storage is full. Free space and try again.':error.message); save.disabled=false; }
+    });
+    const note=el('span','',panel); note.setAttribute('role','status');
+    const link=el('a','View saved reports',panel);link.href=location.origin+'/app#saved-reports';link.hidden=true;
+    function defaultName(){return tool+' · '+new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});}
+    saveState={reset(){name.value=defaultName();save.disabled=false;save.textContent='Save report';link.hidden=true;message(note,'Use this browser to reopen your report.');}};
+    saveState.reset();
+    document.getElementById('process-btn').addEventListener('click',()=>{binding=null;saveState.reset();},{capture:true});
+  };
+})();
+
+</script>
 
 <script>
 // Mobile nav toggle
@@ -738,8 +983,8 @@ async function launchTool(key){
   }
   let token = null;
   try {
-    const {data} = await sb.auth.getSession();
-    token = data && data.session ? data.session.access_token : null;
+    if(AUDITERA_SESSION)token=await AUDITERA_SESSION.token();
+    else {const {data}=await sb.auth.getSession();token=data?.session?.access_token||null;}
   } catch(e){ token = null; }
   if (!token){
     if (tab) tab.close();
@@ -886,7 +1131,8 @@ function isBackendReady(){
     && SUPABASE_URL && !SUPABASE_URL.startsWith('YOUR_')
     && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.startsWith('YOUR_');
 }
-const sb = isBackendReady() ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+const sb = isBackendReady() ? window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true}}) : null;
+var AUDITERA_SESSION = typeof AuditSession!=='undefined'&&AuditSession.enabled(location.origin)&&sb ? AuditSession.create({client:sb,onLock:message=>{showSignedOut();window.dispatchEvent(new CustomEvent('auditera-session-locked',{detail:message}));}}) : null;
 if (!sb) console.warn('[Auditera AI] Running in local demo sign-in mode -- see SUPABASE_SETUP.md to turn on real accounts.');
 
 // ---- Local-only demo fallback (used only when the real backend isn't configured) ----
@@ -1098,7 +1344,9 @@ function enterPasswordRecovery(){
 if (sb && sb.auth && typeof sb.auth.onAuthStateChange === 'function'){
   try {
     sb.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') enterPasswordRecovery();
+      if(event==='PASSWORD_RECOVERY')enterPasswordRecovery();
+      else if(event==='SIGNED_OUT')queueMicrotask(()=>showSignedOut());
+      else if(['SIGNED_IN','TOKEN_REFRESHED'].includes(event))queueMicrotask(()=>void restoreSession());
     });
   } catch (_e){ /* URL flag still covers the recovery case */ }
 }
@@ -1356,6 +1604,7 @@ loginForm.addEventListener('submit', async (e) => {
       // second. A null account is fine -- the row still says who signed in and
       // when, which is the whole point.
       recordLogin(data.user.id);
+      if(AUDITERA_SESSION && !await AUDITERA_SESSION.signedIn()) return;
       showSignedIn(sub.username, sub.property);
     } finally { setFormBusy(loginForm, false); }
     return;
@@ -1409,7 +1658,12 @@ document.getElementById('logout-link').addEventListener('click', async (e) => {
 });
 
 // Restore session on page load, if any.
-(async function restoreSession(){
+let restoreInFlight=null;
+async function restoreSession(){
+  if(restoreInFlight)return restoreInFlight;
+  restoreInFlight=restoreSessionWork().finally(()=>restoreInFlight=null);return restoreInFlight;
+}
+async function restoreSessionWork(){
   // A recovery link signs you in before you have chosen a password, so a
   // session existing here does NOT mean "show them the dashboard". Bailing out
   // is the whole reason the URL was captured up top: without this, the reset
@@ -1417,8 +1671,11 @@ document.getElementById('logout-link').addEventListener('click', async (e) => {
   if (AUTH_URL_STATE.isRecovery || AUTH_URL_STATE.error || inPasswordRecovery) return;
 
   if (sb){
-    const { data: { session } } = await sb.auth.getSession();
-    if (!session) return;
+    let session;
+    try{if(AUDITERA_SESSION){const verified=await AUDITERA_SESSION.check();if(!verified){showSignedOut();return;}}
+      const response=await sb.auth.getSession();session=response.data?.session;
+    }catch(e){showSignedOut();return;}
+    if(!session){showSignedOut();return;}
     // Defensive: a session without a readable user would otherwise throw here,
     // on the path that runs on every single page load, leaving the page half
     // initialised with no visible error.
@@ -1433,7 +1690,9 @@ document.getElementById('logout-link').addEventListener('click', async (e) => {
   const accounts = loadDemoAccounts();
   if (accounts[username]) showSignedIn(username, accounts[username].property);
   else sessionStorage.removeItem(SESSION_KEY);
-})();
+}
+void restoreSession();
+window.addEventListener('pageshow',()=>void restoreSession());
 
 /* ==========================================================================
    Onboarding and the licence dashboard
@@ -1525,8 +1784,8 @@ async function startCheckout(btn){
   }
   let token = null;
   try {
-    const {data} = await sb.auth.getSession();
-    token = data && data.session ? data.session.access_token : null;
+    if(AUDITERA_SESSION)token=await AUDITERA_SESSION.token();
+    else {const {data}=await sb.auth.getSession();token=data?.session?.access_token||null;}
   } catch(e){ token = null; }
   if (!token){
     alert('Your session has expired. Please sign in again.');
@@ -1587,7 +1846,7 @@ async function refreshAccountState(){
 
   let props;
   try {
-    const { data, error } = await sb.from('properties').select('name, address, status, trial_ends_at');
+    const { data, error } = await sb.from('properties').select('id, name, address, status, trial_ends_at');
     if (error || !Array.isArray(data)) throw new Error('Property lookup unavailable');
     props = data;
   } catch(e){
@@ -1613,6 +1872,7 @@ async function refreshAccountState(){
     if (onboarding) onboarding.classList.add('hidden');
     if (panel) panel.classList.remove('hidden');
     renderDashboard(props);
+    void SavedReports.dashboard(sb, AUDITERA_SESSION, props);
   }
 }
 document.getElementById('account-load-retry').addEventListener('click', refreshAccountState);
@@ -1669,6 +1929,7 @@ showSignedIn = function(username, property){
 };
 const _origShowSignedOut = showSignedOut;
 showSignedOut = function(){
+  SavedReports.closeDashboard();
   ++accountLoadRevision;
   document.getElementById('account-load-state').classList.add('hidden');
   _origShowSignedOut();

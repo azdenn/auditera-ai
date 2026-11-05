@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');const path=require('node:path');
 const {chromium}=require('playwright');
-const {installGateStub}=require('./test_gate_stub.cjs');
+const {sessionToken,installBrowserSession,installGateStub}=require('./test_gate_stub.cjs');
 let n=0;const check=(name,fn)=>{fn();n++;console.log('PASS '+name);};
 (async()=>{
   const browser=await chromium.launch({headless:true});
@@ -11,7 +11,7 @@ let n=0;const check=(name,fn)=>{fn();n++;console.log('PASS '+name);};
     await page.route('https://testing.auditera.net/pilot-test',r=>r.fulfill({contentType:'text/html',body:fs.readFileSync(path.join(__dirname,'../dist/tools/leaseverify.html'),'utf8')}));
     await installGateStub(page,{allowed:true,verdict:'allowed',property:{id:'synthetic-property'}});
     await page.route('**/rest/v1/property_rules*',r=>{if(r.request().method()!=='GET')writes.push(r.request().method());return r.fulfill({contentType:'application/json',body:'[]'});});
-    const token='x.'+Buffer.from(JSON.stringify({sub:'synthetic-user'})).toString('base64url')+'.x';
+    const token=sessionToken('synthetic-user');await installBrowserSession(page,token);
     await page.goto('https://testing.auditera.net/pilot-test#tk='+token);
     async function seed(kind='mismatch'){
       return page.evaluate(async kind=>{

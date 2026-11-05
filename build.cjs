@@ -4,7 +4,7 @@
 // node build.cjs --check verifies source/artifact parity without writing
 const fs = require('node:fs');
 const path = require('node:path');
-const { ROOT, TOOLS, compose, write, hash } = require('./shared/build_tool.cjs');
+const { ROOT, TOOLS, compose, write, hash, composeApp, writeApp } = require('./shared/build_tool.cjs');
 const check = process.argv.includes('--check');
 const manifest = { schemaVersion: 1, tools: {} };
 for (const [tool, name] of Object.entries(TOOLS)) {
@@ -17,6 +17,10 @@ for (const [tool, name] of Object.entries(TOOLS)) {
   manifest.tools[name] = { inputs: result.inputs, sha256: result.sha256 };
   console.log((check ? 'Verified ' : 'Built ') + name);
 }
+const app=check?composeApp():writeApp();
+if(check&&(!fs.existsSync(path.join(ROOT,'dist/app.html'))||hash(fs.readFileSync(path.join(ROOT,'dist/app.html')))!==app.sha256))throw new Error('Dashboard source/dist mismatch');
+manifest.app={inputs:app.inputs,sha256:app.sha256};
+console.log((check?'Verified ':'Built ')+'dashboard');
 const manifestPath = path.join(ROOT, 'dist/tools-build-manifest.json');
 const serialized = JSON.stringify(manifest, null, 2) + '\n';
 if (check) {

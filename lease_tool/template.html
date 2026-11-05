@@ -304,7 +304,7 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
        usually no history in this tab to go back through. Absolute, because a
        tool is served from a blob: URL where relative paths resolve to
        nothing. -->
-  <a class="tool-back" href="https://auditera.net/">
+  <a class="tool-back" href="https://auditera.net/app">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
     <span>Back to Auditera AI</span>
   </a>
@@ -557,6 +557,10 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
 <!--PROPERTY_ASSISTANT-->
 <!--RR_PROPERTY_NAME-->
 <!--AUDIT_GATE-->
+<!--SESSION_SDK-->
+<!--SESSION_POLICY-->
+<!--SAVED_REPORTS_STYLE-->
+<!--SAVED_REPORTS-->
 <!--CSV_EXPORT-->
 <script>
 /* =========================================================================
@@ -7898,5 +7902,8 @@ document.getElementById('export-pdf-btn').addEventListener('click', () => {
 });
 </script>
 <!--PROPERTY_ASSISTANT_UI-->
+<script>
+SavedReports.tool('LeaseVerify', buildPdfReportHtml, () => unitEntries, buildDetail);
+</script>
 </body>
 </html>
