@@ -5,11 +5,15 @@ const ROOT=path.resolve(__dirname,'..'), ORIGIN='https://testing.auditera.net', 
 const uid='10000000-0000-0000-0000-000000000001',account='20000000-0000-0000-0000-000000000001',property='30000000-0000-0000-0000-000000000001',propertyB='30000000-0000-0000-0000-000000000002';
 const activeSid='40000000-0000-0000-0000-000000000001',requests=[];
 const sdk=fs.readFileSync(path.join(ROOT,'lease_tool/node_modules/@supabase/supabase-js/dist/umd/supabase.js'),'utf8');
-let revoked=false, auditDecision={allowed:true,verdict:'allowed',property:{id:property,name:'Example Apartments'}};
+let privateAccess=true,revoked=false, auditDecision={allowed:true,verdict:'allowed',property:{id:property,name:'Example Apartments'}};
 function session(userId=uid){const now=Math.floor(Date.now()/1000),user={id:userId,email:'invented@example.invalid',aud:'authenticated',role:'authenticated',created_at:'2026-01-01T00:00:00Z',app_metadata:{},user_metadata:{}};return {access_token:'e30.'+Buffer.from(JSON.stringify({sub:userId,session_id:activeSid,exp:now+3600,iat:now,role:'authenticated'})).toString('base64url')+'.synthetic',refresh_token:'synthetic-refresh-token',expires_at:now+3600,expires_in:3600,token_type:'bearer',user};}
 async function routes(context){
  await context.route('**/*',async route=>{
   const req=route.request(),u=new URL(req.url());requests.push({url:u.href,body:req.postData()||''});
+  if(u.origin===ORIGIN && u.pathname==='/api/private-report-access'){
+    assert(req.headers().authorization?.startsWith('Bearer '));
+    return route.fulfill({status:privateAccess?204:403});
+  }
   if(u.origin===ORIGIN){const rel=u.pathname==='/app'?'app.html':u.pathname==='/'?'index.html':u.pathname.slice(1);if(!/^(?:app\.html|index\.html|resman-setup\.js|tools\/(?:lease|concession|deposit)verify\.html)$/.test(rel))return route.abort();const file=path.join(ROOT,'dist',rel);if(!fs.existsSync(file))return route.fulfill({status:404,body:'missing synthetic asset'});return route.fulfill({contentType:rel.endsWith('.js')?'text/javascript':'text/html',body:fs.readFileSync(file)});}
   if(u.hostname==='cdn.jsdelivr.net'&&u.pathname.includes('/@supabase/supabase-js@'))return route.fulfill({contentType:'text/javascript',body:sdk});
   if(u.origin!==BACKEND)return route.abort();
@@ -104,7 +108,8 @@ async function routes(context){
   await run.locator('#process-btn').click();await run.locator('#results-card').waitFor();
   await run.getByLabel('Report name').fill('Completed upload');await run.getByRole('button',{name:'Save report',exact:true}).click();
   await run.getByRole('button',{name:'Saved',exact:true}).waitFor({timeout:3000}).catch(async()=>{throw Error('Completed upload: '+await run.locator('.save-report-bar [role=status]').innerText())});
-  await dashboard.reload();await dashboard.getByRole('button',{name:'Open report: Completed upload',exact:true}).click();
+  // The original dashboard stays open while a different tab processes and saves.
+  await dashboard.getByRole('button',{name:'Open report: Completed upload',exact:true}).click({timeout:2500});
   await dashboard.frameLocator('.saved-reader iframe').getByText('101 · Synthetic Tester',{exact:true}).waitFor();
   await dashboard.getByRole('button',{name:'Back to dashboard'}).click();
   // A completed, vacant-only rent roll is a valid zero-unit snapshot.
@@ -121,14 +126,25 @@ async function routes(context){
   await run.setInputFiles('#rentroll-file',roll('Other Synthetic Building',true));
   await run.locator('#process-btn').click();await run.locator('#results-card').waitFor();
   await run.getByRole('button',{name:'Save report',exact:true}).click();
-  const pending=run.waitForEvent('download');
-  await run.getByRole('button',{name:'Download report copy'}).click();
+  await run.getByRole('button',{name:'Saved',exact:true}).waitFor();
+  const row=dashboard.locator('#saved-reports .saved-row').filter({hasText:'Other Synthetic Building'});
+  await row.waitFor({timeout:3000});
+  await run.close();
+  await dashboard.reload();await row.getByRole('button').click();
+  const reader=dashboard.locator('.saved-reader');
+  await dashboard.frameLocator('.saved-reader iframe').getByText('101 · Synthetic Tester',{exact:true}).waitFor();
+  const pending=dashboard.waitForEvent('download');
+  await reader.getByRole('button',{name:'Download copy'}).click();
   const downloaded=await pending;
   const downloadBody=fs.readFileSync(await downloaded.path(),'utf8');
   assert(downloadBody.includes('Synthetic Tester'));assert(downloadBody.includes('Content-Security-Policy'));
   assert(!/<script\b/i.test(downloadBody));
-  await dashboard.reload();assert.equal(await dashboard.locator('#saved-reports .saved-row').filter({hasText:'Other Synthetic Building'}).count(),0);
-  await run.close();
+  await reader.getByRole('button',{name:'Back to dashboard'}).click();
+  privateAccess=false;
+  await row.getByRole('button').click();
+  await dashboard.locator('#saved-reports [role=status]').filter({hasText:'could not be confirmed'}).waitFor();
+  assert.equal(await dashboard.locator('.saved-reader').count(),0);
+  privateAccess=true;
   const documentPage=await context.newPage();
   await documentPage.setContent('<h1>Example Apartments</h1><p>Unit: 101</p><p>Resident: Synthetic Tester</p><p>Monthly rent $900.00</p>');
   const documentBytes=await documentPage.pdf();await documentPage.close();
@@ -147,10 +163,10 @@ async function routes(context){
     await dashboard.getByRole('button',{name:'Back to dashboard'}).click();await toolPage.close();
   }
   await dashboard.goto(ORIGIN+'/');await dashboard.goBack();await dashboard.locator('#saved-reports .saved-row').first().waitFor();
-  assert.equal(await dashboard.locator('#saved-reports .saved-row').count(),19);
+  assert.equal(await dashboard.locator('#saved-reports .saved-row').count(),20);
   await dashboard.evaluate(()=>{for(const k of Object.keys(localStorage))if(k.startsWith('auditera.activity.v1:'))localStorage.setItem(k,JSON.stringify({last:Date.now()-21600001}));});
   await dashboard.reload();await dashboard.locator('#login-form').waitFor();assert.equal(await dashboard.locator('#saved-reports').count(),0);
   assert.deepEqual(errors,[]);assert(!requests.some(r=>r.body.includes('Sample resident')||r.body.includes('Review the monthly charge')));
-  console.log('PASS Back, nineteen saved snapshots, idle lock, local-only report contents and no page errors.');
+  console.log('PASS Back, twenty saved snapshots, including private save/reopen/download, idle lock, local-only report contents and no page errors.');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

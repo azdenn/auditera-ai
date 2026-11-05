@@ -3,6 +3,7 @@
    driven, including the ones that only happen when something is broken.
    The cases that matter most are the FAILURE ones: a gate that fails open is
    worse than no gate, because it looks like protection and isn't. */
+import { DEV_USER_IDS } from '../edge/developer_accounts.mjs';
 import worker from '../dist/_worker.js';
 
 const ASSET_BODY = '<html>THE TOOL</html>';
@@ -13,11 +14,11 @@ function req(path, token){
   return new Request('https://auditly.example' + path, token ? {headers:{Authorization:'Bearer ' + token}} : {});
 }
 // Stub Supabase: token 'good' is valid; 'licensed' is valid AND has a licence.
-function stubSupabase({userStatus = 200, propsStatus = 200, props = false, throwOn = null} = {}){
+function stubSupabase({userStatus = 200, userId = 'ordinary', propsStatus = 200, props = false, throwOn = null} = {}){
   globalThis.fetch = async (url) => {
     const u = String(url);
     if (throwOn && u.includes(throwOn)) throw new Error('network down');
-    if (u.includes('/auth/v1/user')) return new Response('{}', {status: userStatus});
+    if (u.includes('/auth/v1/user')) return new Response(JSON.stringify({id:userId}), {status: userStatus});
     if (u.includes('/rest/v1/rpc/has_active_licence')) return new Response(JSON.stringify(props), {status: propsStatus});
     throw new Error('unexpected call: ' + u);
   };
@@ -37,6 +38,18 @@ let x = await read(await worker.fetch(req('/'), ENV));
 check('The homepage is public and served without any check', x.status === 200 && x.text === ASSET_BODY);
 x = await read(await worker.fetch(req('/index.html'), ENV));
 check('Static assets are public', x.status === 200);
+
+const review='/api/private-report-access';
+for (const [label,token,options,status] of [
+  ['anonymous',null,{},401],
+  ['ordinary licensed','ok',{props:true},403],
+  ['revoked reviewer','ok',{userId:[...DEV_USER_IDS][0],props:false},403],
+  ['licensed reviewer','ok',{userId:[...DEV_USER_IDS][0],props:true},204]
+]) {
+  stubSupabase(options);
+  const response=await worker.fetch(req(review,token),ENV);
+  check('Private report access: '+label,response.status===status && response.headers.get('Cache-Control')==='no-store');
+}
 
 // --- the gate -------------------------------------------------------------
 x = await read(await worker.fetch(req('/tools/leaseverify.html'), ENV));

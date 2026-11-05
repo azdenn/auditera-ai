@@ -73,10 +73,7 @@ function json(body: unknown, status = 200){
    that the anti-sharing review depends on.
    ------------------------------------------------------------------------- */
 
-const DEV_USER_IDS = new Set<string>([
-  'feb96d01-e806-4233-b814-1798ffc259fb', // azden.kumar@gmail.com
-  '4fdbb62b-2773-4288-832f-6461f17ecdb3', // rkjeev69@gmail.com
-]);
+import { DEV_USER_IDS } from './developer_accounts.mjs';
 
 /* ---------------------------------------------------------------------------
    Matching. Kept character-for-character in step with shared/property_guard.js

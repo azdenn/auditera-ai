@@ -29,6 +29,8 @@
      SUPABASE_ANON_KEY  the publishable anon key (safe to expose)
    =========================================================================== */
 
+import { DEV_USER_IDS } from '../edge/developer_accounts.mjs';
+
 const TOOL_PREFIX = '/tools/';
 
 /* KEEPING THE TESTING SITE OUT OF GOOGLE.
@@ -82,7 +84,8 @@ export default {
     }
 
     // Anything that isn't a tool is public: marketing page, sign-in, assets.
-    if (!url.pathname.startsWith(TOOL_PREFIX)){
+    const reportAccess = url.pathname === '/api/private-report-access';
+    if (!reportAccess && !url.pathname.startsWith(TOOL_PREFIX)){
       const assetRes = await env.ASSETS.fetch(request);
       if (indexable) return assetRes;
       const tagged = new Response(assetRes.body, assetRes);
@@ -145,6 +148,13 @@ export default {
     try { entitled = (await licences.json()) === true; } catch (e){ entitled = false; }
     if (!entitled){
       return deny(403, 'There is no active property on this account yet. Add one to start your free trial, or get in touch if your trial has ended.');
+    }
+
+    if (reportAccess) {
+      let user;
+      try { user = await who.json(); } catch { return deny(503, 'Sign-in could not be verified.'); }
+      if (!DEV_USER_IDS.has(user?.id)) return deny(403, 'A current property licence is required for this report.');
+      return new Response(null,{status:204,headers:{'Cache-Control':'no-store'}});
     }
 
     /* Cleared. Serve the tool.
