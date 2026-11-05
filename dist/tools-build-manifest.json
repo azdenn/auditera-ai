@@ -3,8 +3,8 @@
   "tools": {
     "leaseverify": {
       "inputs": {
-        "lease_tool/template.html": "7b7ae11c75b90782002d47fcfcfae667b351076f47757a340e45579cfcf33fbf",
-        "shared/build_tool.cjs": "db4d1e3105bd440d3701f12819174b3edba0b7ef05990cc603e8dcb7a350524b",
+        "lease_tool/template.html": "6b9efb9ba7f836cdf19c741b049ac8c257a38cecb68ad964a1e33d2691b61c40",
+        "shared/build_tool.cjs": "4338555ed46db96ad8a8a91fdb85f797418df310f3198da0a83944437f5eddd7",
         "build.cjs": "dd25fd2b261d29d5632181773fb6dd27b33e27c3744aefed829909a12b8f88ec",
         "lease_tool/package-lock.json": "a004aeb9ccd4aebedf4de4cb239acb81ac6f0b0a31089662f0a2497bd6edfe5a",
         "lease_tool/node_modules/pdfjs-dist/build/pdf.min.js": "5b5799e6f8c680663207ac5b42ee14eed2a406fa7af48f50c154f0c0b1566946",
@@ -13,21 +13,22 @@
         "lease_tool/node_modules/fflate/umd/index.js": "462ef8041fc970e3615a20a9dd2b2e3047a073b2da729ef4f02b634bba8b7b83",
         "shared/session_policy.js": "0f9922f76fdb88ce30e745f1d3aa62aba939a6f2b2268ca91cba28815713ab15",
         "lease_tool/node_modules/@supabase/supabase-js/dist/umd/supabase.js": "ee3be8de192b97cb1d73d1e95d6b82bb1f6b658c0f97c4ef757fc331996ed3d3",
-        "shared/saved_reports.js": "1efff7955be3ff3f4fa0d33611435d729dc5a8b996b159e820b222404a9a58d4",
+        "shared/saved_reports.js": "beac303ebf10a676b7ad84854337b59df77fdbdc54a6d44d4564270913e3b05f",
         "shared/saved_reports.css": "205564704fd1e18e5199ede86c1ed14990da3d86f465477dd2265850656bdfbc",
         "shared/audit_gate.js": "42c5f0842f957828d7aad14c33f99760ccc59635141672af3094413a67e63a1e",
         "shared/rentroll_property_name.js": "190373f3eaca7fa0232760f09ae37822d0c3949b9993312701e287431aa76e07",
         "shared/csv_export.js": "fad83e2933664bbe139d38b73e95ca6936c4dba26b3de5581d269deac9eafee1",
         "shared/property_rules.js": "828cb990b16098452d47d92b3b7f5b7771c08c7dce940d8f331d728b0786ba54",
         "shared/property_assistant.js": "dc173b641b8d6fd235b98f159cc7b55bab0be3fbe02a5b7b8a265fdd9f834e7c",
-        "shared/property_assistant_ui.js": "58fa455d1c0c4970d0fdb3eb644baf31c85ddcad85206560a4cabd2e747a15fd"
+        "shared/property_assistant_ui.js": "58fa455d1c0c4970d0fdb3eb644baf31c85ddcad85206560a4cabd2e747a15fd",
+        "shared/interface_theme.html": "b77015a90860f9a4cc334e83e56839555a7375fe6713e68924d406fa90e788a3"
       },
-      "sha256": "71435c4a4a0f6c8d694f5fdc1779b938084cf9120f222b26b387fb9bfa6a47d1"
+      "sha256": "1e41e5cd92e159ffb847159426e78d44d08e92b6a16468eea30938fba47ee2c2"
     },
     "concessionverify": {
       "inputs": {
-        "concession_tool/template.html": "b02bb4438943be2f8bb6235249dc362b0b211310c4422a396fe07ca65dc7ecb0",
-        "shared/build_tool.cjs": "db4d1e3105bd440d3701f12819174b3edba0b7ef05990cc603e8dcb7a350524b",
+        "concession_tool/template.html": "5c4043e656f941e9d08eb5e03ccc10e4d91b629e611819b5388b60f044377b8e",
+        "shared/build_tool.cjs": "4338555ed46db96ad8a8a91fdb85f797418df310f3198da0a83944437f5eddd7",
         "build.cjs": "dd25fd2b261d29d5632181773fb6dd27b33e27c3744aefed829909a12b8f88ec",
         "lease_tool/package-lock.json": "a004aeb9ccd4aebedf4de4cb239acb81ac6f0b0a31089662f0a2497bd6edfe5a",
         "lease_tool/node_modules/pdfjs-dist/build/pdf.min.js": "5b5799e6f8c680663207ac5b42ee14eed2a406fa7af48f50c154f0c0b1566946",
@@ -36,18 +37,19 @@
         "lease_tool/node_modules/fflate/umd/index.js": "462ef8041fc970e3615a20a9dd2b2e3047a073b2da729ef4f02b634bba8b7b83",
         "shared/session_policy.js": "0f9922f76fdb88ce30e745f1d3aa62aba939a6f2b2268ca91cba28815713ab15",
         "lease_tool/node_modules/@supabase/supabase-js/dist/umd/supabase.js": "ee3be8de192b97cb1d73d1e95d6b82bb1f6b658c0f97c4ef757fc331996ed3d3",
-        "shared/saved_reports.js": "1efff7955be3ff3f4fa0d33611435d729dc5a8b996b159e820b222404a9a58d4",
+        "shared/saved_reports.js": "beac303ebf10a676b7ad84854337b59df77fdbdc54a6d44d4564270913e3b05f",
         "shared/saved_reports.css": "205564704fd1e18e5199ede86c1ed14990da3d86f465477dd2265850656bdfbc",
         "shared/audit_gate.js": "42c5f0842f957828d7aad14c33f99760ccc59635141672af3094413a67e63a1e",
         "shared/rentroll_property_name.js": "190373f3eaca7fa0232760f09ae37822d0c3949b9993312701e287431aa76e07",
-        "shared/csv_export.js": "fad83e2933664bbe139d38b73e95ca6936c4dba26b3de5581d269deac9eafee1"
+        "shared/csv_export.js": "fad83e2933664bbe139d38b73e95ca6936c4dba26b3de5581d269deac9eafee1",
+        "shared/interface_theme.html": "b77015a90860f9a4cc334e83e56839555a7375fe6713e68924d406fa90e788a3"
       },
-      "sha256": "0c85ee6baecb2ba8d94e138c27fd66be5233669422ed6626b91c9abacacaaca5"
+      "sha256": "cbc7dcf41dab5308086a9c3cf664575f5a11f6e516b9f516d3750ffacb70cf99"
     },
     "depositverify": {
       "inputs": {
-        "deposit_tool/template.html": "5ce3e48dacc014b86befb8cbb4cbc539853cb3889227ea60229c986fd583490f",
-        "shared/build_tool.cjs": "db4d1e3105bd440d3701f12819174b3edba0b7ef05990cc603e8dcb7a350524b",
+        "deposit_tool/template.html": "f1a21d5dfd90a51781d55b4f236e2565bf69d68c20caff15e0ba7301e2343296",
+        "shared/build_tool.cjs": "4338555ed46db96ad8a8a91fdb85f797418df310f3198da0a83944437f5eddd7",
         "build.cjs": "dd25fd2b261d29d5632181773fb6dd27b33e27c3744aefed829909a12b8f88ec",
         "lease_tool/package-lock.json": "a004aeb9ccd4aebedf4de4cb239acb81ac6f0b0a31089662f0a2497bd6edfe5a",
         "lease_tool/node_modules/pdfjs-dist/build/pdf.min.js": "5b5799e6f8c680663207ac5b42ee14eed2a406fa7af48f50c154f0c0b1566946",
@@ -55,26 +57,28 @@
         "lease_tool/node_modules/xlsx/dist/xlsx.full.min.js": "cc015130aa8521e7f088f88898eba949ccdcbfb38df0bd129b44b7273c3a6f41",
         "shared/session_policy.js": "0f9922f76fdb88ce30e745f1d3aa62aba939a6f2b2268ca91cba28815713ab15",
         "lease_tool/node_modules/@supabase/supabase-js/dist/umd/supabase.js": "ee3be8de192b97cb1d73d1e95d6b82bb1f6b658c0f97c4ef757fc331996ed3d3",
-        "shared/saved_reports.js": "1efff7955be3ff3f4fa0d33611435d729dc5a8b996b159e820b222404a9a58d4",
+        "shared/saved_reports.js": "beac303ebf10a676b7ad84854337b59df77fdbdc54a6d44d4564270913e3b05f",
         "shared/saved_reports.css": "205564704fd1e18e5199ede86c1ed14990da3d86f465477dd2265850656bdfbc",
         "shared/audit_gate.js": "42c5f0842f957828d7aad14c33f99760ccc59635141672af3094413a67e63a1e",
         "shared/rentroll_property_name.js": "190373f3eaca7fa0232760f09ae37822d0c3949b9993312701e287431aa76e07",
-        "shared/csv_export.js": "fad83e2933664bbe139d38b73e95ca6936c4dba26b3de5581d269deac9eafee1"
+        "shared/csv_export.js": "fad83e2933664bbe139d38b73e95ca6936c4dba26b3de5581d269deac9eafee1",
+        "shared/interface_theme.html": "b77015a90860f9a4cc334e83e56839555a7375fe6713e68924d406fa90e788a3"
       },
-      "sha256": "fd43e4103cb3e3aaf65ace36685a5a33b0c3cc19d570a778a02c43d6eb2e32b6"
+      "sha256": "63d5ae1b2dcdf6abf76498ece28bcaec30c23f6341703cd6dbb275a4b12cf436"
     }
   },
   "app": {
     "inputs": {
-      "homepage_assets/app_template.html": "e7cc27ed9497be3dbfc3be1a2d6f7aa4f338553cf034cfb31a35ab5f1a7964e1",
-      "homepage_assets/_shared_nav.html": "756b0bfdd643125db703175dcdfaa010d78574734c9e094ed304937f1ad6319d",
+      "homepage_assets/app_template.html": "2ece6ae453a887ceb16b8f90b3dbbaf373ba52e5e0384a7a17239e9d9c3017f8",
+      "homepage_assets/_shared_nav.html": "b6cfdbfa026908df36fb0d2b8a763c34cb1b4fe853e653ad7d09fdd7b8fdd538",
       "homepage_assets/_shared_styles.html": "e8ec1ffef2d8867cd537077cd4dd80149a7881790cf73bfed6c3079b2ee21047",
       "homepage_assets/_shared_footer.html": "d2198174a0ec29e5cd26282030e74e8bb7db27fcdbc80dca147ce098efcc1cab",
       "shared/session_policy.js": "0f9922f76fdb88ce30e745f1d3aa62aba939a6f2b2268ca91cba28815713ab15",
       "shared/saved_reports.css": "205564704fd1e18e5199ede86c1ed14990da3d86f465477dd2265850656bdfbc",
-      "shared/saved_reports.js": "1efff7955be3ff3f4fa0d33611435d729dc5a8b996b159e820b222404a9a58d4",
-      "homepage_assets/build_app.cjs": "5a082780dc6ac04a522bce386f08bb8a044bab0fd58cb67e99ee1fe2414a84b3"
+      "shared/saved_reports.js": "beac303ebf10a676b7ad84854337b59df77fdbdc54a6d44d4564270913e3b05f",
+      "shared/interface_theme.html": "b77015a90860f9a4cc334e83e56839555a7375fe6713e68924d406fa90e788a3",
+      "homepage_assets/build_app.cjs": "2a444577321c095011316b920d9b2fe72bfc98d859ea4c6f48a777ef3b6070ee"
     },
-    "sha256": "1e85172a4f43db1df371138ab9461b7a1ea9c869e5cf149ad84185adff64299a"
+    "sha256": "e580fb52f152c6bade4138f85ba98835240b931cac544443a96e7b2b958cac54"
   }
 }

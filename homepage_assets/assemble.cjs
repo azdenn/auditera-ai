@@ -3,7 +3,7 @@ const path = require('path');
 
 const dir = __dirname;
 const template = fs.readFileSync(path.join(dir, 'homepage_template.html'), 'utf8');
-const heroB64 = fs.readFileSync(path.join(dir, 'hero_image_b64.txt'), 'utf8').trim();
+const heroB64 = template.includes('__HERO_IMAGE_B64__') ? fs.readFileSync(path.join(dir, 'hero_image_b64.txt'), 'utf8').trim() : '';
 
 const sharedStyles = fs.readFileSync(path.join(dir, '_shared_styles.html'), 'utf8');
 const sharedNav    = fs.readFileSync(path.join(dir, '_shared_nav.html'), 'utf8');
@@ -41,7 +41,8 @@ function navForPage(file){
   });
 }
 
-let out = template;
+const interfaceTheme = fs.readFileSync(path.join(dir,'../shared/interface_theme.html'),'utf8');
+let out = template.replace('</head>',()=>interfaceTheme+'</head>').replace('__PROPERTY_ILLUSTRATION__',()=>fs.readFileSync(path.join(dir,'property_illustration.svg'),'utf8'));
 out = out.replace('__HERO_IMAGE_B64__', () => heroB64);
 // The homepage used to carry its own copy of the nav and footer. Removing a
 // link from the shared partial then changed every page except the front one,
@@ -95,6 +96,7 @@ for (const page of ['pricing', 'signin', 'contact', 'client_results']) {
   const tpl = path.join(dir, page + '_template.html');
   if (!fs.existsSync(tpl)) continue;
   let out = fs.readFileSync(tpl, 'utf8')
+    .replace('</head>',()=>interfaceTheme+'</head>')
     .split('__SHARED_STYLES__').join(sharedStyles)
     .split('__SHARED_NAV__').join(navForPage(page + '.html'))
     .split('__SHARED_FOOTER__').join(sharedFooter);

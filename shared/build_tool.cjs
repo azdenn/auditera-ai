@@ -31,6 +31,7 @@ function compose(tool) {
     const code = read(source);
     html = html.replace(marker, () => name.endsWith('_STYLE') ? '<style>\n'+code+'\n</style>' : '<script>\n' + code + '\n</script>');
   }
+  html=html.replace('</head>',()=>read('shared/interface_theme.html')+'</head>');
   return { html, inputs, sha256: hash(html) };
 }
 function write(tool) {

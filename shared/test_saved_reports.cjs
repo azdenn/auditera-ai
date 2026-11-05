@@ -41,6 +41,20 @@ async function routes(context){
   await dashboard.locator('#login-username').fill('invented@example.invalid');await dashboard.locator('#login-password').fill('synthetic-example');
   await dashboard.locator('#login-form button[type=submit]').click();await dashboard.locator('#saved-reports').waitFor();
   const preview=process.env.AUDITERA_PREVIEW_DIR;
+  await dashboard.route('**/auth/v1/user',async route=>{await new Promise(resolve=>setTimeout(resolve,350));await route.fallback();});
+  await dashboard.reload({waitUntil:'domcontentloaded'});
+  await dashboard.locator('.af-boot').waitFor();
+  assert.equal(await dashboard.locator('#login-card').isVisible(),false);
+  await dashboard.locator('#saved-reports').waitFor();
+  await dashboard.unroute('**/auth/v1/user');
+  if(preview) {
+    await dashboard.setViewportSize({width:1380,height:970});
+    for(const [label,file] of [['light','dashboard-light.png'],['dark','dashboard-dark.png']]){
+      await dashboard.getByRole('button',{name:'Switch to '+label+' mode'}).click();
+      await dashboard.waitForTimeout(400);
+      await dashboard.screenshot({path:path.join(preview,file)});
+    }
+  }
   for(const [key,name] of Object.entries({reconciler:'LeaseVerify',concession:'ConcessionVerify',deposit:'DepositVerify'})){
     const [page]=await Promise.all([context.waitForEvent('page'),dashboard.locator('button[onclick="launchTool(\''+key+'\')"]').click()]);
     await page.waitForURL('blob:**');await page.locator('.save-report-bar').waitFor({state:'attached'});

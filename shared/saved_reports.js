@@ -181,7 +181,7 @@
     } catch {} // A restricted browser can still save a server-bound report.
     if (!host) {
       host = el('section'); host.className = 'saved-reports'; host.id = 'saved-reports';
-      document.querySelector('#signedin-panel .signedin-top').after(host);
+      document.querySelector('#signedin-panel .tools-grid').after(host);
     }
     const panel = host;
     const stillHere = () => version === dashboardVersion && panel === host && isSignedIn && !session.state().locked && session.state().userId === identity.user.id;

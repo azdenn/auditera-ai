@@ -42,8 +42,10 @@ body{background:var(--bg);}
 <body>
 __SHARED_NAV__
 
+<script>document.documentElement.classList.add("session-pending")</script>
 <section id="signin">
   <div class="wrap">
+    <div class="af-boot" role="status">Opening your workspace…</div>
     <div class="section-head">
       <div class="kicker" id="signin-kicker">Sign In</div>
       <h2 id="signin-heading">Access your tools</h2>
@@ -160,66 +162,43 @@ __SHARED_NAV__
     <div class="signedin-panel hidden" id="signedin-panel">
       <div class="signedin-top">
         <div>Signed in as <b id="signedin-email"></b></div>
-        <a id="logout-link">Log out</a>
+        <div class="workspace-links"><a href="#saved-reports">Saved reports</a><a id="logout-link" href="#logout">Log out</a></div>
       </div>
       <div class="checkout-note hidden" id="checkout-note"></div>
       <div class="trial-banner hidden" id="trial-banner"></div>
-      <div class="prop-list hidden" id="prop-list">
-        <h3>Licensed properties</h3>
-        <div id="prop-rows"></div>
-      </div>
-      <!-- The licensed properties are listed in full just above, so this chip
-           would only repeat them. Kept in the DOM (hidden) because other code
-           still writes the current property into it. -->
       <div class="license-chip hidden">
         Licensed property: <span id="signedin-property"></span>
       </div>
       <div class="tools-grid">
         <div class="tool-card">
           <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
-          <h3>LeaseVerify</h3>
-          <p class="tc-value">Compare executed leases against your Rent Roll and catch what doesn't match.</p>
-          <div class="tc-pills">
-            <span class="tc-pill">Rent &amp; charges</span>
-            <span class="tc-pill">Lease dates &amp; term</span>
-            <span class="tc-pill">Signatures</span>
-            <span class="tc-pill">Deposits</span>
-          </div>
+          <h3>Check lease charges</h3>
+          <p class="tc-value">Compare signed leases with the rent roll, including rent, fees and signatures.</p>
           <button class="btn-primary tool-launch-btn" type="button" onclick="launchTool('reconciler')">
-            Launch tool
+            Open LeaseVerify
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </button>
         </div>
         <div class="tool-card">
           <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-          <h3>ConcessionVerify</h3>
-          <p class="tc-value">Work out how many weeks of free rent each resident is really getting, and check it against the lease. Needs the leases, the ledgers and the rent roll.</p>
-          <div class="tc-pills">
-            <span class="tc-pill">Move-in specials</span>
-            <span class="tc-pill">Prorated concessions</span>
-            <span class="tc-pill">Lease-accurate math</span>
-          </div>
+          <h3>Check move-in specials</h3>
+          <p class="tc-value">Check free rent promised in leases against credits on resident ledgers.</p>
           <button class="btn-primary tool-launch-btn" type="button" onclick="launchTool('concession')">
-            Launch tool
+            Open ConcessionVerify
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </button>
         </div>
         <div class="tool-card">
           <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18M3 10l2-5h14l2 5M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/><path d="M9 15h6"/></svg></div>
-          <h3>DepositVerify</h3>
-          <p class="tc-value">Reconcile LeaseLock invoices against your Rent Roll and confirm every resident&rsquo;s deposit is actually covered.</p>
-          <div class="tc-pills">
-            <span class="tc-pill">LeaseLock vs. invoice</span>
-            <span class="tc-pill">Surety bonds</span>
-            <span class="tc-pill">Security deposits</span>
-            <span class="tc-pill">Coverage gaps</span>
-          </div>
+          <h3>Check deposit coverage</h3>
+          <p class="tc-value">Compare deposits and LeaseLock charges with the rent roll and invoice.</p>
           <button class="btn-primary tool-launch-btn" type="button" onclick="launchTool('deposit')">
-            Launch tool
+            Open DepositVerify
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </button>
         </div>
       </div>
+      <details class="prop-list hidden" id="prop-list"><summary>Licensed properties</summary><div id="prop-rows"></div></details>
       <details class="tutorial" id="tutorial">
         <summary>
           <span class="tut-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.25V20"/><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v17H6.5A2.5 2.5 0 0 0 4 22.5z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v17h5.5a2.5 2.5 0 0 1 2.5 2.5z"/></svg></span>
@@ -342,6 +321,8 @@ const TOOL_NAMES = {
 // share the homepage's stylesheet, so the tokens below are duplicated
 // deliberately. Keep them in sync with :root if the palette changes.
 function launchShellHTML(toolName){
+  const palette=getComputedStyle(document.documentElement);
+  const ink=palette.getPropertyValue('--ink'), bg=palette.getPropertyValue('--bg'), accent=palette.getPropertyValue('--accent'), soft=palette.getPropertyValue('--ink-soft');
   return '<!doctype html><html><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<title>Opening ' + toolName + '…</title><style>' +
@@ -360,7 +341,8 @@ function launchShellHTML(toolName){
     '@keyframes idle{0%{margin-left:-32%}100%{margin-left:102%}}' +
     '.msg{font-size:14px;color:#a7adc0}' +
     '@media (prefers-reduced-motion:reduce){.bar{animation:none;width:100%}}' +
-    '</style></head><body><div class="w">' +
+    'body{background:'+bg+';color:'+ink+'}.msg{color:'+soft+';font-size:16px}.bar{background:'+accent+'}.bug b{background:none;-webkit-text-fill-color:'+accent+'}' +
+    '</style></head><body><div class="w" role="status">' +
     '<div class="bug"><b>Auditera AI</b></div>' +
     '<div class="tool">Opening ' + toolName + '</div>' +
     '<div class="track"><div class="bar" id="bar"></div></div>' +
@@ -833,8 +815,8 @@ function showSignedIn(username, property){
   document.getElementById('signedin-property-2').textContent = property || '(not set)';
   signedoutView.classList.add('hidden');
   signedinPanel.classList.remove('hidden');
-  document.getElementById('signin-heading').textContent = 'Welcome back';
-  document.getElementById('signin-sub').textContent = 'Your tools are ready below.';
+  document.getElementById('signin-heading').textContent = 'Your audit workspace';
+  document.getElementById('signin-sub').textContent = 'Choose a tool to start an audit, or reopen a saved report.';
 }
 
 function showSignedOut(){
@@ -850,7 +832,7 @@ function showSignedOut(){
   loginError.classList.add('hidden');
   signupError.classList.add('hidden');
   document.getElementById('signin-heading').textContent = 'Access your tools';
-  document.getElementById('signin-sub').textContent = 'Sign in with your username and password.';
+  document.getElementById('signin-sub').textContent = 'Sign in with your email and password.';
 }
 
 function setFormBusy(form, busy){
@@ -1142,8 +1124,17 @@ async function restoreSessionWork(){
   if (accounts[username]) showSignedIn(username, accounts[username].property);
   else sessionStorage.removeItem(SESSION_KEY);
 }
-void restoreSession();
-window.addEventListener('pageshow',()=>void restoreSession());
+function restoreView(){
+  document.documentElement.classList.add('session-pending');
+  return restoreSession().catch(()=>{
+  showSignedOut();
+  const message=document.getElementById('login-error');
+  message.textContent='Your session could not be restored. Sign in to continue.';
+  message.classList.remove('hidden');
+}).finally(()=>document.documentElement.classList.remove('session-pending'));
+}
+void restoreView();
+window.addEventListener('pageshow',event=>{if(event.persisted) void restoreView();});
 
 /* ==========================================================================
    Onboarding and the licence dashboard
@@ -1364,8 +1355,8 @@ if (onboardingForm){
       currentProperty = name;
       document.getElementById('signedin-property').textContent = name;
       document.getElementById('signedin-property-2').textContent = name;
-      document.getElementById('signin-heading').textContent = 'Welcome back';
-      document.getElementById('signin-sub').textContent = 'Your tools are ready below.';
+      document.getElementById('signin-heading').textContent = 'Your audit workspace';
+      document.getElementById('signin-sub').textContent = 'Choose a tool to start an audit, or reopen a saved report.';
       await refreshAccountState();
     } finally { setFormBusy(onboardingForm, false); }
   });
