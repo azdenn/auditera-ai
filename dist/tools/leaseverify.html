@@ -296,6 +296,15 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
 .property-banner.warn{background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--ink);}
 .property-banner.warn svg{color:var(--warn);}
 </style>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+DQogIDx0aXRsZT5BdWRpdGVyYSBBSTwvdGl0bGU+DQogIDxyZWN0IHg9IjEiIHk9IjEiIHdpZHRoPSI2MiIgaGVpZ2h0PSI2MiIgcng9IjE1IiBmaWxsPSIjMzAyNTFlIiBzdHJva2U9IiNiYThjNjMiIHN0cm9rZS13aWR0aD0iMiIvPg0KICA8cGF0aCBmaWxsPSIjZjZkZGJiIiBkPSJNOSA0OSAyOSAxM2gxMEwyMCA0OXoiLz4NCiAgPHBhdGggZmlsbD0iI2JkODk1OCIgZD0ibTM1IDIyIDIwIDI3SDQzTDMwIDMyeiIvPg0KICA8cGF0aCBmaWxsPSIjZThiYjg4IiBkPSJtMjUgNDAgMTUtNSA0IDYtMjMgN3oiLz4NCjwvc3ZnPg0K">
+<style>
+.auditera-mark { display:inline-block; flex:none; width:40px; height:40px; background:center / contain no-repeat url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+DQogIDx0aXRsZT5BdWRpdGVyYSBBSTwvdGl0bGU+DQogIDxyZWN0IHg9IjEiIHk9IjEiIHdpZHRoPSI2MiIgaGVpZ2h0PSI2MiIgcng9IjE1IiBmaWxsPSIjMzAyNTFlIiBzdHJva2U9IiNiYThjNjMiIHN0cm9rZS13aWR0aD0iMiIvPg0KICA8cGF0aCBmaWxsPSIjZjZkZGJiIiBkPSJNOSA0OSAyOSAxM2gxMEwyMCA0OXoiLz4NCiAgPHBhdGggZmlsbD0iI2JkODk1OCIgZD0ibTM1IDIyIDIwIDI3SDQzTDMwIDMyeiIvPg0KICA8cGF0aCBmaWxsPSIjZThiYjg4IiBkPSJtMjUgNDAgMTUtNSA0IDYtMjMgN3oiLz4NCjwvc3ZnPg0K'); }
+.auditera-wordmark { display:inline-flex; align-items:baseline; gap:.23em; color:var(--ink); font-size:25px; font-weight:700; line-height:1.1; letter-spacing:-.045em; }
+.auditera-wordmark span { font-size:.54em; font-weight:750; letter-spacing:.055em; color:#e8b990; }
+.fbrand .auditera-mark { width:32px; height:32px; }
+.fbrand .auditera-wordmark { font-size:21px; }
+@media(max-width:540px){nav.top .auditera-mark{width:32px;height:32px}nav.top .auditera-wordmark{font-size:21px}}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -309,9 +318,7 @@ footer.page-footer{margin-top:36px;text-align:center;font-size:11.5px;color:var(
     <span>Back to Auditera AI</span>
   </a>
   <header class="page">
-    <div class="brand-mark">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 3.5h7l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 19V5A1.5 1.5 0 0 1 7 3.5Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M14 3.5V7a1 1 0 0 0 1 1h3.5" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 12.5l2 2 4-4.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </div>
+    <span class="auditera-mark" aria-hidden="true"></span>
     <div>
       <h1>LeaseVerify — Auditera AI</h1>
       <p>Upload every unit's lease PDF plus your ResMan rent roll export &mdash; this checks recurring charges across the whole property at once, and flags anything missing or mismatched.</p>

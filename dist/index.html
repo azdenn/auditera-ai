@@ -273,6 +273,15 @@ footer.page .flinks a:hover{color:var(--ink-soft);}
 .license-note{font-size:12px;color:var(--ink-faint);margin-top:20px;text-align:center;max-width:640px;margin-left:auto;margin-right:auto;}
 .demo-mode-badge{display:inline-flex;margin:14px auto 0;background:var(--warn-bg);border:1px solid #5c4a22;color:var(--warn);font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:999px;max-width:480px;}
 </style>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+DQogIDx0aXRsZT5BdWRpdGVyYSBBSTwvdGl0bGU+DQogIDxyZWN0IHg9IjEiIHk9IjEiIHdpZHRoPSI2MiIgaGVpZ2h0PSI2MiIgcng9IjE1IiBmaWxsPSIjMzAyNTFlIiBzdHJva2U9IiNiYThjNjMiIHN0cm9rZS13aWR0aD0iMiIvPg0KICA8cGF0aCBmaWxsPSIjZjZkZGJiIiBkPSJNOSA0OSAyOSAxM2gxMEwyMCA0OXoiLz4NCiAgPHBhdGggZmlsbD0iI2JkODk1OCIgZD0ibTM1IDIyIDIwIDI3SDQzTDMwIDMyeiIvPg0KICA8cGF0aCBmaWxsPSIjZThiYjg4IiBkPSJtMjUgNDAgMTUtNSA0IDYtMjMgN3oiLz4NCjwvc3ZnPg0K">
+<style>
+.auditera-mark { display:inline-block; flex:none; width:40px; height:40px; background:center / contain no-repeat url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+DQogIDx0aXRsZT5BdWRpdGVyYSBBSTwvdGl0bGU+DQogIDxyZWN0IHg9IjEiIHk9IjEiIHdpZHRoPSI2MiIgaGVpZ2h0PSI2MiIgcng9IjE1IiBmaWxsPSIjMzAyNTFlIiBzdHJva2U9IiNiYThjNjMiIHN0cm9rZS13aWR0aD0iMiIvPg0KICA8cGF0aCBmaWxsPSIjZjZkZGJiIiBkPSJNOSA0OSAyOSAxM2gxMEwyMCA0OXoiLz4NCiAgPHBhdGggZmlsbD0iI2JkODk1OCIgZD0ibTM1IDIyIDIwIDI3SDQzTDMwIDMyeiIvPg0KICA8cGF0aCBmaWxsPSIjZThiYjg4IiBkPSJtMjUgNDAgMTUtNSA0IDYtMjMgN3oiLz4NCjwvc3ZnPg0K'); }
+.auditera-wordmark { display:inline-flex; align-items:baseline; gap:.23em; color:var(--ink); font-size:25px; font-weight:700; line-height:1.1; letter-spacing:-.045em; }
+.auditera-wordmark span { font-size:.54em; font-weight:750; letter-spacing:.055em; color:#e8b990; }
+.fbrand .auditera-mark { width:32px; height:32px; }
+.fbrand .auditera-wordmark { font-size:21px; }
+@media(max-width:540px){nav.top .auditera-mark{width:32px;height:32px}nav.top .auditera-wordmark{font-size:21px}}
+</style>
 </head>
 <body>
 
@@ -283,8 +292,8 @@ footer.page .flinks a:hover{color:var(--ink-soft);}
          arrow that points at the page you are already on. The brand beside it
          goes home too, which is what most people try first. -->
     <a class="brand" href="index.html">
-      <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#0d0f16" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
-      Auditera AI
+      <span class="auditera-mark" aria-hidden="true"></span>
+      <span class="auditera-wordmark">Auditera <span>AI</span></span>
     </a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
@@ -535,8 +544,8 @@ footer.page .flinks a:hover{color:var(--ink-soft);}
 <footer class="page">
   <div class="wrap inner">
     <div class="fbrand">
-      <div class="brand-mark" style="width:24px;height:24px;border-radius:7px;"><svg viewBox="0 0 24 24" fill="none" stroke="#0d0f16" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
-      Auditera AI
+      <span class="auditera-mark" aria-hidden="true"></span>
+      <span class="auditera-wordmark">Auditera <span>AI</span></span>
     </div>
     <div class="flinks">
       <a href="index.html#what-it-does">What It Does</a>

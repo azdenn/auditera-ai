@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Auditera AI</title>
+  <rect x="1" y="1" width="62" height="62" rx="15" fill="#30251e" stroke="#ba8c63" stroke-width="2"/>
+  <path fill="#f6ddbb" d="M9 49 29 13h10L20 49z"/>
+  <path fill="#bd8958" d="m35 22 20 27H43L30 32z"/>
+  <path fill="#e8bb88" d="m25 40 15-5 4 6-23 7z"/>
+</svg>

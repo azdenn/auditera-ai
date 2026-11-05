@@ -31,6 +31,8 @@ function compose(tool) {
     const code = read(source);
     html = html.replace(marker, () => name.endsWith('_STYLE') ? '<style>\n'+code+'\n</style>' : '<script>\n' + code + '\n</script>');
   }
+  read('shared/compose_brand.cjs');
+  html = html.replace('</head>', () => require('../shared/compose_brand.cjs').brandHead(read) + '</head>');
   return { html, inputs, sha256: hash(html) };
 }
 function write(tool) {
