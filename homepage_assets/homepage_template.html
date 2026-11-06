@@ -296,7 +296,7 @@ footer.page .flinks a:hover{color:var(--ink-soft);}
 __SHARED_NAV__
 
 <header class="af-hero"><div class="wrap">
-  <div><div class="af-type">Multifamily property audits</div>
+  <div><a class="trial-badge trial-badge-hero" href="pricing.html"><span class="trial-spark" aria-hidden="true">✦</span><span>1 month free</span><span class="trial-detail">No card required</span><span aria-hidden="true">→</span></a><div class="af-type">Multifamily property audits</div>
   <h1>Compare every lease.<span>See what needs review.</span></h1>
   <p>Compare signed leases, rent rolls and resident ledgers. See which charges match and which ones need a closer look.</p>
   <div class="hero-ctas"><a class="btn-primary" href="app.html">Open dashboard <span aria-hidden="true">→</span></a><a class="btn-ghost" href="#what-it-does">Explore the tools</a></div></div>
@@ -380,14 +380,15 @@ __SHARED_NAV__
     <div class="tour-copy">
       <h2 id="tours-heading">Inside Auditera</h2>
       <div class="tour-options" role="group" aria-label="Choose a walkthrough">
-        <button type="button" data-tour="concession" aria-pressed="true">ConcessionVerify</button>
+        <button type="button" data-tour="lease" aria-pressed="true">LeaseVerify</button>
+        <button type="button" data-tour="concession" aria-pressed="false">ConcessionVerify</button>
         <button type="button" data-tour="deposit" aria-pressed="false">DepositVerify</button>
         <button type="button" data-tour="reports" aria-pressed="false">Saved reports</button>
       </div>
     </div>
     <figure class="audit-film tour-screen">
-      <video muted loop playsinline preload="none" src="/media/concession-tour.mp4" poster="/media/concession-tour.webp" aria-labelledby="tour-caption"></video>
-      <figcaption><span><strong id="tour-caption" aria-live="polite">See how two move-in credits add up.</strong><small>Sample records &middot; 12 seconds</small></span>
+      <video muted loop playsinline preload="none" src="/media/leaseverify-walkthrough.mp4" poster="/media/leaseverify-walkthrough.webp" aria-labelledby="tour-caption"></video>
+      <figcaption><span><strong id="tour-caption" aria-live="polite">Compare a lease with the rent roll and review the differences.</strong><small id="tour-duration">Sample records &middot; 17 seconds</small></span>
         <button type="button" hidden>Play preview</button>
       </figcaption>
     </figure>
@@ -500,6 +501,7 @@ initFilm(document.querySelector('.af-hero .audit-film'));
 const tourScreen = document.querySelector('.tour-screen');
 const syncTour = initFilm(tourScreen);
 const tourCaptions = {
+  lease: 'Compare a lease with the rent roll and review the differences.',
   concession: 'See how two move-in credits add up.',
   deposit: 'Find a coverage invoice with no matching charge.',
   reports: 'Save a finding, reopen it and download a copy.'
@@ -510,10 +512,12 @@ tourOptions.forEach(button => button.addEventListener('click', () => {
   const name = button.dataset.tour;
   tourOptions.forEach(option => option.setAttribute('aria-pressed', String(option === button)));
   const player = tourScreen.querySelector('video');
-  player.poster = '/media/' + name + '-tour.webp';
-  player.src = '/media/' + name + '-tour.mp4';
+  const media = name === 'lease' ? 'leaseverify-walkthrough' : name + '-tour';
+  player.poster = '/media/' + media + '.webp';
+  player.src = '/media/' + media + '.mp4';
   tourScreen.querySelector('button').hidden = false;
   document.getElementById('tour-caption').textContent = tourCaptions[name];
+  document.getElementById('tour-duration').textContent = 'Sample records · ' + (name === 'lease' ? 17 : 12) + ' seconds';
   syncTour();
 }));
 
