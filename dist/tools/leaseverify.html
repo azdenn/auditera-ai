@@ -453,6 +453,19 @@ section.alt{background:color-mix(in srgb,var(--surface) 45%,transparent)}
 @media(max-width:800px){nav.top .inner{padding-left:16px;padding-right:16px}nav.top .links.open{margin-left:0}.appearance-row{padding-left:16px;padding-right:16px}}
 @media(prefers-reduced-motion:reduce){.af-hero .btn-primary::after,.cta-band .btn-primary::after,.plan .btn-primary::after{animation:none;display:none}}
 
+
+/* Shared tactile controls, adapted from the studio's raised/press interaction.
+   Rest/hover/press only: ordinary audit actions do not continuously animate. */
+:root{--press-edge:#050d17;--press-halo:#65bcff28}
+:root[data-theme=light]{--press-edge:#7b93a6;--press-halo:#287bab20}
+:is(button,a.btn-primary,a.btn-ghost,a.tool-back,a.nav-back,a.tool-launch-btn){box-shadow:0 3px 0 var(--press-edge),inset 0 1px 0 #ffffff18;transition:transform .15s ease,box-shadow .15s ease,background-color .18s ease,border-color .18s ease;transform-origin:center; -webkit-tap-highlight-color:transparent}
+@media(hover:hover) and (pointer:fine){:is(button,a.btn-primary,a.btn-ghost,a.tool-back,a.nav-back,a.tool-launch-btn):not(:disabled):not([aria-disabled=true]):hover{transform:translateY(-2px);box-shadow:0 5px 0 var(--press-edge),0 5px 16px var(--press-halo),inset 0 1px 0 #ffffff25}}
+:is(button,a.btn-primary,a.btn-ghost,a.tool-back,a.nav-back,a.tool-launch-btn):not(:disabled):not([aria-disabled=true]):active{transform:translateY(2px) scale(.985);box-shadow:0 1px 0 var(--press-edge),inset 0 1px 0 #00000012;transition-duration:.06s}
+:is(button,a.btn-primary,a.btn-ghost,a.tool-back,a.nav-back,a.tool-launch-btn):focus-visible{outline:3px solid var(--accent);outline-offset:5px}
+:is(button,a.btn-primary,a.btn-ghost,a.tool-back,a.nav-back,a.tool-launch-btn):is(:disabled,[aria-disabled=true]){transform:none;box-shadow:none;cursor:not-allowed}
+@media(prefers-reduced-motion:reduce){:is(button,a.btn-primary,a.btn-ghost,a.tool-back,a.nav-back,a.tool-launch-btn):is(:hover,:active){transform:none!important;transition:none}}
+@media print{:is(button,a.btn-primary,a.btn-ghost,a.tool-back,a.nav-back,a.tool-launch-btn){box-shadow:none;transform:none}}
+
 </style>
 </head>
 <body>
