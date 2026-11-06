@@ -367,12 +367,13 @@ nav.top .links { margin-left:0; }
 .af-hero .btn-ghost:hover, .theme-control:hover { background:var(--surface); border-color:var(--accent-line); }
 @media(max-width:800px) { nav.top .nav-toggle { min-height:44px; min-width:44px; align-items:center; justify-content:center; } }
 @media(max-width:540px) { nav.top .auditera-mark { width:32px; height:32px; } nav.top .auditera-wordmark { font-size:21px; } }
-/* Two soft, slowly moving lights stay behind the page and its solid reading surfaces. */
+/* Low-intensity moving lights breathe behind steady, opaque reading surfaces. */
 body { position:relative; isolation:isolate; }
 body::before, body::after {
   content:""; position:fixed; inset:-8vh -8vw; z-index:-1;
   pointer-events:none; background-repeat:no-repeat;
-  animation:ambient-blue 38s ease-in-out infinite alternate;
+  --ambient-low:.70; --ambient-high:1;
+  animation:ambient-blue 38s ease-in-out infinite alternate, ambient-breathe 14s ease-in-out infinite;
 }
 body::before {
   background:radial-gradient(ellipse 44% 46% at 18% 30%,rgba(74,153,235,.15),transparent 78%),
@@ -380,7 +381,12 @@ body::before {
 }
 body::after {
   background:radial-gradient(ellipse 32% 40% at 74% 18%,rgba(78,208,223,.09),transparent 80%);
-  animation-name:ambient-cyan; animation-duration:47s; animation-delay:-19s;
+  animation-name:ambient-cyan, ambient-breathe; animation-duration:47s, 18s;
+  animation-delay:-19s, -7s;
+}
+@keyframes ambient-breathe {
+  0%,100% { opacity:var(--ambient-low); }
+  50% { opacity:var(--ambient-high); }
 }
 @keyframes ambient-blue {
   from { transform:translate3d(-3vw,-2vh,0) scale(1); }
@@ -393,7 +399,7 @@ body::after {
 .af-hero:has(.audit-film) { background:radial-gradient(ellipse at 82% 38%,var(--wash),transparent 68%); }
 section.alt { background:color-mix(in srgb,var(--surface) 78%,transparent); }
 .ambient-paused body::before, .ambient-paused body::after { animation-play-state:paused; }
-html[data-theme=light] body::before, html[data-theme=light] body::after { opacity:.65; }
+html[data-theme=light] body::before, html[data-theme=light] body::after { --ambient-low:.46; --ambient-high:.65; opacity:.65; }
 header.page h1, .hiw-step b, .fact-tile .fact-val { color:var(--ink); }
 .hiw-step .hiw-num { background:var(--accent-soft); color:var(--ink); box-shadow:none; }
 .drop input[type=file]::file-selector-button { color:var(--ink); background:var(--surface); }
