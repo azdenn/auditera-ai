@@ -452,10 +452,10 @@ a.trial-badge:active,.nav-cta:active .trial-badge{animation:none;transform:trans
 @media print{.trial-badge,.trial-badge::before,.trial-badge::after{animation:none}.trial-badge::before,.trial-badge::after{display:none}}
 
 
-/* Full-width navigation with appearance control below the bar, under the brand. */
-nav.top .inner{max-width:none;padding-left:24px;padding-right:24px}
+/* Centered navigation; appearance control stays below and aligned with the brand. */
+nav.top .inner{max-width:1216px;margin-inline:auto;padding-left:24px;padding-right:24px}
 nav.top .brand{order:0}nav.top .nav-back{order:1}nav.top .nav-toggle{order:2;margin-left:auto}nav.top .links{order:3;margin-left:auto}
-.appearance-row{position:relative;padding:12px 24px 0;display:flex;justify-content:flex-start}
+.appearance-row{position:relative;max-width:1216px;margin-inline:auto;padding:12px 24px 0;display:flex;justify-content:flex-start}
 .appearance-row .theme-control{margin-left:0;background:var(--card);font-size:14px;min-height:40px;padding:8px 12px}
 section.alt{background:color-mix(in srgb,var(--surface) 45%,transparent)}
 .af-hero .btn-primary,.cta-band .btn-primary,.plan .btn-primary{position:relative;isolation:isolate;overflow:hidden}
