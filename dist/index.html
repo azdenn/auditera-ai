@@ -406,6 +406,21 @@ header.page h1, .hiw-step b, .fact-tile .fact-val { color:var(--ink); }
 @media print {
   body::before, body::after { display:none; }
 }
+/* Free-month offer: high-contrast blue/cyan accents, no flashing or layout shifts. */
+.trial-badge{display:inline-flex;align-items:center;justify-content:center;gap:9px;position:relative;isolation:isolate;overflow:hidden;vertical-align:middle;border:1px solid #83cfff;border-radius:99px;padding:9px 17px;background:linear-gradient(115deg,#d4f7ff,#b9dcff 55%,#d8ceff);color:#143752!important;font-size:16px;font-weight:750;line-height:1.35;text-decoration:none;box-shadow:0 4px 18px #459ef438,inset 0 1px 0 #fff9;animation:trial-float 4.8s ease-in-out infinite}
+.trial-badge::after{content:'';position:absolute;inset:-50% -80%;z-index:-1;pointer-events:none;background:linear-gradient(110deg,transparent 40%,#ffffff85 49%,transparent 58%);transform:translateX(-65%);animation:trial-sheen 6.4s ease-in-out infinite}
+.trial-spark{font-size:20px;color:#3469a3}.trial-detail{border-left:1px solid #577a9f55;padding-left:10px;font-size:13px;font-weight:600}
+nav.top .links a.nav-cta{display:flex;flex-direction:column;gap:5px;padding:9px 16px;line-height:1.2;overflow:visible}
+.trial-badge.trial-badge-nav{font-size:12px;letter-spacing:.025em;padding:3px 11px;gap:0;line-height:1.2}
+.trial-badge-hero{margin-bottom:24px;max-width:100%;flex-wrap:wrap}.trial-badge-hero:hover{box-shadow:0 4px 24px #459ef469}.trial-badge-hero:focus-visible{outline:3px solid var(--accent);outline-offset:5px}
+.plan .plan-flag{background:none;padding:0;top:-24px;box-shadow:none;letter-spacing:0;text-transform:none}.trial-badge-plan{font-size:19px;padding:11px 25px}.plan{margin-top:16px}.plan h2{margin-top:12px}.amount .per small{font-size:12px;font-weight:500}
+@keyframes trial-float{0%,100%{transform:translateY(0);box-shadow:0 4px 18px #459ef438,inset 0 1px 0 #fff9}50%{transform:translateY(-3px);box-shadow:0 7px 24px #459ef465,inset 0 1px 0 #fff9}}
+@keyframes trial-sheen{0%,35%{transform:translateX(-65%)}65%,100%{transform:translateX(65%)}}
+@media(max-width:540px){.trial-badge-hero{font-size:14px;padding:8px 12px;gap:7px}.trial-detail{font-size:12px;padding-left:7px}}
+@media(prefers-reduced-motion:reduce){.trial-badge,.trial-badge::after{animation:none!important}.trial-badge::after{display:none}}
+@media print{.trial-badge,.trial-badge::after{animation:none}.trial-badge::after{display:none}}
+
+
 </style>
 </head>
 <body>
@@ -431,13 +446,13 @@ header.page h1, .hiw-step b, .fact-tile .fact-val { color:var(--ink); }
            have to read a pricing page to find the way in, and someone new
            should not have to guess that "Sign in" is where buying happens. -->
       <a class="nav-signin" href="app.html">Sign in</a>
-      <a class="btn-primary nav-cta" href="pricing.html">Pricing &amp; free trial</a>
+      <a class="btn-primary nav-cta" href="pricing.html"><span>Pricing &amp; free trial</span><span class="trial-badge trial-badge-nav">1 month free</span></a>
     </div>
   </div>
 </nav>
 
 <header class="af-hero"><div class="wrap">
-  <div><div class="af-type">Multifamily property audits</div>
+  <div><a class="trial-badge trial-badge-hero" href="pricing.html"><span class="trial-spark" aria-hidden="true">✦</span><span>1 month free</span><span class="trial-detail">No card required</span><span aria-hidden="true">→</span></a><div class="af-type">Multifamily property audits</div>
   <h1>Compare every lease.<span>See what needs review.</span></h1>
   <p>Compare signed leases, rent rolls and resident ledgers. See which charges match and which ones need a closer look.</p>
   <div class="hero-ctas"><a class="btn-primary" href="app.html">Open dashboard <span aria-hidden="true">→</span></a><a class="btn-ghost" href="#what-it-does">Explore the tools</a></div></div>
