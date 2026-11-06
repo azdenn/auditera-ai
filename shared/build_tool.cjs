@@ -23,7 +23,9 @@ function compose(tool) {
     AUDIT_GATE: 'shared/audit_gate.js', RR_PROPERTY_NAME: 'shared/rentroll_property_name.js',
     CSV_EXPORT: 'shared/csv_export.js',
     ...(tool === 'lease' ? { PROPERTY_RULES: 'shared/property_rules.js',
-      PROPERTY_ASSISTANT: 'shared/property_assistant.js', PROPERTY_ASSISTANT_UI: 'shared/property_assistant_ui.js' } : {}),
+      PROPERTY_ASSISTANT: 'shared/property_assistant.js', PROPERTY_CONVERSATION: 'shared/property_conversation.js',
+      PROPERTY_CONVERSATION_STYLE: 'shared/property_conversation.css',
+      PROPERTY_ASSISTANT_UI: 'shared/property_assistant_ui.js' } : {}),
   };
   for (const [name, source] of Object.entries(sources)) {
     const marker = '<!--' + name + '-->';

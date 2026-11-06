@@ -3,7 +3,8 @@
 var PA = null;
 function paReset(){
   PA = {enabled:false,pending:PropertyAssistant.canPilot(location.origin),answered:new Set(),baseline:[],drafts:[],storageKey:null,
-    storageError:false,skippedDrafts:0,current:null,preview:null,kept:0,applied:0,finished:false,clarifications:[],separations:[]};
+    storageError:false,skippedDrafts:0,current:null,preview:null,kept:0,applied:0,finished:false,clarifications:[],separations:[],
+    conversation:[],turn:null};
   document.getElementById('property-assistant').classList.add('hidden');
 }
 function paPending(){ return !!(PA && PA.pending); }
@@ -84,6 +85,7 @@ function paOnReconcile(){
   PA.questions=qs.filter(q=>!PA.answered.has(q.key));
   PA.current=PA.questions[0]||null;
   PA.preview=null;
+  PA.turn=null;
   PA.pending=!!PA.current;
   paRender(qs.filter(q=>!PA.answered.has(q.key)).length);
   return PA.pending;
@@ -96,11 +98,100 @@ function paButton(text,fn,parent){
   const b=paElement('button',text,parent);b.type='button';b.className='ghost pa-button';
   b.style.margin='6px 8px 6px 0';b.addEventListener('click',fn);return b;
 }
+function paConversationContext(){
+  return {
+    vocabulary:observedChargeVocabulary(),
+    packages:(PA.questions||[]).filter(q=>(q.members||q.part)&&!hasTierWord(q.label)).map(q=>({
+      label:q.label,members:q.members||(q.part?[q.part]:[])
+    }))
+  };
+}
+function paConversationLabels(text,vocabulary){
+  const labels=prFindLabels(text.replace(/\brent[ -]roll\b/gi,'billing export'),vocabulary);
+  for(const [pattern,category] of [
+    [/\bpet fees?\b/i,'Pet / Animal rent'],
+    [/\brenters? insurance\b/i,'Resident liability insurance']
+  ]){
+    const match=vocabulary.filter(label=>PropertyAssistant.key(label)===PropertyAssistant.key(category));
+    if(pattern.test(text)&&match.length===1&&!labels.includes(match[0]))labels.push(match[0]);
+  }
+  return labels;
+}
+function paAddMessage(speaker,text){
+  PA.conversation.push({speaker,text});
+  PA.conversation=PA.conversation.slice(-24);
+}
+function paDrawConversation(){
+  const log=document.getElementById('pa-chat-log');
+  const choices=document.getElementById('pa-chat-choices');
+  if(!log||!choices)return;
+  log.replaceChildren();choices.replaceChildren();
+  for(const message of PA.conversation){
+    const bubble=paElement('div',null,log);bubble.className='pa-message '+(message.speaker==='You'?'pa-user':'pa-assistant');
+    paElement('strong',message.speaker,bubble);
+    paElement('p',message.text,bubble);
+  }
+  if(PA.turn&&PA.turn.kind==='clarify'){
+    for(const option of PA.turn.choices){
+      paButton(option.label,()=>paConversationSend(option),choices);
+    }
+  }
+  log.scrollTop=log.scrollHeight;
+}
+function paConversationSend(choice){
+  if(!paPending())return;
+  const input=document.getElementById('pa-answer');
+  const text=choice?choice.label:input.value.trim();
+  if(!text)return;
+  PA.preview=null;document.getElementById('pa-preview').replaceChildren();
+  const context=paConversationContext();
+  // The local adapter returns a proposal only. All proposals use the same
+  // evidence validation, approval and persistence paths as guided choices.
+  const reply=PropertyConversation.reply({
+    text,choice:choice&&choice.value,context,
+    pending:PA.turn&&PA.turn.pending,choices:(PA.turn&&PA.turn.choices)||[]
+  },{
+    findLabels:value=>paConversationLabels(value,context.vocabulary),
+    parseRule:value=>prParseSentence(value.replace(/\brent[ -]roll\b/gi,'billing export'),context.vocabulary).rule
+  });
+  paAddMessage('You',text);paAddMessage('Auditera',reply.message);
+  input.value='';PA.turn=reply.kind==='clarify'?reply:null;
+  paDrawConversation();
+  if(reply.kind==='keep'){paKeepAll();return;}
+  if(reply.kind==='proposal'){
+    // A single chat decision must not dismiss the other amenities in its group.
+    document.querySelector('.pa-conversation').appendChild(document.getElementById('pa-preview'));
+    paPreview(reply.rules,[]);
+    if(PA.preview)PA.preview.fromConversation=true;
+  }else{
+    document.getElementById('pa-chat-choices').scrollIntoView({block:'nearest'});
+  }
+}
+function paRenderConversation(parent){
+  const section=paElement('section',null,parent);section.className='pa-conversation';
+  const title=paElement('h3','Talk through a charge',section);title.tabIndex=-1;
+  paElement('p','Explain how your property bills it. This local preview supports charge names and package membership; it will ask you to confirm the details.',section);
+  const log=paElement('div',null,section);log.id='pa-chat-log';log.className='pa-chat-log';
+  log.setAttribute('role','log');log.setAttribute('aria-label','Property conversation');log.setAttribute('aria-live','polite');
+  if(!PA.conversation.length)paAddMessage('Auditera','Which charge would you like to explain? For example, “Washer/dryer is included in our community fee.”');
+  const choices=paElement('div',null,section);choices.id='pa-chat-choices';choices.className='pa-chat-choices';
+  const label=paElement('label','Your explanation or answer',section);label.htmlFor='pa-answer';
+  const input=paElement('textarea',null,section);input.id='pa-answer';input.rows=3;input.maxLength=2000;
+  input.placeholder='Tell us how this charge works at your property…';
+  input.addEventListener('input',()=>{PA.preview=null;document.getElementById('pa-preview').replaceChildren();});
+  paButton('Review my answer',()=>paConversationSend(),section);
+  paButton('Start a new explanation',()=>{
+    PA.turn=null;PA.preview=null;input.value='';
+    document.getElementById('pa-preview').replaceChildren();
+    paAddMessage('Auditera','Describe the next charge you want to clarify.');paDrawConversation();input.focus();
+  },section);
+  paDrawConversation();
+}
 function paRender(remaining){
   const box=document.getElementById('property-assistant');box.replaceChildren();
   box.classList.remove('hidden');
   paElement('h2','Property assistant · local preview',box);
-  const intro=paElement('p','Local preview: guided questions and a limited local interpreter—not a hosted AI chatbot. Documents and explanations stay in this browser. Only approved conventions can be remembered here.',box);
+  const intro=paElement('p','Testing preview · limited local interpreter. Documents and explanations stay in this browser. You review and approve each proposed convention.',box);
   intro.style.lineHeight='1.6';
   if(!PA.pending){
     PA.finished=true;
@@ -109,7 +200,8 @@ function paRender(remaining){
     return;
   }
   document.getElementById('results-card').classList.add('hidden');
-  paElement('p','1. Choose below. 2. Review choices. 3. Confirm and view results. All '+remaining+' question(s) are on this page. Not sure keeps the original findings; agreement is never required.',box);
+  paElement('p',remaining+' question(s) need review. Explain a charge or use the choices below, then review the proposed change. You can also keep the original findings.',box);
+  paRenderConversation(box);
   const heading=paElement('h3','Review your property’s billing conventions',box);heading.tabIndex=-1;
   paElement('p','“Always included” means every unit billed the named package. “Only when not separately billed” leaves separate bills checked. Leave uncertain amenities as “Not sure”. These answers do not verify a package price or replace signed terms.',box).style.lineHeight='1.6';
   if(PA.storageError)paElement('p','Browser conventions could not be read. Nothing missing was treated as verified; remembering is disabled for this run.',box);
@@ -117,7 +209,7 @@ function paRender(remaining){
   const choices=[];
   for(const q of questions){
     const group=paElement('fieldset',null,box);group.className='pa-question';
-    group.style.cssText='margin:16px 0;padding:16px;border:1px solid #424760;border-radius:10px;min-width:0';
+    group.style.cssText='margin:16px 0;padding:16px;border:1px solid var(--line-soft);border-radius:10px;min-width:0';
     paElement('legend',q.label,group);
     paElement('p',q.kind==='includes'?'This package is billed on '+q.units.length+' units with unresolved individual charges. Which amenities does it include?':q.message,group).style.lineHeight='1.6';
     const members=q.members||(q.part?[q.part]:[]);
@@ -125,15 +217,16 @@ function paRender(remaining){
       const label=paElement('label',null,group);label.style.display='block';label.style.padding='6px';
       label.appendChild(document.createTextNode(name+' '));
       const input=paElement('select',null,label);input.className='pa-member';
-      input.style.cssText='display:block;width:100%;max-width:100%;padding:8px;margin-top:6px;font:inherit;background:#1c2030;color:inherit;border:1px solid #424760;border-radius:6px';
+      input.style.cssText='display:block;width:100%;max-width:100%;padding:8px;margin-top:6px;font:inherit;background:var(--card);color:var(--ink);border:1px solid var(--line-soft);border-radius:6px';
       for(const [value,text] of options){
         const option=paElement('option',text,input);option.value=value;
       }
       const state=paElement('small','Not sure — findings will stay unchanged.',label);state.style.display='block';
       input.addEventListener('change',()=>{
+        PA.turn=null;document.getElementById('pa-chat-choices').replaceChildren();
         PA.preview=null;document.getElementById('pa-preview').replaceChildren();
         const selected=input.value!=='unknown';input.dataset.selected=String(selected);
-        input.style.borderColor=selected?'#b1a2ff':'#424760';input.style.background=selected?'#332b56':'#1c2030';
+        input.style.borderColor=selected?'var(--accent)':'var(--line-soft)';input.style.background=selected?'var(--accent-soft)':'var(--card)';
         state.textContent=selected?'Selected: '+input.selectedOptions[0].textContent+' — not applied yet.':'Not sure — findings will stay unchanged.';
       });
       choices.push({q,member,input});
@@ -142,6 +235,7 @@ function paRender(remaining){
     if(q.rule&&!members.length)addChoice('Does this suggested convention describe your property?', [['unknown','Not sure / no — keep findings'],['suggested','Yes — review this suggestion']],null);
   }
   paButton('Review choices',()=>{
+    box.appendChild(document.getElementById('pa-preview'));
     const rules=[];
     for(const {q,member,input} of choices){
       if(input.value==='unknown')continue;
@@ -158,34 +252,8 @@ function paRender(remaining){
     paPreview(rules,questions.map(q=>q.key));
   },box);
   paButton('Keep original findings',()=>paKeepAll(),box);
-  const details=paElement('details',null,box);details.style.marginTop='18px';
-  paElement('summary','Need to explain something different? (optional written answer)',details);
-  const label=paElement('label','Written explanation — reviewed separately from the choices above',details);label.htmlFor='pa-answer';
-  label.style.display='block';label.style.marginTop='14px';
-  const input=paElement('textarea',null,details);input.id='pa-answer';input.rows=3;input.maxLength=2000;
-  input.style.cssText='width:100%;box-sizing:border-box;margin:8px 0;padding:10px;font:inherit';
-  input.placeholder='Optional: add detail, or use the guided choices above. Say “no” to keep the findings.';
-  input.addEventListener('input',()=>{
-    PA.preview=null;document.getElementById('pa-preview').replaceChildren();
-  });
-  paButton('Review my answer',()=>{
-    PA.preview=null;document.getElementById('pa-preview').replaceChildren();
-    const intent=PropertyAssistant.response(input.value);
-    if(intent==='keep'){paKeepAll();return;}
-    if(intent==='empty'){paNotice('Please explain the convention, or choose Keep original findings.');return;}
-    const vocab=observedChargeVocabulary();
-    const membership=paInterpretMembership(input.value,vocab);
-    if(membership){paPreview(membership);return;}
-    const parsed=prParseSentence(input.value.replace(/\brent[ -]roll\b/gi,'billing export'),vocab);
-    if(!parsed.rule){
-      paNotice('I cannot reliably turn this explanation into a rule yet. Nothing has changed. '+
-        ((PA.current.members||PA.current.part)?'Please confirm each relationship using the choices above. “Separate” keeps the charge checked; “Not sure” does not approve inclusion.':'Keep the original findings if the suggested convention does not describe your property.'));
-      return;
-    }
-    paPreview(parsed.rule);
-  },details);
   const preview=paElement('div',null,box);preview.id='pa-preview';preview.setAttribute('aria-live','polite');
-  heading.focus();
+  box.querySelector('.pa-conversation h3').focus();
 }
 function paNotice(message){
   const box=document.getElementById('pa-preview');box.replaceChildren();
@@ -268,6 +336,7 @@ function paApprove(){
     PA.drafts.push(...rows);
   }
   for(const key of PA.preview.questions||[PA.current.key])PA.answered.add(key);
+  if(PA.preview.fromConversation)paAddMessage('Auditera','Approved. I’ll rerun the checks using this convention and ask about any remaining charges.');
   PA.applied+=checked.items.length;PA.preview=null;
   PA.separations.push(...rows.filter(r=>r.rule.type==='separate'));
   PROPERTY_RULES.push(...rows.filter(r=>r.rule.type!=='separate'));

@@ -23,7 +23,7 @@ const origin=process.env.AUDITERA_ASSISTANT_TEST_ORIGIN||'https://testing.audite
   });
   assert.ok(await page.locator('.pa-question').count()>=2,'all real questions render together');
   assert.equal(await page.getByRole('button',{name:'Review choices',exact:true}).count(),1);
-  assert.equal(await page.locator('#pa-answer').isVisible(),false,'prose is optional, not a required second submit');
+  assert.equal(await page.locator('#pa-answer').isVisible(),true,'conversation is available alongside the guided choices');
   for(const input of await page.locator('.pa-member').all())await input.selectOption('conditional');
   assert.ok((await page.locator('.pa-member[data-selected="true"]').count())>=2);
   await page.getByRole('button',{name:'Review choices',exact:true}).click();
