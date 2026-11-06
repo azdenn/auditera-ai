@@ -41,8 +41,8 @@ function navForPage(file){
   });
 }
 
-const interfaceTheme = fs.readFileSync(path.join(dir,'../shared/interface_theme.html'),'utf8');
-let out = template.replace('</head>',()=>interfaceTheme+'</head>').replace('__PROPERTY_ILLUSTRATION__',()=>fs.readFileSync(path.join(dir,'property_illustration.svg'),'utf8'));
+const interfaceTheme = require('../shared/compose_theme.cjs').composeTheme(file => fs.readFileSync(path.join(dir, '..', file), 'utf8'));
+let out = template.replace('</head>',()=>interfaceTheme+'</head>');
 out = out.replace('__HERO_IMAGE_B64__', () => heroB64);
 // The homepage used to carry its own copy of the nav and footer. Removing a
 // link from the shared partial then changed every page except the front one,

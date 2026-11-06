@@ -10,7 +10,8 @@ function composeApp(){
  for(const [name,file] of Object.entries({SESSION_POLICY:'shared/session_policy.js',SAVED_REPORTS_STYLE:'shared/saved_reports.css',SAVED_REPORTS:'shared/saved_reports.js'})){
   const marker='<!--'+name+'-->';if(html.split(marker).length!==2)throw new Error('Expected one dashboard '+marker);html=html.replace(marker,()=>name.endsWith('_STYLE')?'<style>\n'+read(file)+'\n</style>':'<script>\n'+read(file)+'\n</script>');
  }
- html=html.replace('</head>',()=>read('shared/interface_theme.html')+'</head>');
+ read('shared/compose_theme.cjs');
+  html=html.replace('</head>',()=>require('../shared/compose_theme.cjs').composeTheme(read)+'</head>');
  read('homepage_assets/build_app.cjs');
  return {html,inputs,sha256:crypto.createHash('sha256').update(html).digest('hex')};
 }

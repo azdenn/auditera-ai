@@ -1,0 +1,61 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const root = path.resolve(__dirname, '../..');
+const {chromium} = require(path.join(root,'lease_tool/node_modules/playwright'));
+const XLSX = require(path.join(root,'lease_tool/node_modules/xlsx'));
+const {sessionToken,installBrowserSession,installGateStub,installRulesStub} = require(path.join(root,'shared/test_gate_stub.cjs'));
+const out = path.resolve(process.argv[2]);
+async function capture() {
+  fs.mkdirSync(out,{recursive:true});
+  const browser=await chromium.launch();
+  try {
+    const context=await browser.newContext({viewport:{width:840,height:760},deviceScaleFactor:1.5,reducedMotion:'reduce'});
+    const page=await context.newPage();
+    await page.setContent('<main style="font:16px Arial;line-height:2"><h1>Apartment Lease Contract</h1><p>Apartment No. ____ City: ____ State: ____ Zip: ____ B302 Arcadia TX 00000</p><p>C. Monthly Base Rent (Par. 3)</p><p>$ 1450.00</p><p>L. Additional Rent - Monthly Recurring Fixed Charges.</p><p>Animal rent $ Cable/satellite $ Internet $</p><p>Package service $ Pest control $ 8.00 Stormwater/drainage $</p><p>Trash service $ 17.00 Washer/Dryer $</p></main>');
+    const lease=await page.pdf();
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Lumen Court'],['Rent Roll'],['Unit','Description','Amount','Residents','Status'],['B302','Rent',1450,'Demo Resident','Current'],['','Pest control',8],['','Trash',27]]),'Rent Roll');
+    const book=XLSX.write(wb,{type:'buffer',bookType:'xlsx'});
+    await context.route('**/*',r=>r.abort());
+    const url='https://testing.auditera.net/demo';
+    await page.route(url,r=>r.fulfill({contentType:'text/html',body:fs.readFileSync(path.join(root,'dist/tools/leaseverify.html'))}));
+    await installGateStub(page,{allowed:true,verdict:'allowed',property:{id:'demo',name:'Lumen Court'}});
+    await installRulesStub(page);
+    const token=sessionToken('demo',{email:'demo@example.invalid'});await installBrowserSession(page,token);
+    await page.goto(url+'#tk='+token);
+    await page.locator('.drop-row').screenshot({path:path.join(out,'empty.png')});
+    await page.setInputFiles('#lease-files',{name:'B302 - Lease.pdf',mimeType:'application/pdf',buffer:lease});
+    await page.locator('.drop-row').screenshot({path:path.join(out,'lease-only.png')});
+    await page.setInputFiles('#rentroll-file',{name:'Lumen Court - Rent Roll.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:book});
+    await page.locator('.drop-row').screenshot({path:path.join(out,'sources.png')});
+    await page.locator('#process-btn').click();await page.locator('#results-card').waitFor({timeout:12000});
+    const finding=await page.evaluate(()=>unitEntries.flatMap(e=>e.rows||[]).find(r=>r.label==='Trash'&&r.status==='mismatch'));
+    if(!finding||finding.leaseVal!==17||finding.resmanVal!==27)throw Error('Expected synthetic $17 / $27 trash mismatch: '+JSON.stringify(finding));
+    await page.locator('#flat-view-toggle').check();
+    await page.locator('#flat-view-shell').screenshot({path:path.join(out,'findings.png')});
+    await page.getByLabel('Report name').fill('Lumen Court - Charge Review');
+    await page.getByLabel('What to save').selectOption('mismatch');
+    await page.locator('.save-report-bar').screenshot({path:path.join(out,'before-save.png')});
+    await page.getByRole('button',{name:'Save report',exact:true}).click();
+    await page.getByRole('button',{name:'Saved',exact:true}).waitFor({timeout:5000});
+    await page.locator('.save-report-bar').screenshot({path:path.join(out,'save.png')});
+    await page.getByRole('link',{name:'View saved reports'}).click({trial:true});
+    // The report copy lives in the library once this audit has been saved.
+    await page.route('https://testing.auditera.net/app',r=>r.fulfill({contentType:'text/html',body:fs.readFileSync(path.join(root,'dist/app.html'))}));
+    await page.route('https://cdn.jsdelivr.net/**',r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(root,'lease_tool/node_modules/@supabase/supabase-js/dist/umd/supabase.js'))}));
+    await page.route('**/auth/v1/user',r=>r.fulfill({json:{id:'demo',email:'demo@example.invalid'}}));
+    await page.route('**/rest/v1/subscriptions*',r=>r.fulfill({json:{account_id:'demo',user_id:'demo',role:'admin'}}));
+    await page.route('**/rest/v1/properties*',r=>r.fulfill({json:[{id:'demo',account_id:'demo',name:'Lumen Court',status:'active'}]}));
+    await page.getByRole('link',{name:'View saved reports'}).click();
+    await page.getByRole('button',{name:'Open report: Lumen Court - Charge Review'}).click({timeout:4500});
+    const download=page.waitForEvent('download',{timeout:5000});
+    await page.getByRole('button',{name:'Download copy'}).click();
+    const file=await download;const target=path.join(out,file.suggestedFilename());await file.saveAs(target);
+    const html=fs.readFileSync(target,'utf8');
+    if(!html.includes('Trash')||!html.includes('27.00'))throw Error('Downloaded report lacks selected evidence');
+    const reader=await context.newPage();await reader.setContent(html);if(await reader.locator('summary').count())await reader.locator('summary').first().click();
+    await reader.screenshot({path:path.join(out,'report.png')});
+    console.log('Verified lease 17, rent roll 27, saved, reopened, downloaded:',file.suggestedFilename());
+  }finally{await browser.close()}
+}
+capture().catch(e=>{console.error(e);process.exitCode=1});

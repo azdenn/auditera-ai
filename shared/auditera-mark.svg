@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Auditera AI</title>
+  <defs>
+    <linearGradient id="tile" x2="1" y2="1">
+      <stop stop-color="#183d69"/><stop offset="1" stop-color="#111d38"/>
+    </linearGradient>
+    <linearGradient id="edge" x2="1" y2="1">
+      <stop stop-color="#5ce0ed"/><stop offset="1" stop-color="#9b8aef"/>
+    </linearGradient>
+    <linearGradient id="rise" x2="0.5" y2="1">
+      <stop stop-color="#e5fbff"/><stop offset="1" stop-color="#68dce8"/>
+    </linearGradient>
+    <linearGradient id="wing" x2="0.4" y2="1">
+      <stop stop-color="#b6a1ff"/><stop offset="1" stop-color="#6b8cf5"/>
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="62" height="62" rx="15" fill="url(#tile)" stroke="url(#edge)" stroke-width="2"/>
+  <path fill="url(#rise)" d="M9 49 29 13h10L20 49z"/>
+  <path fill="url(#wing)" d="m35 22 20 27H43L30 32z"/>
+  <path fill="#a6ddff" d="m25 40 15-5 4 6-23 7z"/>
+</svg>

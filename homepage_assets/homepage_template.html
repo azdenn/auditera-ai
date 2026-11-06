@@ -273,6 +273,23 @@ footer.page .flinks a:hover{color:var(--ink-soft);}
 .license-note{font-size:12px;color:var(--ink-faint);margin-top:20px;text-align:center;max-width:640px;margin-left:auto;margin-right:auto;}
 .demo-mode-badge{display:inline-flex;margin:14px auto 0;background:var(--warn-bg);border:1px solid #5c4a22;color:var(--warn);font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:999px;max-width:480px;}
 </style>
+<style>
+.af-hero:has(.audit-film){isolation:isolate;background:radial-gradient(ellipse at 82% 38%,var(--wash),transparent 68%),var(--bg)}
+.af-hero:has(.audit-film)::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:repeating-radial-gradient(ellipse at 92% 78%,transparent 0 54px,color-mix(in srgb,var(--accent-line) 16%,transparent) 55px,transparent 56px 79px);mask-image:linear-gradient(110deg,transparent 26%,#000 92%)}
+.audit-film{margin:0;min-width:0;background:#142334;color:#eef7ff;border:1px solid #567e9e;border-radius:19px;overflow:hidden;box-shadow:0 22px 65px -23px #192c4670,0 0 0 5px color-mix(in srgb,var(--accent-line) 12%,transparent)}
+.audit-film video{display:block;width:100%;aspect-ratio:1080/660;object-fit:contain;background:#111f2c}
+.audit-film figcaption{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 18px;background:#182c3e;border-top:1px solid #3a536b}
+.audit-film strong,.audit-film small{display:block}.audit-film strong{font-size:17px}.audit-film small{color:#b8ccdf;font-size:14px}
+.audit-film button{cursor:pointer;flex:none;padding:8px 13px;min-height:44px;color:#eef7ff;background:#213b50;border:1px solid #6c8ba5;border-radius:8px;line-height:1.25;font-family:inherit;font-size:14px;font-weight:600}
+.audit-film button:hover{background:#2f4b62}.audit-film button:focus-visible{outline:3px solid #7cc6f3;outline-offset:2px}
+.tour-layout{display:grid;grid-template-columns:minmax(190px,1fr) minmax(0,2.8fr);align-items:center;gap:clamp(20px,4vw,60px)}
+.tour-copy h2{font-size:clamp(30px,3.2vw,45px);line-height:1.08;color:var(--ink);letter-spacing:-.04em;margin:0 0 1rem}
+.tour-options{display:grid;gap:6px}.tour-options button{font:inherit;font-weight:600;cursor:pointer;color:var(--ink-soft);background:transparent;border:1px solid transparent;border-radius:9px;text-align:left;min-height:48px;padding:10px 14px}
+.tour-options button:hover{background:var(--surface)}.tour-options button[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent-line);color:var(--ink);box-shadow:inset 3px 0 var(--accent)}
+.tour-options button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tour-screen{border-color:var(--accent-line);background:#122333}.tour-screen video{aspect-ratio:1080/656}.tour-screen figcaption{background:#142737;border-color:#395368}.tour-screen small{color:#c2d6e6}.tour-screen button{background:#233b4d;border-color:#7694a9;color:#f1f8ff}.tour-screen button:hover{background:#334e63}
+@media(max-width:760px){.tour-layout{grid-template-columns:minmax(0,1fr)}.tour-options{display:flex;flex-wrap:wrap}.tour-options button{padding:8px 10px}.tour-screen figcaption{padding:10px}}
+</style>
 </head>
 <body>
 
@@ -283,8 +300,14 @@ __SHARED_NAV__
   <h1>Compare every lease.<span>See what needs review.</span></h1>
   <p>Compare signed leases, rent rolls and resident ledgers. See which charges match and which ones need a closer look.</p>
   <div class="hero-ctas"><a class="btn-primary" href="app.html">Open dashboard <span aria-hidden="true">→</span></a><a class="btn-ghost" href="#what-it-does">Explore the tools</a></div></div>
-  <figure class="af-model">__PROPERTY_ILLUSTRATION__
-  <figcaption><strong>Example audit · Unit 204 parking</strong><dl><div><dt>Signed lease</dt><dd>$45</dd></div><div><dt>Rent roll</dt><dd>$60</dd></div><div class="difference"><dt>Difference</dt><dd>+$15 / mo</dd></div></dl></figcaption></figure>
+  <figure class="audit-film">
+    <video id="lease-film" muted loop playsinline preload="none" poster="/media/leaseverify-walkthrough.webp" aria-label="Sample LeaseVerify audit showing a lease upload, charge comparison, saved finding and downloaded report">
+      <source src="/media/leaseverify-walkthrough.mp4" type="video/mp4">
+    </video>
+    <figcaption><span><strong>LeaseVerify in action</strong><small>Sample audit &middot; 17 seconds</small></span>
+      <button id="film-play" type="button" hidden>Play preview</button>
+    </figcaption>
+  </figure>
 </div></header>
 
 
@@ -350,6 +373,24 @@ __SHARED_NAV__
         <div class="accordion-panel"><div class="accordion-panel-inner"><p>Check each unit for a deposit, surety bond or LeaseLock coverage. Compare recurring charges with invoice amounts and open each difference for review.</p></div></div>
       </div>
     </div>
+  </div>
+</section>
+<section id="product-tours" aria-labelledby="tours-heading">
+  <div class="wrap tour-layout">
+    <div class="tour-copy">
+      <h2 id="tours-heading">Inside Auditera</h2>
+      <div class="tour-options" role="group" aria-label="Choose a walkthrough">
+        <button type="button" data-tour="concession" aria-pressed="true">ConcessionVerify</button>
+        <button type="button" data-tour="deposit" aria-pressed="false">DepositVerify</button>
+        <button type="button" data-tour="reports" aria-pressed="false">Saved reports</button>
+      </div>
+    </div>
+    <figure class="audit-film tour-screen">
+      <video muted loop playsinline preload="none" src="/media/concession-tour.mp4" poster="/media/concession-tour.webp" aria-labelledby="tour-caption"></video>
+      <figcaption><span><strong id="tour-caption" aria-live="polite">See how two move-in credits add up.</strong><small>Sample records &middot; 12 seconds</small></span>
+        <button type="button" hidden>Play preview</button>
+      </figcaption>
+    </figure>
   </div>
 </section>
 <section id="pillars">
@@ -426,6 +467,56 @@ __SHARED_FOOTER__
   below.
 -->
 <script>
+
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+function initFilm(figure) {
+const film = figure.querySelector('video');
+const playControl = figure.querySelector('figcaption button');
+let wantsPlayback = !reducedMotion.matches;
+let inView = false;
+function syncFilm() {
+  if (wantsPlayback && inView && !document.hidden) {
+    film.play().catch(error => {
+      if (error.name !== 'AbortError') wantsPlayback = false;
+    });
+  } else {
+    film.pause();
+  }
+}
+function showFilmState() {
+  playControl.textContent = film.paused ? 'Play preview' : 'Pause preview';
+}
+playControl.hidden = false;
+film.addEventListener('play', showFilmState);
+film.addEventListener('pause', showFilmState);
+film.addEventListener('error', () => { playControl.hidden = true; });
+playControl.addEventListener('click', () => { wantsPlayback = film.paused; syncFilm(); });
+new IntersectionObserver(([entry]) => { inView = entry.intersectionRatio >= 0.15; syncFilm(); }, {threshold:0.15}).observe(film);
+document.addEventListener('visibilitychange', syncFilm);
+reducedMotion.addEventListener('change', () => { wantsPlayback = !reducedMotion.matches; syncFilm(); });
+return syncFilm;
+}
+initFilm(document.querySelector('.af-hero .audit-film'));
+const tourScreen = document.querySelector('.tour-screen');
+const syncTour = initFilm(tourScreen);
+const tourCaptions = {
+  concession: 'See how two move-in credits add up.',
+  deposit: 'Find a coverage invoice with no matching charge.',
+  reports: 'Save a finding, reopen it and download a copy.'
+};
+const tourOptions = document.querySelectorAll('[data-tour]');
+tourOptions.forEach(button => button.addEventListener('click', () => {
+  if (button.getAttribute('aria-pressed') === 'true') return;
+  const name = button.dataset.tour;
+  tourOptions.forEach(option => option.setAttribute('aria-pressed', String(option === button)));
+  const player = tourScreen.querySelector('video');
+  player.poster = '/media/' + name + '-tour.webp';
+  player.src = '/media/' + name + '-tour.mp4';
+  tourScreen.querySelector('button').hidden = false;
+  document.getElementById('tour-caption').textContent = tourCaptions[name];
+  syncTour();
+}));
+
 // Mobile nav toggle
 const navToggle = document.getElementById('nav-toggle');
 const navLinks = document.getElementById('nav-links');
