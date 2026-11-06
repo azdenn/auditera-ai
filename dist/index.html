@@ -435,11 +435,11 @@ a.trial-badge:active,.nav-cta:active .trial-badge{animation:none;transform:trans
 @media print{.trial-badge,.trial-badge::before,.trial-badge::after{animation:none}.trial-badge::before,.trial-badge::after{display:none}}
 
 
-/* Centered navigation; appearance control stays below and aligned with the brand. */
+/* Centered navigation with theme first; Back sits below the bar. */
 nav.top .inner{max-width:1216px;margin-inline:auto;padding-left:24px;padding-right:24px}
-nav.top .brand{order:0}nav.top .nav-back{order:1}nav.top .nav-toggle{order:2;margin-left:auto}nav.top .links{order:3;margin-left:auto}
+nav.top .theme-control{order:-1;margin-left:0;flex:none}nav.top .brand{order:0}nav.top .nav-toggle{order:2;margin-left:auto}nav.top .links{order:3;margin-left:auto}
 .appearance-row{position:relative;max-width:1216px;margin-inline:auto;padding:12px 24px 0;display:flex;justify-content:flex-start}
-.appearance-row .theme-control{margin-left:0;background:var(--card);font-size:14px;min-height:40px;padding:8px 12px}
+.appearance-row:empty{display:none}.appearance-row .nav-back{margin-left:0;background:var(--card);color:var(--ink);font-size:14px;min-height:40px;padding:8px 12px}.appearance-row .nav-back span{display:inline}.appearance-row .nav-back:hover{background:var(--surface)}
 section.alt{background:color-mix(in srgb,var(--surface) 45%,transparent)}
 .af-hero .btn-primary,.cta-band .btn-primary,.plan .btn-primary{position:relative;isolation:isolate;overflow:hidden}
 .af-hero .btn-primary::after,.cta-band .btn-primary::after,.plan .btn-primary::after{content:'';position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(110deg,transparent 36%,#78d9ff25 44%,#ffffff66 50%,#78d9ff25 56%,transparent 64%) 180% 0/250% 100% no-repeat;animation:action-shine 5.6s ease-in-out infinite}
@@ -457,6 +457,7 @@ section.alt{background:color-mix(in srgb,var(--surface) 45%,transparent)}
          homepage build strips this (see assemble.cjs) rather than shipping an
          arrow that points at the page you are already on. The brand beside it
          goes home too, which is what most people try first. -->
+    <button type="button" class="theme-control" data-theme-toggle>Light mode</button>
     <a class="brand" href="index.html">
       <span class="auditera-mark" aria-hidden="true"></span>
       <span class="auditera-wordmark">Auditera <span>AI</span></span>
@@ -475,7 +476,7 @@ section.alt{background:color-mix(in srgb,var(--surface) 45%,transparent)}
     </div>
   </div>
 </nav>
-<div class="appearance-row"><button type="button" class="theme-control" data-theme-toggle>Light mode</button></div>
+<div class="appearance-row"></div>
 
 <header class="af-hero"><div class="wrap">
   <div><a class="trial-badge trial-badge-hero" href="pricing.html"><span class="trial-spark" aria-hidden="true">✦</span><span>1 month free</span><span class="trial-detail">No card required</span><span aria-hidden="true">→</span></a><div class="af-type">Multifamily property audits</div>
