@@ -412,20 +412,27 @@ header.page h1, .hiw-step b, .fact-tile .fact-val { color:var(--ink); }
 @media print {
   body::before, body::after { display:none; }
 }
-/* Free-month offer: high-contrast blue/cyan accents, no flashing or layout shifts. */
-.trial-badge{display:inline-flex;align-items:center;justify-content:center;gap:9px;position:relative;isolation:isolate;overflow:hidden;vertical-align:middle;border:1px solid #83cfff;border-radius:99px;padding:9px 17px;background:linear-gradient(115deg,#d4f7ff,#b9dcff 55%,#d8ceff);color:#143752!important;font-size:16px;font-weight:750;line-height:1.35;text-decoration:none;box-shadow:0 4px 18px #459ef438,inset 0 1px 0 #fff9;animation:trial-float 4.8s ease-in-out infinite}
-.trial-badge::after{content:'';position:absolute;inset:-50% -80%;z-index:-1;pointer-events:none;background:linear-gradient(110deg,transparent 40%,#ffffff85 49%,transparent 58%);transform:translateX(-65%);animation:trial-sheen 6.4s ease-in-out infinite}
-.trial-spark{font-size:20px;color:#3469a3}.trial-detail{border-left:1px solid #577a9f55;padding-left:10px;font-size:13px;font-weight:600}
-nav.top .links a.nav-cta{display:flex;flex-direction:column;gap:5px;padding:9px 16px;line-height:1.2;overflow:visible}
-.trial-badge.trial-badge-nav{font-size:12px;letter-spacing:.025em;padding:3px 11px;gap:0;line-height:1.2}
-.trial-badge-hero{margin-bottom:24px;max-width:100%;flex-wrap:wrap}.trial-badge-hero:hover{box-shadow:0 4px 24px #459ef469}.trial-badge-hero:focus-visible{outline:3px solid var(--accent);outline-offset:5px}
+/* Offer motion references Bird on the Lettuce's live waitlist button (Nov 6).
+   Raised edge, breathing aura, sheen and a brief nudge separated by stillness. */
+.trial-badge{display:inline-flex;align-items:center;justify-content:center;gap:9px;position:relative;isolation:isolate;overflow:visible;vertical-align:middle;border:1px solid #c6efff;border-radius:10px;padding:10px 18px;background:linear-gradient(135deg,#d8f8ff,#91cfff 65%,#b7beff);color:#12334e!important;font-size:16px;font-weight:800;line-height:1.35;text-decoration:none;box-shadow:0 5px 0 #527ca2,0 0 25px #51baff66;text-shadow:0 1px #ffffff65;animation:trial-nudge 5.8s ease-in-out infinite;transition:box-shadow .15s,transform .15s}
+.trial-badge>*{position:relative;z-index:1}
+.trial-badge::before{content:'';position:absolute;inset:-5px;border:1px solid #74caff9c;border-radius:inherit;box-shadow:0 0 22px #52b8ff66;z-index:-1;pointer-events:none;animation:trial-aura 3.4s ease-in-out infinite}
+.trial-badge::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(110deg,transparent 39%,#ffffff70 49%,transparent 59%) 180% 0/240% 100% no-repeat;animation:trial-shine 4.8s ease-in-out infinite}
+.trial-spark{font-size:20px;color:#285f98}.trial-detail{border-left:1px solid #577a9f55;padding-left:10px;font-size:13px;font-weight:600}
+nav.top .links a.nav-cta{display:flex;flex-direction:column;gap:7px;padding:10px 16px 13px;line-height:1.2;overflow:visible}
+.trial-badge.trial-badge-nav{font-size:12px;letter-spacing:.025em;padding:3px 11px;gap:0;line-height:1.2;border-radius:6px;box-shadow:0 3px 0 #527ca2,0 0 18px #51baff66}
+.trial-badge-nav::before{inset:-3px}
+.trial-badge-hero{margin-bottom:24px;max-width:100%;flex-wrap:wrap}
+a.trial-badge:hover,a.trial-badge:focus-visible,.nav-cta:is(:hover,:focus-visible) .trial-badge{animation:none;transform:translateY(-2px);box-shadow:0 7px 0 #527ca2,0 0 30px #51baff88}
+a.trial-badge:active,.nav-cta:active .trial-badge{animation:none;transform:translateY(4px) scale(.98);box-shadow:0 1px 0 #527ca2,0 0 18px #51baff44}
+.trial-badge-hero:focus-visible{outline:3px solid var(--accent);outline-offset:8px}
 .plan .plan-flag{background:none;padding:0;top:-24px;box-shadow:none;letter-spacing:0;text-transform:none}.trial-badge-plan{font-size:19px;padding:11px 25px}.plan{margin-top:16px}.plan h2{margin-top:12px}.amount .per small{font-size:12px;font-weight:500}
-@keyframes trial-float{0%,100%{transform:translateY(0);box-shadow:0 4px 18px #459ef438,inset 0 1px 0 #fff9}50%{transform:translateY(-3px);box-shadow:0 7px 24px #459ef465,inset 0 1px 0 #fff9}}
-@keyframes trial-sheen{0%,35%{transform:translateX(-65%)}65%,100%{transform:translateX(65%)}}
+@keyframes trial-nudge{0%,60%,82%,100%{transform:translateY(0) rotate(0) scale(1)}65%{transform:translateY(-3px) scale(1.035)}69%{transform:translateY(-3px) rotate(-2deg) scale(1.035)}73%{transform:translateY(-3px) rotate(2deg) scale(1.035)}77%{transform:translateY(-1px) rotate(-1deg)}}
+@keyframes trial-aura{50%{opacity:.25;transform:scale(1.075)}}
+@keyframes trial-shine{0%,55%{background-position:180% 0}85%,100%{background-position:-120% 0}}
 @media(max-width:540px){.trial-badge-hero{font-size:14px;padding:8px 12px;gap:7px}.trial-detail{font-size:12px;padding-left:7px}}
-@media(prefers-reduced-motion:reduce){.trial-badge,.trial-badge::after{animation:none!important}.trial-badge::after{display:none}}
-@media print{.trial-badge,.trial-badge::after{animation:none}.trial-badge::after{display:none}}
-
+@media(prefers-reduced-motion:reduce){.trial-badge,.trial-badge::before,.trial-badge::after{animation:none!important}.trial-badge::after{display:none}a.trial-badge:is(:hover,:focus-visible,:active),.nav-cta:is(:hover,:focus-visible,:active) .trial-badge{transform:none}}
+@media print{.trial-badge,.trial-badge::before,.trial-badge::after{animation:none}.trial-badge::before,.trial-badge::after{display:none}}
 
 </style>
 </head>

@@ -98,5 +98,16 @@ __SHARED_NAV__
 </div>
 
 __SHARED_FOOTER__
+<script>
+(() => {
+  const toggle = document.getElementById('nav-toggle');
+  const links = document.getElementById('nav-links');
+  if (!toggle || !links) return;
+  function close() { links.classList.remove('open'); toggle.setAttribute('aria-expanded', 'false'); }
+  toggle.addEventListener('click', () => toggle.setAttribute('aria-expanded', String(links.classList.toggle('open'))));
+  links.addEventListener('click', event => { if (event.target.closest('a')) close(); });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape' && links.classList.contains('open')) { close(); toggle.focus(); } });
+})();
+</script>
 </body>
 </html>
