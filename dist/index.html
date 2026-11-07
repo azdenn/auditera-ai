@@ -435,17 +435,30 @@ a.trial-badge:active,.nav-cta:active .trial-badge{animation:none;transform:trans
 @media print{.trial-badge,.trial-badge::before,.trial-badge::after{animation:none}.trial-badge::before,.trial-badge::after{display:none}}
 
 
-/* Centered navigation; appearance control stays below and aligned with the brand. */
+/* Centered navigation with theme first; Back sits below the bar. */
 nav.top .inner{max-width:1216px;margin-inline:auto;padding-left:24px;padding-right:24px}
-nav.top .brand{order:0}nav.top .nav-back{order:1}nav.top .nav-toggle{order:2;margin-left:auto}nav.top .links{order:3;margin-left:auto}
+nav.top .theme-control{order:-1;margin-left:0;flex:none}nav.top .brand{order:0}nav.top .nav-toggle{order:2;margin-left:auto}nav.top .links{order:3;margin-left:auto}
 .appearance-row{position:relative;max-width:1216px;margin-inline:auto;padding:12px 24px 0;display:flex;justify-content:flex-start}
-.appearance-row .theme-control{margin-left:0;background:var(--card);font-size:14px;min-height:40px;padding:8px 12px}
+.appearance-row:empty{display:none}.appearance-row .nav-back{margin-left:0;background:var(--card);color:var(--ink);font-size:14px;min-height:40px;padding:8px 12px}.appearance-row .nav-back span{display:inline}.appearance-row .nav-back:hover{background:var(--surface)}
 section.alt{background:color-mix(in srgb,var(--surface) 45%,transparent)}
 .af-hero .btn-primary,.cta-band .btn-primary,.plan .btn-primary{position:relative;isolation:isolate;overflow:hidden}
 .af-hero .btn-primary::after,.cta-band .btn-primary::after,.plan .btn-primary::after{content:'';position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(110deg,transparent 36%,#78d9ff25 44%,#ffffff66 50%,#78d9ff25 56%,transparent 64%) 180% 0/250% 100% no-repeat;animation:action-shine 5.6s ease-in-out infinite}
 @keyframes action-shine{0%,45%{background-position:180% 0}80%,100%{background-position:-120% 0}}
 @media(max-width:800px){nav.top .inner{padding-left:16px;padding-right:16px}nav.top .links.open{margin-left:0}.appearance-row{padding-left:16px;padding-right:16px}}
 @media(prefers-reduced-motion:reduce){.af-hero .btn-primary::after,.cta-band .btn-primary::after,.plan .btn-primary::after{animation:none;display:none}}
+
+
+/* Shared tactile controls, adapted from the studio's raised/press interaction.
+   Rest/hover/press only: ordinary audit actions do not continuously animate. */
+:root{--press-edge:#050d17;--press-halo:#65bcff28}
+:root[data-theme=light]{--press-edge:#7b93a6;--press-halo:#287bab20}
+:is(button,a.btn-primary,a.btn-ghost,a.tool-back,a.nav-back,a.tool-launch-btn){box-shadow:0 3px 0 var(--press-edge),inset 0 1px 0 #ffffff18;transition:transform .15s ease,box-shadow .15s ease,background-color .18s ease,border-color .18s ease;transform-origin:center; -webkit-tap-highlight-color:transparent}
+@media(hover:hover) and (pointer:fine){:is(button,a.btn-primary,a.btn-ghost,a.tool-back,a.nav-back,a.tool-launch-btn):not(:disabled):not([aria-disabled=true]):hover{transform:translateY(-2px);box-shadow:0 5px 0 var(--press-edge),0 5px 16px var(--press-halo),inset 0 1px 0 #ffffff25}}
+:is(button,a.btn-primary,a.btn-ghost,a.tool-back,a.nav-back,a.tool-launch-btn):not(:disabled):not([aria-disabled=true]):active{transform:translateY(2px) scale(.985);box-shadow:0 1px 0 var(--press-edge),inset 0 1px 0 #00000012;transition-duration:.06s}
+:is(button,a.btn-primary,a.btn-ghost,a.tool-back,a.nav-back,a.tool-launch-btn):focus-visible{outline:3px solid var(--accent);outline-offset:5px}
+:is(button,a.btn-primary,a.btn-ghost,a.tool-back,a.nav-back,a.tool-launch-btn):is(:disabled,[aria-disabled=true]){transform:none;box-shadow:none;cursor:not-allowed}
+@media(prefers-reduced-motion:reduce){:is(button,a.btn-primary,a.btn-ghost,a.tool-back,a.nav-back,a.tool-launch-btn):is(:hover,:active){transform:none!important;transition:none}}
+@media print{:is(button,a.btn-primary,a.btn-ghost,a.tool-back,a.nav-back,a.tool-launch-btn){box-shadow:none;transform:none}}
 
 </style>
 </head>
@@ -457,6 +470,7 @@ section.alt{background:color-mix(in srgb,var(--surface) 45%,transparent)}
          homepage build strips this (see assemble.cjs) rather than shipping an
          arrow that points at the page you are already on. The brand beside it
          goes home too, which is what most people try first. -->
+    <button type="button" class="theme-control" data-theme-toggle>Light mode</button>
     <a class="brand" href="index.html">
       <span class="auditera-mark" aria-hidden="true"></span>
       <span class="auditera-wordmark">Auditera <span>AI</span></span>
@@ -475,7 +489,7 @@ section.alt{background:color-mix(in srgb,var(--surface) 45%,transparent)}
     </div>
   </div>
 </nav>
-<div class="appearance-row"><button type="button" class="theme-control" data-theme-toggle>Light mode</button></div>
+<div class="appearance-row"></div>
 
 <header class="af-hero"><div class="wrap">
   <div><a class="trial-badge trial-badge-hero" href="pricing.html"><span class="trial-spark" aria-hidden="true">✦</span><span>1 month free</span><span class="trial-detail">No card required</span><span aria-hidden="true">→</span></a><div class="af-type">Multifamily property audits</div>
